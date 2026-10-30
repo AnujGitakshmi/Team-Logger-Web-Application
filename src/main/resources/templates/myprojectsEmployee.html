@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>My Projects | TeamLogger</title>
+
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: #f4f6f9;
+            color: #1f2937;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ======================================================
+           STANDARD EMPLOYEE SIDEBAR
+        ====================================================== */
+
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 245px;
+            height: 100vh;
+            background: #111827;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+            border-right: 1px solid #1f2937;
+        }
+
+        .logo {
+            height: 75px;
+            display: flex;
+            align-items: center;
+            padding: 0 22px;
+            border-bottom: 1px solid #1f2937;
+            flex-shrink: 0;
+        }
+
+        .logo-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: #2563eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 19px;
+            font-weight: 700;
+            margin-right: 11px;
+            flex-shrink: 0;
+        }
+
+        .logo-text {
+            font-size: 18px;
+            font-weight: 700;
+            color: #ffffff;
+            white-space: nowrap;
+        }
+
+        .employee-label {
+            font-size: 10px;
+            color: #6b7280;
+            margin-top: 3px;
+            text-transform: uppercase;
+            letter-spacing: .7px;
+        }
+
+        .nav {
+            flex: 1;
+            padding: 20px 12px;
+            overflow-y: auto;
+        }
+
+        .nav::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .nav::-webkit-scrollbar-thumb {
+            background: #374151;
+            border-radius: 10px;
+        }
+
+        .nav-section-title {
+            padding: 0 13px 9px;
+            color: #6b7280;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .account-title {
+            margin-top: 25px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            min-height: 44px;
+            gap: 0;
+            padding: 10px 13px;
+            margin-bottom: 5px;
+            border-radius: 8px;
+            color: #9ca3af;
+            background: transparent;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background .18s ease, color .18s ease;
+        }
+
+        .nav-link:hover {
+            background: #1f2937;
+            color: #ffffff;
+        }
+
+        .nav-link.active {
+            background: #2563eb;
+            color: #ffffff;
+        }
+
+        .nav-icon {
+            width: 25px;
+            min-width: 25px;
+            margin-right: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: 17px;
+            line-height: 1;
+        }
+
+        .nav-label {
+            white-space: nowrap;
+        }
+
+        .sidebar-user {
+            padding: 14px;
+            border-top: 1px solid #1f2937;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .avatar {
+            width: 38px;
+            height: 38px;
+            min-width: 38px;
+            border-radius: 50%;
+            background: #2563eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .user-info {
+            min-width: 0;
+        }
+
+        .user-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #ffffff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-role {
+            font-size: 11px;
+            color: #6b7280;
+            margin-top: 3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* ======================================================
+           MAIN
+        ====================================================== */
+
+        .main {
+            margin-left: 245px;
+            width: calc(100% - 245px);
+        }
+
+        .topbar {
+            height: 78px;
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+        }
+
+        .page-title {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        /* ======================================================
+           STATS
+        ====================================================== */
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            border: 1px solid #e5e7eb;
+            padding: 20px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        /* ======================================================
+           SECTION
+        ====================================================== */
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 18px;
+        }
+
+        /* ======================================================
+           PROJECT GRID
+        ====================================================== */
+
+        .project-grid {
+            display: grid;
+            grid-template-columns:
+                    repeat(auto-fit, minmax(330px, 1fr));
+            gap: 20px;
+        }
+
+        .project-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 22px;
+            transition: .2s;
+        }
+
+        .project-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, .08);
+        }
+
+        .project-header {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .project-name {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        /* ======================================================
+           STATUS
+        ====================================================== */
+
+        .status {
+            padding: 5px 10px;
+            border-radius: 30px;
+            font-size: 11px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .assigned {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+
+        .pending {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .completed {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        /* ======================================================
+           DESCRIPTION
+        ====================================================== */
+
+        .description {
+            font-size: 13px;
+            color: #6b7280;
+            line-height: 1.6;
+            margin-bottom: 18px;
+        }
+
+        /* ======================================================
+           PROJECT INFO
+        ====================================================== */
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 18px;
+        }
+
+        .info-title {
+            font-size: 10px;
+            color: #9ca3af;
+            text-transform: uppercase;
+        }
+
+        .info-value {
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        /* ======================================================
+           ACTIONS
+        ====================================================== */
+
+        .actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-view {
+            background: #eef4ff;
+            color: #2e6dd8;
+        }
+
+        .btn-view:hover {
+            background: #dce9ff;
+        }
+
+        .btn-complete {
+            background: #16a34a;
+            color: white;
+        }
+
+        .btn-complete:hover {
+            background: #15803d;
+        }
+
+        /* ======================================================
+           PENDING / COMPLETED INFO
+        ====================================================== */
+
+        .state-message {
+            width: 100%;
+            padding: 11px 13px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .waiting-admin {
+            background: #fff7ed;
+            color: #c2410c;
+            border: 1px solid #fed7aa;
+        }
+
+        .completed-message {
+            background: #f0fdf4;
+            color: #15803d;
+            border: 1px solid #bbf7d0;
+        }
+
+        /* ======================================================
+           EMPTY
+        ====================================================== */
+
+        .empty {
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            padding: 60px;
+            text-align: center;
+        }
+
+        /* ======================================================
+           RESPONSIVE
+        ====================================================== */
+
+        @media (max-width: 900px) {
+
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+        }
+
+        @media (max-width: 750px) {
+
+            .sidebar {
+                width: 70px;
+            }
+
+            .logo {
+                padding: 0;
+                justify-content: center;
+            }
+
+            .logo-text,
+            .employee-label {
+                display: none;
+            }
+
+            .logo-icon {
+                margin-right: 0;
+            }
+
+            .nav {
+                padding: 18px 8px;
+            }
+
+            .nav-section-title {
+                display: none;
+            }
+
+            .nav-link {
+                justify-content: center;
+                padding: 10px 0;
+            }
+
+            .nav-icon {
+                margin-right: 0;
+            }
+
+            .nav-label {
+                display: none;
+            }
+
+            .sidebar-user {
+                padding: 12px 8px;
+                justify-content: center;
+            }
+
+            .user-info {
+                display: none;
+            }
+
+            .main {
+                margin-left: 70px;
+                width: calc(100% - 70px);
+            }
+
+            .topbar {
+                padding: 0 18px;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .project-grid {
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+        @media (max-width: 650px) {
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<div class="layout">
+
+
+    <!-- ======================================================
+         STANDARD EMPLOYEE SIDEBAR
+    ======================================================= -->
+
+    <aside class="sidebar">
+
+        <div class="logo">
+
+            <div class="logo-icon">
+                T
+            </div>
+
+            <div>
+
+                <div class="logo-text">
+                    TeamLogger
+                </div>
+
+                <div class="employee-label">
+                    Employee
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <nav class="nav">
+
+            <div class="nav-section-title">
+                Workspace
+            </div>
+
+
+            <a href="/employee/dashboard"
+               class="nav-link">
+
+                <span class="nav-icon">⌂</span>
+                <span class="nav-label">Dashboard</span>
+
+            </a>
+
+
+            <a th:href="@{/employee/projects}"
+               class="nav-link active">
+
+                <span class="nav-icon">▣</span>
+                <span class="nav-label">My Projects</span>
+
+            </a>
+
+
+            <a href="/employee/tasks"
+               class="nav-link">
+
+                <span class="nav-icon">✓</span>
+                <span class="nav-label">My Tasks</span>
+
+            </a>
+
+
+            <a href="/employee/attendance"
+               class="nav-link">
+
+                <span class="nav-icon">▤</span>
+                <span class="nav-label">Attendance</span>
+
+            </a>
+
+
+            <a href="/employee/overtime"
+               class="nav-link">
+
+                <span class="nav-icon">⏱</span>
+                <span class="nav-label">Overtime</span>
+
+            </a>
+
+
+            <a href="/employee/notifications"
+               class="nav-link">
+
+                <span class="nav-icon">🔔</span>
+                <span class="nav-label">Notifications</span>
+
+            </a>
+
+
+            <div class="nav-section-title account-title">
+                Account
+            </div>
+
+
+            <a href="/employee/settings"
+               class="nav-link">
+
+                <span class="nav-icon">⚙</span>
+                <span class="nav-label">Settings</span>
+
+            </a>
+
+
+            <a href="/logout"
+               class="nav-link">
+
+                <span class="nav-icon">↪</span>
+                <span class="nav-label">Logout</span>
+
+            </a>
+
+        </nav>
+
+
+        <div class="sidebar-user">
+
+            <div class="avatar"
+                 th:text="${employee.name != null and !employee.name.isEmpty()
+                    ? #strings.substring(employee.name,0,1).toUpperCase()
+                    : 'E'}">
+                E
+            </div>
+
+
+            <div class="user-info">
+
+                <div class="user-name"
+                     th:text="${employee.name}">
+                    Employee
+                </div>
+
+                <div class="user-role"
+                     th:text="${employee.designation}">
+                    Designation
+                </div>
+
+            </div>
+
+        </div>
+
+    </aside>
+
+
+    <!-- ======================================================
+         MAIN
+    ======================================================= -->
+
+    <main class="main">
+
+
+        <header class="topbar">
+
+            <div class="page-title">
+                My Projects
+            </div>
+
+            <div th:text="${employee.name}">
+                Employee
+            </div>
+
+        </header>
+
+
+        <div class="content">
+
+
+            <!-- ==================================================
+                 STATS
+            =================================================== -->
+
+            <div class="stats">
+
+
+                <div class="stat-card">
+
+                    <div class="stat-label">
+                        Total Projects
+                    </div>
+
+                    <div class="stat-value"
+                         th:text="${projects != null
+                            ? projects.size()
+                            : 0}">
+                        0
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-label">
+                        Assigned
+                    </div>
+
+                    <div class="stat-value"
+                         th:text="${projects != null
+                            ? #lists.size(projects.?[status=='ASSIGNED'])
+                            : 0}">
+                        0
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-label">
+                        Completion Requested
+                    </div>
+
+                    <div class="stat-value"
+                         th:text="${projects != null
+                            ? #lists.size(projects.?[status=='PENDING'])
+                            : 0}">
+                        0
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-label">
+                        Completed
+                    </div>
+
+                    <div class="stat-value"
+                         th:text="${projects != null
+                            ? #lists.size(projects.?[status=='COMPLETED'])
+                            : 0}">
+                        0
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="section-title">
+                My Projects
+            </div>
+
+
+            <div class="project-grid"
+                 th:if="${projects != null and !projects.isEmpty()}">
+
+
+                <div class="project-card"
+                     th:each="project : ${projects}">
+
+
+                    <div class="project-header">
+
+                        <div class="project-name"
+                             th:text="${project.projectName}">
+                            Project
+                        </div>
+
+
+                        <span class="status assigned"
+                              th:if="${project.status == 'ASSIGNED'}">
+                            ASSIGNED
+                        </span>
+
+
+                        <span class="status pending"
+                              th:if="${project.status == 'PENDING'}">
+                            COMPLETION REQUESTED
+                        </span>
+
+
+                        <span class="status completed"
+                              th:if="${project.status == 'COMPLETED'}">
+                            COMPLETED
+                        </span>
+
+                    </div>
+
+
+                    <div class="description"
+                         th:text="${project.description != null
+                            ? project.description
+                            : 'No description provided.'}">
+                        Description
+                    </div>
+
+
+                    <div class="info-grid">
+
+                        <div>
+
+                            <div class="info-title">
+                                Start Date
+                            </div>
+
+                            <div class="info-value"
+                                 th:text="${project.startDate}">
+                            </div>
+
+                        </div>
+
+
+                        <div>
+
+                            <div class="info-title">
+                                Due Date
+                            </div>
+
+                            <div class="info-value"
+                                 th:text="${project.expectedCompletionDate}">
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="info-grid">
+
+                        <div>
+
+                            <div class="info-title">
+                                Project Leader ID
+                            </div>
+
+                            <div class="info-value"
+                                 th:text="${project.projectLeaderId}">
+                            </div>
+
+                        </div>
+
+
+                        <div>
+
+                            <div class="info-title">
+                                Current Status
+                            </div>
+
+                            <div class="info-value"
+                                 th:text="${project.status}">
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="actions">
+
+
+                        <a class="btn btn-view"
+                           th:href="@{/employee/projects/{id}(id=${project.id})}">
+
+                            View Details
+
+                        </a>
+
+
+                        <form th:if="${project.projectLeaderId != null
+                                      and project.projectLeaderId == employee.id
+                                      and project.status == 'ASSIGNED'}"
+                              th:action="@{/employee/projects/{id}/request-completion(id=${project.id})}"
+                              method="post">
+
+                            <button type="submit"
+                                    class="btn btn-complete">
+
+                                ✓ Complete Project
+
+                            </button>
+
+                        </form>
+
+
+                        <div class="state-message waiting-admin"
+                             th:if="${project.status == 'PENDING'}">
+
+                            ⏳ Waiting for Admin Confirmation
+
+                        </div>
+
+
+                        <div class="state-message completed-message"
+                             th:if="${project.status == 'COMPLETED'}">
+
+                            ✓ Project Completed by Admin
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="empty"
+                 th:if="${projects == null or projects.isEmpty()}">
+
+                <h2>
+                    No Projects Assigned
+                </h2>
+
+                <p style="margin-top:10px;color:#6b7280;">
+
+                    Your Project Leader hasn't assigned any projects yet.
+
+                </p>
+
+            </div>
+
+        </div>
+
+    </main>
+
+</div>
+
+</body>
+
+</html>

@@ -1,0 +1,58 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TeamLogger Extension</title>
+    <style>
+        body {
+            width: 300px;
+            padding: 16px;
+            font-family: Arial, sans-serif;
+            color: #222;
+        }
+
+        h2 {
+            margin-top: 0;
+            font-size: 19px;
+        }
+
+        p {
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 8px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background: #2563eb;
+            color: white;
+            font-size: 14px;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+
+        #status {
+            overflow-wrap: anywhere;
+        }
+    </style>
+</head>
+<body>
+<h2>TeamLogger Website Monitor</h2>
+
+<p id="status">Checking extension status...</p>
+
+<button id="pairButton">Pair with TeamLoggerC</button>
+<button id="unpairButton">Unpair Extension</button>
+
+<script src="popup.js"></script>
+</body>
+</html>

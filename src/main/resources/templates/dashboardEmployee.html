@@ -1,0 +1,2711 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Employee Dashboard | TeamLogger</title>
+
+
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Inter, "Segoe UI", Arial, sans-serif;
+        }
+
+        body {
+            background: #f5f7fb;
+            color: #1f2937;
+        }
+
+
+        /* =====================================================
+           LAYOUT
+           ===================================================== */
+
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+
+        /* =====================================================
+           SIDEBAR
+           ===================================================== */
+
+        .sidebar {
+            width: 245px;
+            background: #111827;
+            color: white;
+
+            padding: 22px 16px;
+
+            display: flex;
+            flex-direction: column;
+
+            position: fixed;
+
+            left: 0;
+            top: 0;
+            bottom: 0;
+
+            z-index: 100;
+        }
+
+
+        .logo {
+            display: flex;
+            align-items: center;
+
+            gap: 11px;
+
+            padding: 0 10px;
+
+            margin-bottom: 38px;
+        }
+
+
+        .logo-box {
+            width: 38px;
+            height: 38px;
+
+            border-radius: 9px;
+
+            background: #2563eb;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+
+        .logo span {
+            font-size: 19px;
+            font-weight: 700;
+        }
+
+
+        .menu-title {
+            color: #6b7280;
+
+            font-size: 11px;
+            font-weight: 600;
+
+            text-transform: uppercase;
+
+            letter-spacing: .8px;
+
+            padding: 0 11px;
+
+            margin-bottom: 10px;
+        }
+
+
+        .nav {
+            display: flex;
+            flex-direction: column;
+
+            gap: 4px;
+        }
+
+
+        .nav a {
+            text-decoration: none;
+
+            color: #9ca3af;
+
+            padding: 11px 12px;
+
+            border-radius: 8px;
+
+            display: flex;
+            align-items: center;
+
+            gap: 11px;
+
+            font-size: 14px;
+
+            transition: .2s;
+        }
+
+
+        .nav a:hover {
+            background: #1f2937;
+            color: white;
+        }
+
+
+        .nav a.active {
+            background: #2563eb;
+            color: white;
+        }
+
+
+        .nav-icon {
+            width: 20px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+
+        .sidebar-bottom {
+            margin-top: auto;
+        }
+
+
+        .profile-mini {
+            border-top: 1px solid #273244;
+
+            padding: 16px 8px 5px;
+
+            display: flex;
+            align-items: center;
+
+            gap: 10px;
+        }
+
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+
+            border-radius: 50%;
+
+            background: #2563eb;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            font-weight: 600;
+        }
+
+
+        .profile-info {
+            min-width: 0;
+        }
+
+
+        .profile-info strong {
+            display: block;
+
+            font-size: 13px;
+
+            color: white;
+
+            white-space: nowrap;
+
+            overflow: hidden;
+
+            text-overflow: ellipsis;
+        }
+
+
+        .profile-info small {
+            color: #9ca3af;
+            font-size: 11px;
+        }
+
+
+        /* =====================================================
+           MAIN
+           ===================================================== */
+
+        .main {
+            margin-left: 245px;
+
+            width: calc(100% - 245px);
+
+            padding: 28px 34px;
+        }
+
+
+        /* =====================================================
+           HEADER
+           ===================================================== */
+
+        .header {
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            margin-bottom: 25px;
+        }
+
+
+        .header h1 {
+            font-size: 26px;
+
+            color: #111827;
+
+            margin-bottom: 6px;
+        }
+
+
+        .header p {
+            font-size: 13px;
+
+            color: #6b7280;
+        }
+
+
+        /* =====================================================
+           ORGANIZATION
+           ===================================================== */
+
+        .company-name {
+            display: inline-flex;
+
+            align-items: center;
+
+            margin-bottom: 5px;
+
+            padding: 5px 9px;
+
+            border-radius: 6px;
+
+            background: #eff6ff;
+
+            color: #2563eb;
+
+            font-size: 12px !important;
+
+            font-weight: 600;
+        }
+
+
+        .header-right {
+            display: flex;
+
+            align-items: center;
+
+            gap: 13px;
+        }
+
+
+        .notification {
+            width: 40px;
+            height: 40px;
+
+            border-radius: 9px;
+
+            border: 1px solid #e5e7eb;
+
+            background: white;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            cursor: pointer;
+
+            font-size: 17px;
+        }
+
+
+        .date-box {
+            background: white;
+
+            border: 1px solid #e5e7eb;
+
+            padding: 10px 14px;
+
+            border-radius: 8px;
+
+            font-size: 13px;
+
+            color: #4b5563;
+        }
+
+
+        /* =====================================================
+           WORK SESSION
+           ===================================================== */
+
+        .work-card {
+            background: white;
+
+            border: 1px solid #e5e7eb;
+
+            border-radius: 13px;
+
+            padding: 23px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            margin-bottom: 23px;
+
+            box-shadow: 0 2px 5px rgba(0,0,0,.02);
+        }
+
+
+        .work-info {
+            display: flex;
+
+            align-items: center;
+
+            gap: 15px;
+        }
+
+
+        .work-icon {
+            width: 50px;
+            height: 50px;
+
+            border-radius: 11px;
+
+            background: #eff6ff;
+
+            color: #2563eb;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            font-size: 23px;
+        }
+
+
+        .work-info h3 {
+            font-size: 16px;
+
+            margin-bottom: 5px;
+        }
+
+
+        .work-info p {
+            font-size: 12px;
+
+            color: #6b7280;
+
+            margin-bottom: 4px;
+        }
+
+
+        /* =====================================================
+           STATUS
+           ===================================================== */
+
+        .status {
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 7px;
+
+            font-size: 12px;
+
+            color: #16a34a;
+
+            margin-top: 4px;
+
+            font-weight: 600;
+        }
+
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+
+            border-radius: 50%;
+
+            background: #22c55e;
+        }
+
+
+        .status-not-working {
+            color: #6b7280;
+        }
+
+
+        .status-not-working .status-dot {
+            background: #9ca3af;
+        }
+
+
+        .office-time {
+            margin-top: 5px;
+
+            font-size: 11px;
+
+            color: #9ca3af;
+        }
+
+
+        /* =====================================================
+           BUTTON
+           ===================================================== */
+
+        .btn {
+            border: none;
+
+            border-radius: 8px;
+
+            padding: 11px 20px;
+
+            cursor: pointer;
+
+            font-size: 13px;
+
+            font-weight: 600;
+
+            transition: .2s;
+        }
+
+
+        .btn-primary {
+            background: #2563eb;
+
+            color: white;
+        }
+
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+
+        /* =====================================================
+           STATISTICS
+           ===================================================== */
+
+        .stats {
+            display: grid;
+
+            grid-template-columns: repeat(4, 1fr);
+
+            gap: 17px;
+
+            margin-bottom: 23px;
+        }
+
+
+        .stat-card {
+            background: white;
+
+            border: 1px solid #e5e7eb;
+
+            border-radius: 11px;
+
+            padding: 19px;
+        }
+
+
+        .stat-top {
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            margin-bottom: 14px;
+        }
+
+
+        .stat-title {
+            color: #6b7280;
+
+            font-size: 12px;
+
+            font-weight: 500;
+        }
+
+
+        .stat-icon {
+            width: 33px;
+            height: 33px;
+
+            background: #f3f4f6;
+
+            border-radius: 8px;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            font-size: 15px;
+        }
+
+
+        .stat-value {
+            font-size: 24px;
+
+            font-weight: 700;
+
+            color: #111827;
+        }
+
+
+        .stat-note {
+            font-size: 11px;
+
+            color: #9ca3af;
+
+            margin-top: 5px;
+        }
+
+
+        /* =====================================================
+           CONTENT GRID
+           ===================================================== */
+
+        .content-grid {
+            display: grid;
+
+            grid-template-columns: 2fr 1fr;
+
+            gap: 20px;
+        }
+
+
+        /* =====================================================
+           CARD
+           ===================================================== */
+
+        .card {
+            background: white;
+
+            border: 1px solid #e5e7eb;
+
+            border-radius: 11px;
+
+            overflow: hidden;
+
+            margin-bottom: 20px;
+        }
+
+
+        .card:last-child {
+            margin-bottom: 0;
+        }
+
+
+        .card-header {
+            padding: 18px 20px;
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+
+        .card-header h2 {
+            font-size: 15px;
+
+            color: #111827;
+        }
+
+
+        .view-link {
+            color: #2563eb;
+
+            font-size: 12px;
+
+            text-decoration: none;
+
+            font-weight: 500;
+        }
+
+
+        .view-link:hover {
+            text-decoration: underline;
+        }
+
+
+        /* =====================================================
+           PROJECTS
+           ===================================================== */
+
+        .project-list {
+            padding: 5px 20px 10px;
+        }
+
+
+        .project-row {
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            gap: 20px;
+
+            padding: 15px 0;
+
+            border-bottom: 1px solid #f1f1f1;
+        }
+
+
+        .project-row:last-child {
+            border-bottom: none;
+        }
+
+
+        .project-info {
+            min-width: 0;
+        }
+
+
+        .project-name {
+            font-weight: 600;
+
+            font-size: 13px;
+
+            color: #374151;
+
+            margin-bottom: 5px;
+        }
+
+
+        .project-description {
+            font-size: 11px;
+
+            color: #6b7280;
+
+            margin-bottom: 4px;
+
+            max-width: 600px;
+
+            white-space: nowrap;
+
+            overflow: hidden;
+
+            text-overflow: ellipsis;
+        }
+
+
+        .project-leader {
+            font-size: 10px;
+
+            color: #9ca3af;
+
+            margin-top: 3px;
+        }
+
+
+        .project-right {
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+
+            flex-shrink: 0;
+        }
+
+
+        /* =====================================================
+           BADGES
+           ===================================================== */
+
+        .badge {
+            padding: 5px 9px;
+
+            border-radius: 20px;
+
+            font-size: 10px;
+
+            font-weight: 600;
+        }
+
+
+        .badge-active {
+            background: #ecfdf5;
+
+            color: #059669;
+        }
+
+
+        .badge-pending {
+            background: #fff7ed;
+
+            color: #ea580c;
+        }
+
+
+        .badge-completed {
+            background: #f3f4f6;
+
+            color: #6b7280;
+        }
+
+
+        .project-view {
+            color: #2563eb;
+
+            font-size: 11px;
+
+            text-decoration: none;
+
+            font-weight: 600;
+        }
+
+
+        .project-view:hover {
+            text-decoration: underline;
+        }
+
+
+        /* =====================================================
+           QUICK ACTIONS
+           ===================================================== */
+
+        .quick-actions {
+            padding: 17px;
+
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 9px;
+        }
+
+
+        .action {
+            border: 1px solid #e5e7eb;
+
+            border-radius: 9px;
+
+            padding: 12px;
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+
+            text-decoration: none;
+
+            color: #374151;
+
+            transition: .2s;
+        }
+
+
+        .action:hover {
+            border-color: #bfdbfe;
+
+            background: #f8fbff;
+        }
+
+
+        .action-icon {
+            width: 35px;
+            height: 35px;
+
+            background: #eff6ff;
+
+            color: #2563eb;
+
+            border-radius: 8px;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+        }
+
+
+        .action strong {
+            display: block;
+
+            font-size: 12px;
+
+            margin-bottom: 3px;
+        }
+
+
+        .action small {
+            font-size: 10px;
+
+            color: #9ca3af;
+        }
+
+
+        /* =====================================================
+           ATTENDANCE
+           ===================================================== */
+
+        .attendance {
+            padding: 18px 20px;
+        }
+
+
+        .attendance-row {
+            display: flex;
+
+            justify-content: space-between;
+
+            gap: 15px;
+
+            padding: 11px 0;
+
+            border-bottom: 1px solid #f1f1f1;
+
+            font-size: 12px;
+        }
+
+
+        .attendance-row:last-child {
+            border-bottom: none;
+        }
+
+
+        .attendance-label {
+            color: #6b7280;
+        }
+
+
+        .attendance-value {
+            font-weight: 600;
+
+            color: #374151;
+
+            text-align: right;
+        }
+
+
+        /* =====================================================
+           ACTIVITY
+           ===================================================== */
+
+        .activity-list {
+            padding: 4px 20px 10px;
+        }
+
+
+        .activity-row {
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            gap: 15px;
+
+            padding: 13px 0;
+
+            border-bottom: 1px solid #f1f1f1;
+        }
+
+
+        .activity-row:last-child {
+            border-bottom: none;
+        }
+
+
+        .activity-left {
+            display: flex;
+
+            align-items: center;
+
+            gap: 10px;
+
+            min-width: 0;
+        }
+
+
+        .activity-icon {
+            width: 32px;
+            height: 32px;
+
+            flex-shrink: 0;
+
+            border-radius: 8px;
+
+            background: #f3f4f6;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            font-size: 13px;
+        }
+
+
+        .activity-content {
+            min-width: 0;
+        }
+
+
+        .activity-name {
+            font-size: 12px;
+
+            font-weight: 600;
+
+            color: #374151;
+
+            white-space: nowrap;
+
+            overflow: hidden;
+
+            text-overflow: ellipsis;
+
+            max-width: 500px;
+        }
+
+
+        .activity-time {
+            font-size: 11px;
+
+            color: #6b7280;
+
+            margin-top: 3px;
+        }
+
+
+        /* =====================================================
+           EMPTY STATE
+           ===================================================== */
+
+        .empty-data {
+            padding: 35px 20px;
+
+            text-align: center;
+
+            color: #9ca3af;
+
+            font-size: 12px;
+        }
+
+
+        /* =====================================================
+           RESPONSIVE
+           ===================================================== */
+
+        @media(max-width: 1100px) {
+
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+
+        @media(max-width: 750px) {
+
+            .sidebar {
+                width: 70px;
+
+                padding: 20px 8px;
+            }
+
+
+            .logo span,
+            .menu-title,
+            .nav a span:not(.nav-icon),
+            .profile-info {
+                display: none;
+            }
+
+
+            .logo {
+                justify-content: center;
+            }
+
+
+            .nav a {
+                justify-content: center;
+            }
+
+
+            .profile-mini {
+                justify-content: center;
+            }
+
+
+            .main {
+                margin-left: 70px;
+
+                width: calc(100% - 70px);
+
+                padding: 20px;
+            }
+
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+
+            .work-card {
+                flex-direction: column;
+
+                align-items: flex-start;
+
+                gap: 18px;
+            }
+
+
+            .header {
+                align-items: flex-start;
+
+                gap: 15px;
+            }
+
+
+            .header h1 {
+                font-size: 22px;
+            }
+
+
+            .date-box {
+                display: none;
+            }
+
+
+            .project-row {
+                align-items: flex-start;
+
+                flex-direction: column;
+            }
+
+
+            .project-right {
+                width: 100%;
+
+                justify-content: space-between;
+            }
+
+
+            .activity-name {
+                max-width: 220px;
+            }
+
+        }
+
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<div class="layout">
+
+
+    <!-- =====================================================
+         SIDEBAR
+         ===================================================== -->
+
+    <aside class="sidebar">
+
+
+        <div class="logo">
+
+            <div class="logo-box">
+                T
+            </div>
+
+            <span>
+                TeamLogger
+            </span>
+
+        </div>
+
+
+        <div class="menu-title">
+            Workspace
+        </div>
+
+
+        <nav class="nav">
+
+
+            <!-- DASHBOARD -->
+
+            <a th:href="@{/employee/dashboard}"
+               class="active">
+
+                <span class="nav-icon">
+                    ⌂
+                </span>
+
+                <span>
+                    Dashboard
+                </span>
+
+            </a>
+
+
+            <!-- PROJECTS -->
+
+            <a th:href="@{/employee/projects}">
+
+                <span class="nav-icon">
+                    ▣
+                </span>
+
+                <span>
+                    My Projects
+                </span>
+
+            </a>
+
+
+            <!-- TASKS -->
+
+            <a th:href="@{/employee/tasks}">
+
+                <span class="nav-icon">
+                    ✓
+                </span>
+
+                <span>
+                    My Tasks
+                </span>
+
+            </a>
+
+
+            <!-- ATTENDANCE -->
+
+            <a th:href="@{/employee/attendance}">
+
+                <span class="nav-icon">
+                    ▦
+                </span>
+
+                <span>
+                    Attendance
+                </span>
+
+            </a>
+
+
+            <!-- OVERTIME -->
+
+            <a th:href="@{/employee/overtime}">
+
+                <span class="nav-icon">
+                    +
+                </span>
+
+                <span>
+                    Overtime
+                </span>
+
+            </a>
+
+
+            <!-- NOTIFICATIONS -->
+
+            <a th:href="@{/employee/notifications}">
+
+                <span class="nav-icon">
+                    🔔
+                </span>
+
+                <span>
+                    Notifications
+                </span>
+
+            </a>
+
+
+        </nav>
+
+
+        <div class="menu-title"
+             style="margin-top:25px;">
+
+            Account
+
+        </div>
+
+
+        <nav class="nav">
+
+
+            <!-- SETTINGS -->
+
+            <a th:href="@{/employee/settings}">
+
+                <span class="nav-icon">
+                    ⚙
+                </span>
+
+                <span>
+                    Settings
+                </span>
+
+            </a>
+
+
+            <!-- LOGOUT -->
+
+            <a href="/logout">
+
+                <span class="nav-icon">
+                    ↪
+                </span>
+
+                <span>
+                    Logout
+                </span>
+
+            </a>
+
+
+        </nav>
+
+
+        <!-- =================================================
+             PROFILE
+             ================================================= -->
+
+        <div class="sidebar-bottom">
+
+            <div class="profile-mini">
+
+
+                <div class="avatar"
+                     th:text="${user.name != null
+                               ? #strings.substring(
+                                   user.name,
+                                   0,
+                                   1
+                               ).toUpperCase()
+                               : 'E'}">
+
+                    E
+
+                </div>
+
+
+                <div class="profile-info">
+
+
+                    <strong th:text="${user.name}">
+
+                        Employee
+
+                    </strong>
+
+
+                    <small th:text="${user.designation != null
+                                     ? user.designation
+                                     : 'Team Member'}">
+
+                        Team Member
+
+                    </small>
+
+
+                </div>
+
+
+            </div>
+
+        </div>
+
+
+    </aside>
+
+
+    <!-- =====================================================
+         MAIN
+         ===================================================== -->
+
+    <main class="main">
+
+
+        <!-- =================================================
+             HEADER
+             ================================================= -->
+
+        <header class="header">
+
+            <div>
+
+                <h1>
+
+                    Good morning,
+                    <span th:text="${user.name}">
+                        Employee
+                    </span>
+
+                    👋
+
+                </h1>
+
+
+                <!-- =================================================
+                     ORGANIZATION
+                     ================================================= -->
+
+                <p class="company-name"
+                   th:if="${admin != null and admin.name != null}"
+                   th:text="'Organization: ' + ${admin.name}">
+
+                    Organization: TeamLogger
+
+                </p>
+
+
+                <p>
+                    Here's what's happening with your work today.
+                </p>
+
+            </div>
+
+
+            <div class="header-right">
+
+
+                <div class="notification">
+                    🔔
+                </div>
+
+
+                <div class="date-box"
+                     th:text="${#temporals.format(
+                     T(java.time.LocalDate).now(),
+                     'EEEE, dd MMMM yyyy')}">
+
+                    Tuesday, 15 September 2026
+
+                </div>
+
+
+            </div>
+
+
+        </header>
+
+
+        <!-- =================================================
+             WORK SESSION
+             ================================================= -->
+
+        <section class="work-card">
+
+
+            <div class="work-info">
+
+
+                <div class="work-icon">
+                    ◷
+                </div>
+
+
+                <div>
+
+
+                    <h3>
+                        Today's Work Session
+                    </h3>
+
+
+                    <!-- OFFICE SESSION -->
+
+                    <p th:if="${currentSession != null and officeHours}">
+
+                        Your office work session is running
+                        from 10:00 AM to 7:00 PM.
+
+                    </p>
+
+
+                    <!-- MANUAL SESSION -->
+
+                    <p th:if="${currentSession != null and !officeHours}">
+
+                        Your manual working session is currently active.
+
+                    </p>
+
+
+                    <!-- NO SESSION -->
+
+                    <p th:if="${currentSession == null}">
+
+                        You do not have an active working session.
+
+                    </p>
+
+
+                    <!-- WORKING -->
+
+                    <div class="status"
+                         th:if="${currentSession != null}">
+
+                        <span class="status-dot"></span>
+
+                        Working
+
+                    </div>
+
+
+                    <!-- NOT WORKING -->
+
+                    <div class="status status-not-working"
+                         th:if="${currentSession == null}">
+
+                        <span class="status-dot"></span>
+
+                        Not Working
+
+                    </div>
+
+
+                    <div class="office-time">
+
+                        Office hours:
+                        <strong>10:00 AM</strong>
+                        -
+                        <strong>7:00 PM</strong>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 WORK BUTTONS
+                 ================================================= -->
+
+            <div>
+
+
+                <!-- OFFICE HOURS -->
+
+                <form th:if="${officeHours}"
+                      th:action="@{/employee/work/start}"
+                      method="post">
+
+                    <button type="submit"
+                            class="btn btn-primary">
+
+                        Start Work
+
+                    </button>
+
+                </form>
+
+
+                <!-- OUTSIDE OFFICE HOURS
+                     NO SESSION -->
+
+                <form th:if="${!officeHours and currentSession == null}"
+                      th:action="@{/employee/work/start}"
+                      method="post">
+
+                    <button type="submit"
+                            class="btn btn-primary">
+
+                        Start Work
+
+                    </button>
+
+                </form>
+
+
+                <!-- OUTSIDE OFFICE HOURS
+                     ACTIVE SESSION -->
+
+                <form th:if="${!officeHours and currentSession != null}"
+                      th:action="@{/employee/work/stop}"
+                      method="post">
+
+                    <button type="submit"
+                            class="btn btn-primary">
+
+                        Stop Work
+
+                    </button>
+
+                </form>
+
+
+            </div>
+
+
+        </section>
+
+
+        <!-- =================================================
+             STATISTICS
+             ================================================= -->
+
+        <section class="stats">
+
+
+            <!-- ACTIVE TIME -->
+
+            <div class="stat-card">
+
+                <div class="stat-top">
+
+                    <span class="stat-title">
+                        Active Time
+                    </span>
+
+                    <div class="stat-icon">
+                        ◷
+                    </div>
+
+                </div>
+
+
+                <div class="stat-value"
+                     id="activeTime">
+
+                    0h 0m 0s
+
+                </div>
+
+
+                <div class="stat-note">
+                    Today's active working time
+                </div>
+
+            </div>
+
+
+            <!-- IDLE TIME -->
+
+            <div class="stat-card">
+
+                <div class="stat-top">
+
+                    <span class="stat-title">
+                        Idle Time
+                    </span>
+
+                    <div class="stat-icon">
+                        ○
+                    </div>
+
+                </div>
+
+
+                <div class="stat-value"
+                     id="idleTime">
+
+                    0h 0m 0s
+
+                </div>
+
+
+                <div class="stat-note">
+                    Today's idle duration
+                </div>
+
+            </div>
+
+
+            <!-- WORK SESSION -->
+
+            <div class="stat-card">
+
+                <div class="stat-top">
+
+                    <span class="stat-title">
+                        Work Session
+                    </span>
+
+                    <div class="stat-icon">
+                        ⏱
+                    </div>
+
+                </div>
+
+
+                <div class="stat-value"
+                     id="workSessionTime">
+
+                    0h 0m 0s
+
+                </div>
+
+
+                <div class="stat-note">
+                    Current active time
+                </div>
+
+            </div>
+
+
+            <!-- OVERTIME -->
+
+            <div class="stat-card">
+
+                <div class="stat-top">
+
+                    <span class="stat-title">
+                        Overtime
+                    </span>
+
+                    <div class="stat-icon">
+                        +
+                    </div>
+
+                </div>
+
+
+                <div class="stat-value">
+
+                    0h 00m
+
+                </div>
+
+
+                <div class="stat-note">
+                    This month
+                </div>
+
+            </div>
+
+
+        </section>
+
+
+        <!-- =================================================
+             CONTENT GRID
+             ================================================= -->
+
+        <section class="content-grid">
+
+
+            <!-- =================================================
+                 LEFT COLUMN
+                 ================================================= -->
+
+            <div>
+
+
+                <!-- =================================================
+                     MY PROJECTS
+                     ================================================= -->
+
+                <div class="card">
+
+
+                    <div class="card-header">
+
+
+                        <h2>
+                            My Projects
+                        </h2>
+
+
+                        <a th:href="@{/employee/projects}"
+                           class="view-link">
+
+                            View all →
+
+                        </a>
+
+
+                    </div>
+
+
+                    <div class="project-list">
+
+
+                        <!-- CURRENT PROJECT -->
+
+                        <div th:if="${currentProject != null}"
+                             class="project-row">
+
+
+                            <div class="project-info">
+
+
+                                <div class="project-name"
+                                     th:text="${currentProject.projectName}">
+
+                                    Project Name
+
+                                </div>
+
+
+                                <div class="project-description"
+                                     th:if="${currentProject.description != null}"
+                                     th:text="${currentProject.description}">
+
+                                    Project description
+
+                                </div>
+
+
+                                <div class="project-leader"
+                                     th:if="${currentProject.expectedCompletionDate != null}"
+                                     th:text="'Deadline: ' +
+                                              ${#temporals.format(
+                                              currentProject.expectedCompletionDate,
+                                              'dd MMM yyyy')}">
+
+                                    Deadline
+
+                                </div>
+
+
+                            </div>
+
+
+                            <div class="project-right">
+
+
+                                <!-- ASSIGNED -->
+
+                                <span class="badge badge-active"
+                                      th:if="${currentProject.status != null
+                                              and currentProject.status.equalsIgnoreCase('ASSIGNED')}"
+                                      th:text="${currentProject.status}">
+
+                                    ASSIGNED
+
+                                </span>
+
+
+                                <!-- PENDING -->
+
+                                <span class="badge badge-pending"
+                                      th:if="${currentProject.status != null
+                                              and currentProject.status.equalsIgnoreCase('PENDING')}"
+                                      th:text="${currentProject.status}">
+
+                                    PENDING
+
+                                </span>
+
+
+                                <!-- COMPLETED -->
+
+                                <span class="badge badge-completed"
+                                      th:if="${currentProject.status != null
+                                              and currentProject.status.equalsIgnoreCase('COMPLETED')}"
+                                      th:text="${currentProject.status}">
+
+                                    COMPLETED
+
+                                </span>
+
+
+                                <!-- OTHER STATUS -->
+
+                                <span class="badge badge-completed"
+                                      th:if="${currentProject.status == null
+                                              or (
+                                                  !currentProject.status.equalsIgnoreCase('ASSIGNED')
+                                                  and !currentProject.status.equalsIgnoreCase('PENDING')
+                                                  and !currentProject.status.equalsIgnoreCase('COMPLETED')
+                                              )}"
+                                      th:text="${currentProject.status != null
+                                                ? currentProject.status
+                                                : 'UNKNOWN'}">
+
+                                    STATUS
+
+                                </span>
+
+
+                                <!-- OPEN -->
+
+                                <a th:href="@{'/employee/projects/' + ${currentProject.id}}"
+                                   class="project-view">
+
+                                    Open →
+
+                                </a>
+
+
+                            </div>
+
+
+                        </div>
+
+
+                        <!-- NO PROJECT -->
+
+                        <div th:if="${currentProject == null}"
+                             class="empty-data">
+
+                            No project assigned.
+
+                        </div>
+
+
+                    </div>
+
+
+                </div>
+
+
+                <!-- =================================================
+                     TODAY'S ACTIVITY / DAILY WORK
+                     ================================================= -->
+
+                <div class="card">
+
+
+                    <div class="card-header">
+
+
+                        <h2>
+                            Today's Activity
+                        </h2>
+
+
+                        <a th:href="@{/employee/tasks}"
+                           class="view-link">
+
+                            View tasks →
+
+                        </a>
+
+
+                    </div>
+
+
+                    <div class="activity-list">
+
+
+                        <!-- NO WORK -->
+
+                        <div th:if="${todayWork == null
+                                    or #lists.isEmpty(todayWork)}"
+                             class="empty-data">
+
+                            No work logged today.
+
+                        </div>
+
+
+                        <!-- TODAY'S WORK -->
+
+                        <div class="activity-row"
+                             th:each="work : ${todayWork}">
+
+
+                            <div class="activity-left">
+
+
+                                <div class="activity-icon">
+                                    💻
+                                </div>
+
+
+                                <div class="activity-content">
+
+
+                                    <div class="activity-name"
+                                         th:text="${work.description != null
+                                                   ? work.description
+                                                   : 'Work completed'}">
+
+                                        Work completed
+
+                                    </div>
+
+
+                                    <div class="activity-time"
+                                         th:if="${work.createdAt != null}"
+                                         th:text="${#temporals.format(
+                                         work.createdAt,
+                                         'hh:mm a')}">
+
+                                        10:30 AM
+
+                                    </div>
+
+
+                                </div>
+
+
+                            </div>
+
+
+                            <!-- PROJECT LINK -->
+
+                            <a th:if="${work.projectId != null}"
+                               th:href="@{'/employee/projects/' + ${work.projectId}}"
+                               class="project-view">
+
+                                Project →
+
+                            </a>
+
+
+                        </div>
+
+
+                    </div>
+
+
+                </div>
+
+
+            </div>
+
+
+            <!-- =================================================
+                 RIGHT COLUMN
+                 ================================================= -->
+
+            <div>
+
+
+                <!-- =================================================
+                     QUICK ACTIONS
+                     ================================================= -->
+
+                <div class="card">
+
+
+                    <div class="card-header">
+
+                        <h2>
+                            Quick Actions
+                        </h2>
+
+                    </div>
+
+
+                    <div class="quick-actions">
+
+
+                        <!-- PROJECTS -->
+
+                        <a th:href="@{/employee/projects}"
+                           class="action">
+
+
+                            <div class="action-icon">
+                                ▣
+                            </div>
+
+
+                            <div>
+
+                                <strong>
+                                    My Projects
+                                </strong>
+
+                                <small>
+                                    View assigned projects
+                                </small>
+
+                            </div>
+
+
+                        </a>
+
+
+                        <!-- TASKS -->
+
+                        <a th:href="@{/employee/tasks}"
+                           class="action">
+
+
+                            <div class="action-icon">
+                                ✓
+                            </div>
+
+
+                            <div>
+
+                                <strong>
+                                    My Tasks
+                                </strong>
+
+                                <small>
+                                    Add and manage today's work
+                                </small>
+
+                            </div>
+
+
+                        </a>
+
+
+                        <!-- ATTENDANCE -->
+
+                        <a th:href="@{/employee/attendance}"
+                           class="action">
+
+
+                            <div class="action-icon">
+                                ◷
+                            </div>
+
+
+                            <div>
+
+                                <strong>
+                                    Attendance
+                                </strong>
+
+                                <small>
+                                    View attendance history
+                                </small>
+
+                            </div>
+
+
+                        </a>
+
+
+                        <!-- ACTIVITY -->
+
+                        <a href="#"
+                           class="action">
+
+
+                            <div class="action-icon">
+                                ▤
+                            </div>
+
+
+                            <div>
+
+                                <strong>
+                                    Activity
+                                </strong>
+
+                                <small>
+                                    View today's activity
+                                </small>
+
+                            </div>
+
+
+                        </a>
+
+
+                    </div>
+
+
+                </div>
+
+
+                <!-- =================================================
+                     TODAY'S ATTENDANCE
+                     ================================================= -->
+
+                <div class="card">
+
+
+                    <div class="card-header">
+
+                        <h2>
+                            Today's Attendance
+                        </h2>
+
+                    </div>
+
+
+                    <div class="attendance">
+
+
+                        <!-- LOGIN -->
+
+                        <div class="attendance-row">
+
+                            <span class="attendance-label">
+                                Login
+                            </span>
+
+
+                            <span class="attendance-value"
+                                  th:if="${loginTime != null}"
+                                  th:text="${#temporals.format(
+                                  loginTime,
+                                  'hh:mm a')}">
+
+                                --
+
+                            </span>
+
+
+                            <span class="attendance-value"
+                                  th:if="${loginTime == null}">
+
+                                --
+
+                            </span>
+
+                        </div>
+
+
+                        <!-- OFFICE START -->
+
+                        <div class="attendance-row">
+
+                            <span class="attendance-label">
+                                Office Start
+                            </span>
+
+
+                            <span class="attendance-value">
+                                10:00 AM
+                            </span>
+
+                        </div>
+
+
+                        <!-- ACTIVE -->
+
+                        <div class="attendance-row">
+
+                            <span class="attendance-label">
+                                Active Time
+                            </span>
+
+
+                            <span class="attendance-value"
+                                  id="attendanceActiveTime">
+
+                                0h 0m 0s
+
+                            </span>
+
+                        </div>
+
+
+                        <!-- IDLE -->
+
+                        <div class="attendance-row">
+
+                            <span class="attendance-label">
+                                Idle Time
+                            </span>
+
+
+                            <span class="attendance-value"
+                                  id="attendanceIdleTime">
+
+                                0h 0m 0s
+
+                            </span>
+
+                        </div>
+
+
+                        <!-- OFFICE END -->
+
+                        <div class="attendance-row">
+
+                            <span class="attendance-label">
+                                Office End
+                            </span>
+
+
+                            <span class="attendance-value">
+                                07:00 PM
+                            </span>
+
+                        </div>
+
+
+                        <!-- LOGOUT -->
+
+                        <div class="attendance-row">
+
+                            <span class="attendance-label">
+                                Logout
+                            </span>
+
+
+                            <span class="attendance-value"
+                                  th:if="${logoutTime != null}"
+                                  th:text="${#temporals.format(
+                                  logoutTime,
+                                  'hh:mm a')}">
+
+                                --
+
+                            </span>
+
+
+                            <span class="attendance-value"
+                                  th:if="${logoutTime == null}">
+
+                                --
+
+                            </span>
+
+                        </div>
+
+
+                        <!-- STATUS -->
+
+                        <div class="attendance-row">
+
+                            <span class="attendance-label">
+                                Status
+                            </span>
+
+
+                            <span class="attendance-value"
+                                  th:if="${currentSession != null}"
+                                  style="color:#16a34a;">
+
+                                Working
+
+                            </span>
+
+
+                            <span class="attendance-value"
+                                  th:if="${currentSession == null}"
+                                  style="color:#6b7280;">
+
+                                Not Working
+
+                            </span>
+
+                        </div>
+
+
+                    </div>
+
+
+                </div>
+
+
+                <!-- =================================================
+                     PROFILE
+                     ================================================= -->
+
+                <div class="card">
+
+
+                    <div class="card-header">
+
+                        <h2>
+                            My Profile
+                        </h2>
+
+                    </div>
+
+
+                    <div class="attendance">
+
+
+                        <!-- NAME -->
+
+                        <div class="attendance-row">
+
+                            <span class="attendance-label">
+                                Name
+                            </span>
+
+
+                            <span class="attendance-value"
+                                  th:text="${user.name}">
+
+                                Employee
+
+                            </span>
+
+                        </div>
+
+
+                        <!-- DESIGNATION -->
+
+                        <div class="attendance-row">
+
+                            <span class="attendance-label">
+                                Designation
+                            </span>
+
+
+                            <span class="attendance-value"
+                                  th:text="${user.designation != null
+                                  ? user.designation
+                                  : 'Team Member'}">
+
+                                Team Member
+
+                            </span>
+
+                        </div>
+
+
+                        <!-- EMPLOYEE ID -->
+
+                        <div class="attendance-row">
+
+                            <span class="attendance-label">
+                                Employee ID
+                            </span>
+
+
+                            <span class="attendance-value"
+                                  th:text="${user.employeeLoginId != null
+                                  ? user.employeeLoginId
+                                  : user.id}">
+
+                                --
+
+                            </span>
+
+                        </div>
+
+
+                        <!-- ORGANIZATION -->
+
+                        <div class="attendance-row"
+                             th:if="${admin != null}">
+
+                            <span class="attendance-label">
+                                Organization
+                            </span>
+
+
+                            <span class="attendance-value"
+                                  th:text="${admin.name != null
+                                  ? admin.name
+                                  : 'Organization'}">
+
+                                Organization
+
+                            </span>
+
+                        </div>
+
+
+                        <!-- DOMAIN -->
+
+                        <div class="attendance-row"
+                             th:if="${user.domain != null}">
+
+                            <span class="attendance-label">
+                                Domain
+                            </span>
+
+
+                            <span class="attendance-value"
+                                  th:text="${user.domain}">
+
+                                --
+
+                            </span>
+
+                        </div>
+
+
+                        <!-- STATUS -->
+
+                        <div class="attendance-row">
+
+                            <span class="attendance-label">
+                                Status
+                            </span>
+
+
+                            <span class="attendance-value"
+                                  style="color:#16a34a;"
+                                  th:text="${user.status}">
+
+                                ACTIVE
+
+                            </span>
+
+                        </div>
+
+
+                    </div>
+
+
+                </div>
+
+
+            </div>
+
+
+        </section>
+
+
+    </main>
+
+
+</div>
+
+
+<!-- =========================================================
+     LIVE ACTIVITY TRACKING
+     ========================================================= -->
+
+<script>
+
+
+    /*
+     * =========================================================
+     * FORMAT SECONDS
+     * =========================================================
+     */
+
+    function formatTime(totalSeconds) {
+
+        totalSeconds =
+            Number(totalSeconds) || 0;
+
+
+        const hours =
+            Math.floor(
+                totalSeconds / 3600
+            );
+
+
+        const minutes =
+            Math.floor(
+                (totalSeconds % 3600) / 60
+            );
+
+
+        const seconds =
+            totalSeconds % 60;
+
+
+        return hours + "h "
+             + minutes + "m "
+             + seconds + "s";
+    }
+
+
+    /*
+     * =========================================================
+     * UPDATE ACTIVITY TIME
+     * =========================================================
+     */
+
+    function updateActivityTime() {
+
+
+        fetch("/employee/activity/current", {
+
+            method: "GET",
+
+            headers: {
+                "Accept": "application/json"
+            }
+
+        })
+
+
+        .then(response => {
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    "HTTP " + response.status
+                );
+
+            }
+
+
+            return response.json();
+
+        })
+
+
+        .then(data => {
+
+
+            console.log(
+                "Live activity:",
+                data
+            );
+
+
+            /* ================================================
+               ACTIVE TIME
+               ================================================ */
+
+            const activeTime =
+                formatTime(
+                    data.activeSeconds
+                );
+
+
+            const activeElement =
+                document.getElementById(
+                    "activeTime"
+                );
+
+
+            if (activeElement) {
+
+                activeElement.textContent =
+                    activeTime;
+
+            }
+
+
+            /* ================================================
+               WORK SESSION
+               ================================================ */
+
+            const workSessionElement =
+                document.getElementById(
+                    "workSessionTime"
+                );
+
+
+            if (workSessionElement) {
+
+                workSessionElement.textContent =
+                    activeTime;
+
+            }
+
+
+            /* ================================================
+               ATTENDANCE ACTIVE TIME
+               ================================================ */
+
+            const attendanceActiveElement =
+                document.getElementById(
+                    "attendanceActiveTime"
+                );
+
+
+            if (attendanceActiveElement) {
+
+                attendanceActiveElement.textContent =
+                    activeTime;
+
+            }
+
+
+            /* ================================================
+               IDLE TIME
+               ================================================ */
+
+            const idleTime =
+                formatTime(
+                    data.idleSeconds
+                );
+
+
+            const idleElement =
+                document.getElementById(
+                    "idleTime"
+                );
+
+
+            if (idleElement) {
+
+                idleElement.textContent =
+                    idleTime;
+
+            }
+
+
+            /* ================================================
+               ATTENDANCE IDLE TIME
+               ================================================ */
+
+            const attendanceIdleElement =
+                document.getElementById(
+                    "attendanceIdleTime"
+                );
+
+
+            if (attendanceIdleElement) {
+
+                attendanceIdleElement.textContent =
+                    idleTime;
+
+            }
+
+
+            /* ================================================
+               DEBUG INFORMATION
+               ================================================ */
+
+            console.log(
+                "User state:",
+                data.state
+            );
+
+
+            console.log(
+                "Tracking:",
+                data.tracking
+            );
+
+
+        })
+
+
+        .catch(error => {
+
+
+            console.error(
+                "Activity update failed:",
+                error
+            );
+
+
+        });
+
+    }
+
+
+    /*
+     * =========================================================
+     * INITIAL LOAD
+     * =========================================================
+     */
+
+    updateActivityTime();
+
+
+    /*
+     * =========================================================
+     * REFRESH EVERY 5 SECONDS
+     * =========================================================
+     */
+
+    setInterval(
+        updateActivityTime,
+        5000
+    );
+
+
+</script>
+
+
+</body>
+
+</html>

@@ -1,0 +1,2535 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title th:text="${adminSettings.companyName + ' | Employees'}">
+        Employees
+    </title>
+
+    <style>
+
+        /* =====================================================
+           GLOBAL
+        ===================================================== */
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family:
+                    Inter,
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    Roboto,
+                    Arial,
+                    sans-serif;
+
+            background: #f5f7fb;
+            color: #111827;
+            min-height: 100vh;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+
+        /* =====================================================
+           FIXED SIDEBAR
+        ===================================================== */
+
+        .sidebar {
+            position: fixed;
+
+            top: 0;
+            left: 0;
+            bottom: 0;
+
+            width: 250px;
+
+            background: #111827;
+            color: #ffffff;
+
+            display: flex;
+            flex-direction: column;
+
+            z-index: 1000;
+
+            overflow: hidden;
+        }
+
+
+        /* =====================================================
+           LOGO
+        ===================================================== */
+
+        .logo-section {
+            height: 78px;
+
+            display: flex;
+            align-items: center;
+
+            padding: 0 22px;
+
+            border-bottom:
+                1px solid rgba(255,255,255,0.08);
+
+            flex-shrink: 0;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 38px;
+            height: 38px;
+
+            border-radius: 9px;
+
+            background: #2563eb;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            font-size: 18px;
+            font-weight: 700;
+
+            flex-shrink: 0;
+        }
+
+        .logo-text {
+            display: flex;
+            flex-direction: column;
+
+            min-width: 0;
+        }
+
+        .logo-title {
+            font-size: 16px;
+            font-weight: 700;
+
+            color: #ffffff;
+
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .logo-subtitle {
+            font-size: 10px;
+
+            color: #9ca3af;
+
+            margin-top: 2px;
+
+            letter-spacing: 0.05em;
+        }
+
+
+        /* =====================================================
+           SIDEBAR NAVIGATION
+        ===================================================== */
+
+        .sidebar-nav {
+            flex: 1;
+
+            padding: 20px 14px;
+
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .sidebar-nav::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .sidebar-nav::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar-nav::-webkit-scrollbar-thumb {
+            background: #374151;
+            border-radius: 10px;
+        }
+
+        .nav-section-title {
+            padding: 0 10px;
+
+            margin: 8px 0 10px;
+
+            font-size: 10px;
+            font-weight: 700;
+
+            letter-spacing: 0.08em;
+
+            color: #6b7280;
+
+            text-transform: uppercase;
+        }
+
+        .nav-item {
+            height: 44px;
+
+            display: flex;
+            align-items: center;
+
+            gap: 12px;
+
+            padding: 0 12px;
+
+            margin-bottom: 5px;
+
+            border-radius: 8px;
+
+            color: #9ca3af;
+
+            font-size: 13px;
+            font-weight: 500;
+
+            transition:
+                background 0.2s ease,
+                color 0.2s ease,
+                transform 0.15s ease;
+
+            white-space: nowrap;
+        }
+
+        .nav-item:hover {
+            background: #1f2937;
+
+            color: #ffffff;
+        }
+
+        .nav-item.active {
+            background: #2563eb;
+
+            color: #ffffff;
+
+            box-shadow:
+                0 2px 5px rgba(37,99,235,0.18);
+        }
+
+        .nav-item:active {
+            transform: scale(0.98);
+        }
+
+        .nav-icon {
+            width: 22px;
+            min-width: 22px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            font-size: 16px;
+        }
+
+
+        /* =====================================================
+           ADMIN PROFILE
+        ===================================================== */
+
+        .admin-profile {
+            padding: 16px;
+
+            border-top:
+                1px solid rgba(255,255,255,0.08);
+
+            display: flex;
+            align-items: center;
+
+            gap: 11px;
+
+            flex-shrink: 0;
+        }
+
+        .admin-avatar {
+            width: 38px;
+            height: 38px;
+
+            min-width: 38px;
+
+            border-radius: 50%;
+
+            background: #2563eb;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            color: #ffffff;
+
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .admin-info {
+            min-width: 0;
+
+            display: flex;
+            flex-direction: column;
+        }
+
+        .admin-name {
+            color: #ffffff;
+
+            font-size: 13px;
+            font-weight: 600;
+
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .admin-role {
+            color: #9ca3af;
+
+            font-size: 10px;
+
+            margin-top: 2px;
+        }
+
+
+        /* =====================================================
+           MAIN
+        ===================================================== */
+
+        .main {
+            margin-left: 250px;
+
+            min-height: 100vh;
+
+            width: calc(100% - 250px);
+        }
+
+
+        /* =====================================================
+           TOPBAR
+        ===================================================== */
+
+        .topbar {
+            height: 78px;
+
+            background: #ffffff;
+
+            border-bottom:
+                1px solid #e5e7eb;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            padding: 0 30px;
+
+            position: sticky;
+            top: 0;
+
+            z-index: 100;
+        }
+
+        .page-heading h1 {
+            font-size: 21px;
+
+            font-weight: 700;
+
+            color: #111827;
+        }
+
+        .page-heading p {
+            margin-top: 4px;
+
+            font-size: 12px;
+
+            color: #6b7280;
+        }
+
+
+        /* =====================================================
+           TOPBAR RIGHT
+        ===================================================== */
+
+        .topbar-right {
+            display: flex;
+
+            align-items: center;
+
+            gap: 16px;
+        }
+
+
+        /* =====================================================
+           SYSTEM ONLINE
+        ===================================================== */
+
+        .live-status {
+            display: flex;
+
+            align-items: center;
+
+            gap: 7px;
+
+            font-size: 12px;
+
+            font-weight: 500;
+
+            color: #374151;
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+
+            border-radius: 50%;
+
+            background: #22c55e;
+
+            box-shadow:
+                0 0 0 3px rgba(34,197,94,0.12);
+        }
+
+
+        /* =====================================================
+           ADD EMPLOYEE
+        ===================================================== */
+
+        .add-employee-button {
+            display: inline-flex;
+
+            align-items: center;
+            justify-content: center;
+
+            gap: 8px;
+
+            height: 42px;
+
+            padding: 0 16px;
+
+            background: #2563eb;
+
+            color: #ffffff;
+
+            border-radius: 8px;
+
+            font-size: 13px;
+
+            font-weight: 600;
+
+            box-shadow:
+                0 3px 8px rgba(37,99,235,0.20);
+
+            transition:
+                background 0.2s ease,
+                transform 0.2s ease,
+                box-shadow 0.2s ease;
+        }
+
+        .add-employee-button:hover {
+            background: #1d4ed8;
+
+            color: #ffffff;
+
+            transform: translateY(-1px);
+
+            box-shadow:
+                0 5px 12px rgba(37,99,235,0.25);
+        }
+
+        .add-employee-button:active {
+            transform: translateY(0);
+        }
+
+        .plus-icon {
+            font-size: 18px;
+
+            font-weight: 500;
+
+            line-height: 1;
+        }
+
+
+        /* =====================================================
+           CONTENT
+        ===================================================== */
+
+        .content {
+            padding: 28px 30px 40px;
+        }
+
+
+        /* =====================================================
+           STATISTICS
+        ===================================================== */
+
+        .stats-grid {
+            display: grid;
+
+            grid-template-columns:
+                repeat(4, minmax(0, 1fr));
+
+            gap: 18px;
+
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: #ffffff;
+
+            border:
+                1px solid #e5e7eb;
+
+            border-radius: 10px;
+
+            padding: 19px 20px;
+
+            box-shadow:
+                0 1px 2px rgba(0,0,0,0.02);
+        }
+
+        .stat-label {
+            color: #6b7280;
+
+            font-size: 10px;
+
+            font-weight: 700;
+
+            letter-spacing: 0.05em;
+
+            text-transform: uppercase;
+        }
+
+        .stat-value {
+            margin-top: 8px;
+
+            color: #111827;
+
+            font-size: 26px;
+
+            font-weight: 700;
+        }
+
+        .stat-description {
+            margin-top: 4px;
+
+            color: #9ca3af;
+
+            font-size: 11px;
+        }
+
+
+        /* =====================================================
+           DIRECTORY CARD
+        ===================================================== */
+
+        .directory-card {
+            background: #ffffff;
+
+            border:
+                1px solid #e5e7eb;
+
+            border-radius: 10px;
+
+            overflow: hidden;
+
+            box-shadow:
+                0 1px 2px rgba(0,0,0,0.02);
+        }
+
+
+        /* =====================================================
+           DIRECTORY HEADER
+        ===================================================== */
+
+        .directory-header {
+            padding: 20px 22px;
+
+            border-bottom:
+                1px solid #e5e7eb;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            gap: 20px;
+        }
+
+        .directory-title h2 {
+            font-size: 15px;
+
+            font-weight: 700;
+
+            color: #111827;
+        }
+
+        .directory-title p {
+            margin-top: 4px;
+
+            font-size: 11px;
+
+            color: #6b7280;
+        }
+
+
+        /* =====================================================
+           TOOLBAR
+        ===================================================== */
+
+        .toolbar {
+            padding: 16px 22px;
+
+            background: #fafafa;
+
+            border-bottom:
+                1px solid #e5e7eb;
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 10px;
+
+            flex-wrap: wrap;
+        }
+
+        .search-wrapper {
+            position: relative;
+
+            flex: 1;
+
+            min-width: 230px;
+        }
+
+        .search-icon {
+            position: absolute;
+
+            left: 11px;
+
+            top: 50%;
+
+            transform: translateY(-50%);
+
+            color: #9ca3af;
+
+            font-size: 14px;
+        }
+
+        .search-input {
+            width: 100%;
+
+            height: 38px;
+
+            padding:
+                0 12px 0 34px;
+
+            border:
+                1px solid #d1d5db;
+
+            border-radius: 7px;
+
+            outline: none;
+
+            background: #ffffff;
+
+            color: #111827;
+
+            font-size: 12px;
+
+            transition:
+                border-color 0.2s ease,
+                box-shadow 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: #2563eb;
+
+            box-shadow:
+                0 0 0 3px rgba(37,99,235,0.10);
+        }
+
+        .filter-select {
+            height: 38px;
+
+            min-width: 145px;
+
+            padding:
+                0 32px 0 11px;
+
+            border:
+                1px solid #d1d5db;
+
+            border-radius: 7px;
+
+            background: #ffffff;
+
+            color: #374151;
+
+            font-size: 12px;
+
+            outline: none;
+
+            cursor: pointer;
+        }
+
+        .filter-select:focus {
+            border-color: #2563eb;
+        }
+
+        .refresh-button {
+            height: 38px;
+
+            padding: 0 13px;
+
+            border:
+                1px solid #d1d5db;
+
+            border-radius: 7px;
+
+            background: #ffffff;
+
+            color: #374151;
+
+            font-size: 12px;
+
+            font-weight: 500;
+
+            cursor: pointer;
+
+            transition:
+                background 0.2s ease,
+                border-color 0.2s ease;
+        }
+
+        .refresh-button:hover {
+            background: #f3f4f6;
+
+            border-color: #9ca3af;
+        }
+
+
+        /* =====================================================
+           TABLE
+        ===================================================== */
+
+        .table-wrapper {
+            width: 100%;
+
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+
+            border-collapse: collapse;
+
+            min-width: 850px;
+        }
+
+        thead {
+            background: #f9fafb;
+        }
+
+        th {
+            padding: 12px 18px;
+
+            text-align: left;
+
+            font-size: 10px;
+
+            font-weight: 700;
+
+            color: #6b7280;
+
+            text-transform: uppercase;
+
+            letter-spacing: 0.04em;
+
+            border-bottom:
+                1px solid #e5e7eb;
+        }
+
+        td {
+            padding: 14px 18px;
+
+            border-bottom:
+                1px solid #f0f1f3;
+
+            font-size: 12px;
+
+            color: #374151;
+
+            vertical-align: middle;
+        }
+
+        tbody tr {
+            transition:
+                background 0.15s ease;
+        }
+
+        tbody tr:hover {
+            background: #fafbff;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+
+        /* =====================================================
+           EMPLOYEE CELL
+        ===================================================== */
+
+        .employee-cell {
+            display: flex;
+
+            align-items: center;
+
+            gap: 11px;
+        }
+
+        .employee-avatar {
+            width: 36px;
+            height: 36px;
+
+            flex-shrink: 0;
+
+            border-radius: 50%;
+
+            background: #eff6ff;
+
+            color: #2563eb;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            font-size: 11px;
+
+            font-weight: 700;
+        }
+
+        .employee-info {
+            min-width: 0;
+        }
+
+        .employee-name {
+            font-size: 12px;
+
+            font-weight: 600;
+
+            color: #111827;
+        }
+
+        .employee-email {
+            margin-top: 3px;
+
+            font-size: 10px;
+
+            color: #9ca3af;
+
+            white-space: nowrap;
+
+            overflow: hidden;
+
+            text-overflow: ellipsis;
+
+            max-width: 210px;
+        }
+
+
+        /* =====================================================
+           LOGIN ID
+        ===================================================== */
+
+        .login-id {
+            font-family:
+                Consolas,
+                "Courier New",
+                monospace;
+
+            font-size: 11px;
+
+            color: #4b5563;
+
+            background: #f9fafb;
+
+            padding: 4px 7px;
+
+            border-radius: 5px;
+        }
+
+
+        /* =====================================================
+           DESIGNATION
+        ===================================================== */
+
+        .designation {
+            color: #374151;
+
+            font-size: 12px;
+        }
+
+
+        /* =====================================================
+           TEAM
+        ===================================================== */
+
+        .team {
+            color: #4b5563;
+
+            font-size: 12px;
+        }
+
+
+        /* =====================================================
+           STATUS
+        ===================================================== */
+
+        .status-badge {
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 6px;
+
+            padding: 5px 8px;
+
+            border-radius: 20px;
+
+            font-size: 10px;
+
+            font-weight: 600;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+
+            border-radius: 50%;
+        }
+
+        .status-active {
+            background: #ecfdf5;
+
+            color: #047857;
+        }
+
+        .status-active .status-dot {
+            background: #10b981;
+        }
+
+        .status-inactive {
+            background: #fef2f2;
+
+            color: #b91c1c;
+        }
+
+        .status-inactive .status-dot {
+            background: #ef4444;
+        }
+
+
+        /* =====================================================
+           ACTIONS
+        ===================================================== */
+
+        .actions {
+            display: flex;
+
+            align-items: center;
+
+            gap: 7px;
+
+            flex-wrap: wrap;
+        }
+
+        .action-button {
+            height: 30px;
+
+            padding: 0 9px;
+
+            border-radius: 6px;
+
+            font-size: 10px;
+
+            font-weight: 600;
+
+            cursor: pointer;
+
+            display: inline-flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            border:
+                1px solid transparent;
+
+            transition:
+                background 0.2s ease,
+                border-color 0.2s ease,
+                color 0.2s ease;
+        }
+
+        .view-button {
+            background: #eff6ff;
+
+            color: #2563eb;
+
+            border-color: #dbeafe;
+        }
+
+        .view-button:hover {
+            background: #dbeafe;
+        }
+
+        .disable-button {
+            background: #fff7ed;
+
+            color: #c2410c;
+
+            border-color: #fed7aa;
+        }
+
+        .disable-button:hover {
+            background: #ffedd5;
+        }
+
+        .enable-button {
+            background: #ecfdf5;
+
+            color: #047857;
+
+            border-color: #a7f3d0;
+        }
+
+        .enable-button:hover {
+            background: #d1fae5;
+        }
+
+
+        /* =====================================================
+           EMPTY STATE
+        ===================================================== */
+
+        .empty-state {
+            padding: 55px 20px;
+
+            text-align: center;
+        }
+
+        .empty-icon {
+            width: 52px;
+            height: 52px;
+
+            margin: 0 auto 14px;
+
+            border-radius: 50%;
+
+            background: #f3f4f6;
+
+            color: #9ca3af;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            font-size: 20px;
+        }
+
+        .empty-state h3 {
+            font-size: 14px;
+
+            font-weight: 600;
+
+            color: #374151;
+        }
+
+        .empty-state p {
+            margin-top: 5px;
+
+            font-size: 11px;
+
+            color: #9ca3af;
+        }
+
+        .no-results {
+            display: none;
+        }
+
+
+        /* =====================================================
+           FOOTER
+        ===================================================== */
+
+        .directory-footer {
+            padding: 12px 22px;
+
+            background: #fafafa;
+
+            border-top:
+                1px solid #e5e7eb;
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+        }
+
+        .employee-count {
+            font-size: 10px;
+
+            color: #6b7280;
+        }
+
+
+        /* =====================================================
+           RESPONSIVE - 1100px
+        ===================================================== */
+
+        @media (max-width: 1100px) {
+
+            .stats-grid {
+                grid-template-columns:
+                    repeat(2, minmax(0, 1fr));
+            }
+        }
+
+
+        /* =====================================================
+           RESPONSIVE - 800px
+        ===================================================== */
+
+        @media (max-width: 800px) {
+
+            .sidebar {
+                width: 210px;
+            }
+
+            .main {
+                margin-left: 210px;
+
+                width:
+                    calc(100% - 210px);
+            }
+
+            .topbar {
+                padding: 0 20px;
+            }
+
+            .content {
+                padding: 22px 20px;
+            }
+
+            .live-status {
+                display: none;
+            }
+        }
+
+
+        /* =====================================================
+           RESPONSIVE - 600px
+        ===================================================== */
+
+        @media (max-width: 600px) {
+
+            /*
+             * Sidebar remains fixed.
+             * It becomes a compact fixed top navigation.
+             */
+
+            .sidebar {
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: auto;
+
+                width: 100%;
+
+                height: 68px;
+
+                flex-direction: row;
+
+                overflow: hidden;
+            }
+
+            .logo-section {
+                width: 68px;
+
+                height: 68px;
+
+                flex-shrink: 0;
+
+                justify-content: center;
+
+                padding: 0;
+            }
+
+            .logo-text {
+                display: none;
+            }
+
+            .sidebar-nav {
+                flex: 1;
+
+                height: 68px;
+
+                padding: 0 8px;
+
+                display: flex;
+
+                align-items: center;
+
+                gap: 5px;
+
+                overflow-x: auto;
+
+                overflow-y: hidden;
+            }
+
+            .nav-section-title {
+                display: none;
+            }
+
+            .nav-item {
+                height: 44px;
+
+                min-width: 44px;
+
+                width: 44px;
+
+                flex-shrink: 0;
+
+                justify-content: center;
+
+                padding: 0;
+
+                margin: 0;
+
+                border-radius: 8px;
+            }
+
+            .nav-item span:not(.nav-icon) {
+                display: none;
+            }
+
+            .nav-icon {
+                width: 22px;
+
+                min-width: 22px;
+            }
+
+            .admin-profile {
+                width: 58px;
+
+                height: 68px;
+
+                flex-shrink: 0;
+
+                justify-content: center;
+
+                padding: 0;
+
+                border-top: none;
+
+                border-left:
+                    1px solid rgba(255,255,255,0.08);
+            }
+
+            .admin-info {
+                display: none;
+            }
+
+            .main {
+                margin-left: 0;
+
+                width: 100%;
+
+                padding-top: 68px;
+            }
+
+            .topbar {
+                height: 70px;
+
+                padding: 0 15px;
+            }
+
+            .page-heading p {
+                display: none;
+            }
+
+            .page-heading h1 {
+                font-size: 18px;
+            }
+
+            .add-employee-button {
+                padding: 0 11px;
+            }
+
+            .add-employee-button span:last-child {
+                display: none;
+            }
+
+            .content {
+                padding: 18px 14px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .directory-header {
+                align-items: flex-start;
+
+                flex-direction: column;
+            }
+
+            .toolbar {
+                align-items: stretch;
+
+                flex-direction: column;
+            }
+
+            .search-wrapper {
+                width: 100%;
+            }
+
+            .filter-select,
+            .refresh-button {
+                width: 100%;
+            }
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<!-- =====================================================
+     FIXED ADMIN SIDEBAR
+===================================================== -->
+
+<aside class="sidebar">
+
+
+    <!-- =================================================
+         LOGO
+    ================================================= -->
+
+    <div class="logo-section">
+
+        <div class="logo">
+
+            <div class="logo-icon">
+                TL
+            </div>
+
+            <div class="logo-text">
+
+                <div class="logo-title"
+                     th:text="${adminSettings.companyName}">
+                    TeamLogger
+                </div>
+
+                <div class="logo-subtitle">
+                    ADMIN PANEL
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =================================================
+         NAVIGATION
+    ================================================= -->
+
+    <nav class="sidebar-nav">
+
+
+        <!-- MAIN -->
+
+        <div class="nav-section-title">
+            Main
+        </div>
+
+
+        <!-- DASHBOARD -->
+
+        <a th:href="@{/admin/dashboard}"
+           class="nav-item"
+           data-path="/admin/dashboard">
+
+            <span class="nav-icon">
+                ▦
+            </span>
+
+            <span>
+                Dashboard
+            </span>
+
+        </a>
+
+
+        <!-- EMPLOYEES -->
+
+        <a th:href="@{/admin/employees}"
+           class="nav-item"
+           data-path="/admin/employees">
+
+            <span class="nav-icon">
+                👥
+            </span>
+
+            <span>
+                Employees
+            </span>
+
+        </a>
+
+
+        <!-- TODAY'S ACTIVITY -->
+
+        <a th:href="@{/admin/tracking}"
+           class="nav-item"
+           data-path="/admin/tracking">
+
+            <span class="nav-icon">
+                ◉
+            </span>
+
+            <span>
+                Today's Activity
+            </span>
+
+        </a>
+
+
+        <!-- PROJECTS -->
+
+        <a th:href="@{/admin/projects}"
+           class="nav-item"
+           data-path="/admin/projects">
+
+            <span class="nav-icon">
+                ▣
+            </span>
+
+            <span>
+                Projects
+            </span>
+
+        </a>
+
+
+        <!-- MANAGEMENT -->
+
+        <div class="nav-section-title">
+            Management
+        </div>
+
+
+        <!-- OVERTIME -->
+
+        <a th:href="@{/admin/overtime}"
+           class="nav-item"
+           data-path="/admin/overtime">
+
+            <span class="nav-icon">
+                ◷
+            </span>
+
+            <span>
+                Overtime
+            </span>
+
+        </a>
+
+
+        <!-- REPORTS -->
+
+        <a th:href="@{/admin/reports}"
+           class="nav-item"
+           data-path="/admin/reports">
+
+            <span class="nav-icon">
+                ▤
+            </span>
+
+            <span>
+                Reports
+            </span>
+
+        </a>
+
+
+        <!-- LOGIN APPROVALS -->
+
+        <a th:href="@{/admin/login-approvals}"
+           class="nav-item"
+           data-path="/admin/login-approvals">
+
+            <span class="nav-icon">
+                ✓
+            </span>
+
+            <span>
+                Login Approvals
+            </span>
+
+        </a>
+
+
+        <!-- SCREEN RECORDING -->
+
+        <a th:href="@{/admin/screen-recording}"
+           class="nav-item"
+           data-path="/admin/screen-recording">
+
+            <span class="nav-icon">
+                ▧
+            </span>
+
+            <span>
+                Screen Recording
+            </span>
+
+        </a>
+
+
+        <!-- SETTINGS -->
+
+        <a th:href="@{/admin/settings}"
+           class="nav-item"
+           data-path="/admin/settings">
+
+            <span class="nav-icon">
+                ⚙
+            </span>
+
+            <span>
+                Settings
+            </span>
+
+        </a>
+
+    </nav>
+
+
+    <!-- =================================================
+         ADMIN PROFILE
+    ================================================= -->
+
+    <div class="admin-profile">
+
+        <div class="admin-avatar"
+             th:text="${admin != null
+                       and admin.name != null
+                       and !admin.name.isEmpty()
+                       ? #strings.substring(admin.name, 0, 1).toUpperCase()
+                       : 'A'}">
+            A
+        </div>
+
+        <div class="admin-info">
+
+            <div class="admin-name"
+                 th:text="${admin != null
+                           and admin.name != null
+                           ? admin.name
+                           : 'Admin'}">
+                Admin
+            </div>
+
+            <div class="admin-role">
+                Administrator
+            </div>
+
+        </div>
+
+    </div>
+
+</aside>
+
+
+
+<!-- =====================================================
+     MAIN CONTENT
+===================================================== -->
+
+<main class="main">
+
+
+    <!-- =================================================
+         TOPBAR
+    ================================================= -->
+
+    <header class="topbar">
+
+        <div class="page-heading">
+
+            <h1>
+                Employees
+            </h1>
+
+            <p>
+                Manage and monitor employees under your administration.
+            </p>
+
+        </div>
+
+
+        <div class="topbar-right">
+
+
+            <!-- SYSTEM STATUS -->
+
+            <div class="live-status">
+
+                <span class="live-dot"></span>
+
+                System Online
+
+            </div>
+
+
+            <!-- ADD EMPLOYEE -->
+
+            <a th:href="@{/admin/employees/add}"
+               class="add-employee-button">
+
+                <span class="plus-icon">
+                    +
+                </span>
+
+                <span>
+                    Add Employee
+                </span>
+
+            </a>
+
+        </div>
+
+    </header>
+
+
+
+    <!-- =================================================
+         PAGE CONTENT
+    ================================================= -->
+
+    <section class="content">
+
+
+        <!-- =================================================
+             STATISTICS
+        ================================================= -->
+
+        <div class="stats-grid">
+
+
+            <!-- TOTAL -->
+
+            <div class="stat-card">
+
+                <div class="stat-label">
+                    Total Employees
+                </div>
+
+                <div class="stat-value"
+                     id="totalEmployees"
+                     th:text="${employees.size()}">
+                    0
+                </div>
+
+                <div class="stat-description">
+                    Employees under your administration
+                </div>
+
+            </div>
+
+
+            <!-- ACTIVE -->
+
+            <div class="stat-card">
+
+                <div class="stat-label">
+                    Active
+                </div>
+
+                <div class="stat-value"
+                     id="activeEmployees"
+                     th:text="${#lists.size(employees.?[status == 'ACTIVE'])}">
+                    0
+                </div>
+
+                <div class="stat-description">
+                    Currently active employees
+                </div>
+
+            </div>
+
+
+            <!-- INACTIVE -->
+
+            <div class="stat-card">
+
+                <div class="stat-label">
+                    Inactive
+                </div>
+
+                <div class="stat-value"
+                     id="inactiveEmployees"
+                     th:text="${#lists.size(employees.?[status == 'INACTIVE'])}">
+                    0
+                </div>
+
+                <div class="stat-description">
+                    Disabled employees
+                </div>
+
+            </div>
+
+
+            <!-- TEAMS -->
+
+            <div class="stat-card">
+
+                <div class="stat-label">
+                    Teams
+                </div>
+
+                <div class="stat-value">
+                    —
+                </div>
+
+                <div class="stat-description">
+                    Teams represented by employees
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- =================================================
+             EMPLOYEE DIRECTORY
+        ================================================= -->
+
+        <div class="directory-card">
+
+
+            <!-- DIRECTORY HEADER -->
+
+            <div class="directory-header">
+
+                <div class="directory-title">
+
+                    <h2>
+                        Employee Directory
+                    </h2>
+
+                    <p>
+                        View employee information and manage account status.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- =================================================
+                 TOOLBAR
+            ================================================= -->
+
+            <div class="toolbar">
+
+
+                <!-- SEARCH -->
+
+                <div class="search-wrapper">
+
+                    <span class="search-icon">
+                        🔍
+                    </span>
+
+                    <input
+                            type="text"
+                            id="employeeSearch"
+                            class="search-input"
+                            placeholder="Search by name, email or login ID...">
+
+                </div>
+
+
+                <!-- STATUS -->
+
+                <select
+                        id="statusFilter"
+                        class="filter-select">
+
+                    <option value="">
+                        All Status
+                    </option>
+
+                    <option value="ACTIVE">
+                        Active
+                    </option>
+
+                    <option value="INACTIVE">
+                        Inactive
+                    </option>
+
+                </select>
+
+
+                <!-- DESIGNATION -->
+
+                <select
+                        id="designationFilter"
+                        class="filter-select">
+
+                    <option value="">
+                        All Designations
+                    </option>
+
+                    <option value="Senior Developer">
+                        Senior Developer
+                    </option>
+
+                    <option value="Junior Developer">
+                        Junior Developer
+                    </option>
+
+                    <option value="Developer">
+                        Developer
+                    </option>
+
+                    <option value="Intern">
+                        Intern
+                    </option>
+
+                </select>
+
+
+                <!-- REFRESH -->
+
+                <button
+                        type="button"
+                        class="refresh-button"
+                        onclick="refreshEmployeePage()">
+
+                    ↻ Refresh
+
+                </button>
+
+            </div>
+
+
+
+            <!-- =================================================
+                 TABLE
+            ================================================= -->
+
+            <div class="table-wrapper">
+
+                <table>
+
+                    <thead>
+
+                    <tr>
+
+                        <th>
+                            Employee
+                        </th>
+
+                        <th>
+                            Login ID
+                        </th>
+
+                        <th>
+                            Designation
+                        </th>
+
+                        <th>
+                            Team
+                        </th>
+
+                        <th>
+                            Status
+                        </th>
+
+                        <th>
+                            Actions
+                        </th>
+
+                    </tr>
+
+                    </thead>
+
+
+                    <tbody id="employeeTableBody">
+
+
+                    <!-- =================================================
+                         EMPLOYEE ROW
+                    ================================================= -->
+
+                    <tr
+                            th:each="employee : ${employees}"
+
+                            class="employee-row"
+
+                            th:data-name="${employee.name}"
+
+                            th:data-email="${employee.email}"
+
+                            th:data-login="${employee.employeeLoginId}"
+
+                            th:data-status="${employee.status}"
+
+                            th:data-designation="${employee.designation}">
+
+
+                        <!-- EMPLOYEE -->
+
+                        <td>
+
+                            <div class="employee-cell">
+
+
+                                <div
+                                        class="employee-avatar"
+
+                                        th:text="${employee.name != null
+                                                  and !employee.name.isEmpty()
+                                                  ? #strings.substring(employee.name,0,1).toUpperCase()
+                                                  : 'E'}">
+
+                                    E
+
+                                </div>
+
+
+                                <div class="employee-info">
+
+                                    <div
+                                            class="employee-name"
+
+                                            th:text="${employee.name != null
+                                                      ? employee.name
+                                                      : 'Employee'}">
+
+                                        Employee Name
+
+                                    </div>
+
+
+                                    <div
+                                            class="employee-email"
+
+                                            th:text="${employee.email != null
+                                                      ? employee.email
+                                                      : 'No email'}">
+
+                                        employee@example.com
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </td>
+
+
+
+                        <!-- LOGIN ID -->
+
+                        <td>
+
+                            <span
+                                    class="login-id"
+
+                                    th:text="${employee.employeeLoginId != null
+                                              ? employee.employeeLoginId
+                                              : '—'}">
+
+                                employee01
+
+                            </span>
+
+                        </td>
+
+
+
+                        <!-- DESIGNATION -->
+
+                        <td>
+
+                            <span
+                                    class="designation"
+
+                                    th:text="${employee.designation != null
+                                              ? employee.designation
+                                              : '—'}">
+
+                                Developer
+
+                            </span>
+
+                        </td>
+
+
+
+                        <!-- TEAM -->
+
+                        <td>
+
+                            <span
+                                    class="team"
+
+                                    th:if="${employee.teamId != null}"
+
+                                    th:text="${'Team #' + employee.teamId}">
+
+                                Team #1
+
+                            </span>
+
+
+                            <span
+                                    class="team"
+
+                                    th:unless="${employee.teamId != null}">
+
+                                —
+
+                            </span>
+
+                        </td>
+
+
+
+                        <!-- STATUS -->
+
+                        <td>
+
+
+                            <!-- ACTIVE -->
+
+                            <span
+                                    th:if="${employee.status == 'ACTIVE'}"
+
+                                    class="status-badge status-active">
+
+                                <span class="status-dot"></span>
+
+                                Active
+
+                            </span>
+
+
+                            <!-- INACTIVE -->
+
+                            <span
+                                    th:if="${employee.status != 'ACTIVE'}"
+
+                                    class="status-badge status-inactive">
+
+                                <span class="status-dot"></span>
+
+                                Inactive
+
+                            </span>
+
+                        </td>
+
+
+
+                        <!-- ACTIONS -->
+
+                        <td>
+
+                            <div class="actions">
+
+
+                                <!-- VIEW -->
+
+                                <a
+                                        th:href="@{/admin/employees/{id}(id=${employee.id})}"
+
+                                        class="action-button view-button">
+
+                                    View
+
+                                </a>
+
+
+                                <!-- DISABLE -->
+
+                                <form
+                                        th:if="${employee.status == 'ACTIVE'}"
+
+                                        th:action="@{/admin/employees/{id}/disable(id=${employee.id})}"
+
+                                        method="post"
+
+                                        style="display:inline;">
+
+                                    <button
+                                            type="submit"
+
+                                            class="action-button disable-button">
+
+                                        Disable
+
+                                    </button>
+
+                                </form>
+
+
+                                <!-- ENABLE -->
+
+                                <form
+                                        th:if="${employee.status != 'ACTIVE'}"
+
+                                        th:action="@{/admin/employees/{id}/enable(id=${employee.id})}"
+
+                                        method="post"
+
+                                        style="display:inline;">
+
+                                    <button
+                                            type="submit"
+
+                                            class="action-button enable-button">
+
+                                        Enable
+
+                                    </button>
+
+                                </form>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                    </tbody>
+
+                </table>
+
+
+
+                <!-- =================================================
+                     EMPTY STATE
+                ================================================= -->
+
+                <div
+                        th:if="${#lists.isEmpty(employees)}"
+
+                        class="empty-state">
+
+                    <div class="empty-icon">
+                        👥
+                    </div>
+
+                    <h3>
+                        No Employees Found
+                    </h3>
+
+                    <p>
+                        Add your first employee using the Add Employee button above.
+                    </p>
+
+                </div>
+
+
+
+                <!-- =================================================
+                     NO SEARCH RESULTS
+                ================================================= -->
+
+                <div
+                        id="noResults"
+
+                        class="empty-state no-results">
+
+                    <div class="empty-icon">
+                        🔍
+                    </div>
+
+                    <h3>
+                        No Matching Employees
+                    </h3>
+
+                    <p>
+                        Try changing your search or filter criteria.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- =================================================
+                 FOOTER
+            ================================================= -->
+
+            <div class="directory-footer">
+
+                <span
+                        class="employee-count"
+                        id="employeeCount">
+
+                    Showing
+
+                    <strong th:text="${employees.size()}">
+                        0
+                    </strong>
+
+                    employees
+
+                </span>
+
+            </div>
+
+        </div>
+
+    </section>
+
+</main>
+
+
+
+<!-- =====================================================
+     JAVASCRIPT
+===================================================== -->
+
+<script>
+
+    document.addEventListener("DOMContentLoaded", function () {
+
+
+        /* =================================================
+           SIDEBAR ACTIVE STATE
+        ================================================= */
+
+        const currentPath =
+            window.location.pathname
+                .replace(/\/+$/, "") || "/";
+
+
+        const navItems =
+            document.querySelectorAll(".nav-item");
+
+
+        navItems.forEach(function (item) {
+
+            const path =
+                item.getAttribute("data-path");
+
+
+            if (!path) {
+                return;
+            }
+
+
+            const normalizedPath =
+                path.replace(/\/+$/, "");
+
+
+            const isDashboard =
+                normalizedPath === "/admin/dashboard";
+
+
+            const isActive =
+                isDashboard
+
+                    ? currentPath === normalizedPath
+
+                    : (
+                        currentPath === normalizedPath ||
+                        currentPath.startsWith(
+                            normalizedPath + "/"
+                        )
+                    );
+
+
+            if (isActive) {
+
+                item.classList.add("active");
+
+            } else {
+
+                item.classList.remove("active");
+
+            }
+
+        });
+
+
+
+        /* =================================================
+           EMPLOYEE FILTER ELEMENTS
+        ================================================= */
+
+        const searchInput =
+            document.getElementById(
+                "employeeSearch"
+            );
+
+
+        const statusFilter =
+            document.getElementById(
+                "statusFilter"
+            );
+
+
+        const designationFilter =
+            document.getElementById(
+                "designationFilter"
+            );
+
+
+        const rows =
+            Array.from(
+                document.querySelectorAll(
+                    ".employee-row"
+                )
+            );
+
+
+        const noResults =
+            document.getElementById(
+                "noResults"
+            );
+
+
+        const employeeCount =
+            document.getElementById(
+                "employeeCount"
+            );
+
+
+
+        /* =================================================
+           FILTER EMPLOYEES
+        ================================================= */
+
+        function filterEmployees() {
+
+
+            const search =
+                searchInput.value
+                    .toLowerCase()
+                    .trim();
+
+
+            const status =
+                statusFilter.value
+                    .toLowerCase();
+
+
+            const designation =
+                designationFilter.value
+                    .toLowerCase();
+
+
+            let visibleCount = 0;
+
+
+            rows.forEach(function (row) {
+
+
+                const name =
+                    (row.dataset.name || "")
+                        .toLowerCase();
+
+
+                const email =
+                    (row.dataset.email || "")
+                        .toLowerCase();
+
+
+                const login =
+                    (row.dataset.login || "")
+                        .toLowerCase();
+
+
+                const rowStatus =
+                    (row.dataset.status || "")
+                        .toLowerCase();
+
+
+                const rowDesignation =
+                    (row.dataset.designation || "")
+                        .toLowerCase();
+
+
+
+                const matchesSearch =
+                    !search ||
+
+                    name.includes(search) ||
+
+                    email.includes(search) ||
+
+                    login.includes(search);
+
+
+
+                const matchesStatus =
+                    !status ||
+
+                    rowStatus === status;
+
+
+
+                const matchesDesignation =
+                    !designation ||
+
+                    rowDesignation === designation;
+
+
+
+                const visible =
+                    matchesSearch &&
+                    matchesStatus &&
+                    matchesDesignation;
+
+
+
+                row.style.display =
+                    visible ? "" : "none";
+
+
+
+                if (visible) {
+
+                    visibleCount++;
+
+                }
+
+            });
+
+
+
+            if (rows.length > 0) {
+
+                noResults.style.display =
+                    visibleCount === 0
+                        ? "block"
+                        : "none";
+
+            }
+
+
+
+            employeeCount.innerHTML =
+                "Showing <strong>" +
+                visibleCount +
+                "</strong> employees";
+
+        }
+
+
+
+        /* =================================================
+           SEARCH
+        ================================================= */
+
+        searchInput.addEventListener(
+            "input",
+            filterEmployees
+        );
+
+
+
+        /* =================================================
+           STATUS FILTER
+        ================================================= */
+
+        statusFilter.addEventListener(
+            "change",
+            filterEmployees
+        );
+
+
+
+        /* =================================================
+           DESIGNATION FILTER
+        ================================================= */
+
+        designationFilter.addEventListener(
+            "change",
+            filterEmployees
+        );
+
+
+
+        /* =================================================
+           INITIAL FILTER
+        ================================================= */
+
+        filterEmployees();
+
+    });
+
+
+
+    /* =====================================================
+       REFRESH EMPLOYEE PAGE
+       Sidebar is not manually modified.
+       Browser simply reloads the same Employees route.
+    ===================================================== */
+
+    function refreshEmployeePage() {
+
+        window.location.href =
+            window.location.pathname +
+            window.location.search;
+
+    }
+
+</script>
+
+
+</body>
+
+</html>

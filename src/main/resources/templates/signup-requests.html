@@ -1,0 +1,303 @@
+
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Branch Admin Requests - TeamLogger</title>
+
+  <style>
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        padding: 24px;
+        font-family: Arial, sans-serif;
+        background: #f4f6f9;
+        color: #202938;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 24px;
+    }
+
+    h1 {
+        margin: 0 0 8px;
+        font-size: 26px;
+    }
+
+    .subtitle {
+        color: #667085;
+        margin: 0;
+    }
+
+    .panel {
+        background: white;
+        border-radius: 12px;
+        padding: 22px;
+        box-shadow: 0 2px 10px rgba(16, 24, 40, 0.06);
+    }
+
+    .message {
+        padding: 12px 16px;
+        border-radius: 8px;
+        margin-bottom: 16px;
+    }
+
+    .success {
+        background: #e8f7ed;
+        color: #176b36;
+    }
+
+    .error {
+        background: #fdecec;
+        color: #a32121;
+    }
+
+    .table-wrapper {
+        overflow-x: auto;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 850px;
+    }
+
+    th, td {
+        text-align: left;
+        padding: 14px 12px;
+        border-bottom: 1px solid #eaecf0;
+        vertical-align: top;
+    }
+
+    th {
+        background: #f9fafb;
+        font-size: 12px;
+        text-transform: uppercase;
+        color: #667085;
+        letter-spacing: 0.4px;
+    }
+
+    td {
+        font-size: 14px;
+    }
+
+    .status {
+        display: inline-block;
+        padding: 5px 9px;
+        border-radius: 20px;
+        background: #fff4d6;
+        color: #8a5b00;
+        font-size: 12px;
+        font-weight: bold;
+    }
+
+    .actions {
+        min-width: 190px;
+    }
+
+    .actions form {
+        margin-bottom: 10px;
+    }
+
+    .note {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #d0d5dd;
+        border-radius: 6px;
+        margin-bottom: 8px;
+    }
+
+    button, .back-link {
+        display: inline-block;
+        padding: 9px 13px;
+        border: none;
+        border-radius: 6px;
+        font-size: 13px;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    .approve {
+        background: #157347;
+        color: white;
+    }
+
+    .reject {
+        background: #c93636;
+        color: white;
+    }
+
+    .back-link {
+        background: #e9edf3;
+        color: #202938;
+    }
+
+    .empty {
+        padding: 35px 12px;
+        text-align: center;
+        color: #667085;
+    }
+
+    .empty h3 {
+        color: #344054;
+    }
+
+    @media (max-width: 600px) {
+        body {
+            padding: 12px;
+        }
+
+        .panel {
+            padding: 14px;
+        }
+
+        h1 {
+            font-size: 22px;
+        }
+    }
+  </style>
+</head>
+
+<body>
+<div class="container">
+
+  <div class="header">
+    <div>
+      <h1>Branch Admin Signup Requests</h1>
+      <p class="subtitle">
+        Review applications to create a branch and its administrator account.
+      </p>
+    </div>
+
+    <a class="back-link" th:href="@{/admin/dashboard}">
+      Back to Dashboard
+    </a>
+  </div>
+
+  <div th:if="${success}"
+       class="message success"
+       th:text="${success}"></div>
+
+  <div th:if="${error}"
+       class="message error"
+       th:text="${error}"></div>
+
+  <div class="panel">
+
+    <div th:if="${#lists.isEmpty(requests)}" class="empty">
+      <h3>No pending requests</h3>
+      <p>New branch-admin applications will appear here.</p>
+    </div>
+
+    <div th:unless="${#lists.isEmpty(requests)}"
+         class="table-wrapper">
+
+      <table>
+        <thead>
+        <tr>
+          <th>Applicant</th>
+          <th>Email</th>
+          <th>Organization</th>
+          <th>Requested Branch</th>
+          <th>Submitted</th>
+          <th>Status</th>
+          <th>Decision</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr th:each="request : ${requests}">
+          <td th:text="${request.adminName}">Applicant</td>
+
+          <td th:text="${request.email}">
+            email@example.com
+          </td>
+
+          <td th:text="${request.organizationName}">
+            Organization
+          </td>
+
+          <td th:text="${request.branchName}">
+            Branch
+          </td>
+
+          <td th:text="${request.requestedAt != null
+                        ? #temporals.format(request.requestedAt, 'dd MMM yyyy HH:mm')
+                        : '—'}">
+            Date
+          </td>
+
+          <td>
+                        <span class="status"
+                              th:text="${request.status}">
+                            PENDING
+                        </span>
+          </td>
+
+          <td class="actions">
+
+            <!-- APPROVE REQUEST -->
+            <form th:action="@{/super-admin/signup-requests/{id}/approve(id=${request.id})}"
+                  method="post"
+                  onsubmit="return confirm('Approve this application and create the branch admin account?');">
+
+              <input type="hidden"
+                     th:name="${_csrf.parameterName}"
+                     th:value="${_csrf.token}">
+
+              <input class="note"
+                     type="text"
+                     name="decisionNote"
+                     maxlength="500"
+                     placeholder="Optional approval note">
+
+              <button class="approve" type="submit">
+                Approve
+              </button>
+            </form>
+
+            <!-- REJECT REQUEST -->
+            <form th:action="@{/super-admin/signup-requests/{id}/reject(id=${request.id})}"
+                  method="post"
+                  onsubmit="return confirm('Reject this application? No branch or admin account will be created.');">
+
+              <input type="hidden"
+                     th:name="${_csrf.parameterName}"
+                     th:value="${_csrf.token}">
+
+              <input class="note"
+                     type="text"
+                     name="decisionNote"
+                     maxlength="500"
+                     placeholder="Optional rejection reason">
+
+              <button class="reject" type="submit">
+                Reject
+              </button>
+            </form>
+
+          </td>
+        </tr>
+        </tbody>
+      </table>
+
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

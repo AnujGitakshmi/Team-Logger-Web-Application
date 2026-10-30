@@ -1,0 +1,4178 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+  <title th:text="${adminSettings.companyName + ' - Login Approvals'}">
+    TeamLogger - Login Approvals
+  </title>
+
+
+  <style>
+
+    /* =========================================================
+       RESET
+    ========================================================= */
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    html {
+        width: 100%;
+        min-height: 100%;
+        overflow-x: hidden;
+    }
+
+    body {
+        width: 100%;
+        min-height: 100vh;
+
+        background: #f5f7fb;
+        color: #1f2937;
+
+        font-family: Inter, "Segoe UI", Arial, Helvetica, sans-serif;
+
+        overflow-x: hidden;
+    }
+
+    a {
+        text-decoration: none;
+    }
+
+    button,
+    input,
+    select {
+        font-family: inherit;
+    }
+
+
+    /* =========================================================
+       MAIN LAYOUT
+    ========================================================= */
+
+    .layout {
+        width: 100%;
+        min-height: 100vh;
+    }
+
+
+    /* =========================================================
+       SIDEBAR
+    ========================================================= */
+
+    .sidebar {
+
+        position: fixed;
+
+        top: 0;
+        left: 0;
+        bottom: 0;
+
+        width: 250px;
+
+        background: #111827;
+
+        color: #ffffff;
+
+        display: flex;
+        flex-direction: column;
+
+        z-index: 1000;
+
+        overflow: hidden;
+    }
+
+
+    /* =========================================================
+       LOGO SECTION
+    ========================================================= */
+
+    .logo-section {
+
+        width: 100%;
+        height: 78px;
+
+        flex-shrink: 0;
+
+        display: flex;
+        align-items: center;
+
+        padding: 0 18px;
+
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .logo {
+
+        display: flex;
+        align-items: center;
+
+        gap: 11px;
+
+        min-width: 0;
+    }
+
+    .logo-icon {
+
+        width: 40px;
+        height: 40px;
+
+        flex-shrink: 0;
+
+        border-radius: 10px;
+
+        background: #2563eb;
+
+        color: #ffffff;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        font-size: 15px;
+        font-weight: 800;
+
+        box-shadow:
+            0 4px 12px rgba(37,99,235,0.25);
+    }
+
+    .logo-text {
+        min-width: 0;
+    }
+
+    .logo-title {
+
+        color: #ffffff;
+
+        font-size: 15px;
+
+        font-weight: 700;
+
+        white-space: nowrap;
+
+        overflow: hidden;
+
+        text-overflow: ellipsis;
+    }
+
+    .logo-subtitle {
+
+        margin-top: 3px;
+
+        color: #9ca3af;
+
+        font-size: 9px;
+
+        font-weight: 700;
+
+        letter-spacing: 1px;
+    }
+
+
+    /* =========================================================
+       SIDEBAR NAVIGATION
+    ========================================================= */
+
+    .sidebar-nav {
+
+        flex: 1;
+
+        padding: 18px 12px;
+
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    .nav-section-title {
+
+        padding: 8px 12px;
+
+        margin-top: 5px;
+        margin-bottom: 7px;
+
+        color: #6b7280;
+
+        font-size: 9px;
+
+        font-weight: 700;
+
+        text-transform: uppercase;
+
+        letter-spacing: 1px;
+    }
+
+    .nav-section-title:not(:first-child) {
+        margin-top: 18px;
+    }
+
+    .nav-item {
+
+        width: 100%;
+
+        height: 44px;
+
+        padding: 0 12px;
+
+        margin-bottom: 5px;
+
+        border-radius: 8px;
+
+        display: flex;
+        align-items: center;
+
+        gap: 11px;
+
+        color: #d1d5db;
+
+        font-size: 12px;
+
+        font-weight: 500;
+
+        position: relative;
+
+        transition:
+            background 0.2s ease,
+            color 0.2s ease,
+            transform 0.2s ease;
+    }
+
+    .nav-item:hover {
+
+        background: #1f2937;
+
+        color: #ffffff;
+    }
+
+    .nav-item.active {
+
+        background: #2563eb;
+
+        color: #ffffff;
+
+        box-shadow:
+            0 4px 12px rgba(37,99,235,0.25);
+    }
+
+    .nav-item.active:hover {
+        background: #2563eb;
+    }
+
+    .nav-icon {
+
+        width: 24px;
+        min-width: 24px;
+
+        display: inline-flex;
+
+        align-items: center;
+        justify-content: center;
+
+        font-size: 16px;
+
+        line-height: 1;
+    }
+
+
+    /* =========================================================
+       LOGIN APPROVAL BADGE
+    ========================================================= */
+
+    .nav-badge {
+
+        margin-left: auto;
+
+        min-width: 21px;
+        height: 21px;
+
+        padding: 0 6px;
+
+        border-radius: 999px;
+
+        background: #ef4444;
+
+        color: #ffffff;
+
+        display: inline-flex;
+
+        align-items: center;
+        justify-content: center;
+
+        font-size: 10px;
+
+        font-weight: 700;
+
+        line-height: 1;
+
+        box-shadow:
+            0 2px 8px rgba(239,68,68,0.35);
+    }
+
+
+    /* =========================================================
+       ADMIN PROFILE
+    ========================================================= */
+
+    .admin-profile {
+
+        width: 100%;
+
+        min-height: 76px;
+
+        flex-shrink: 0;
+
+        padding: 14px 16px;
+
+        border-top:
+            1px solid rgba(255,255,255,0.07);
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 11px;
+    }
+
+    .admin-avatar {
+
+        width: 38px;
+        height: 38px;
+
+        min-width: 38px;
+
+        border-radius: 50%;
+
+        background: #2563eb;
+
+        color: #ffffff;
+
+        display: flex;
+
+        align-items: center;
+        justify-content: center;
+
+        font-size: 14px;
+
+        font-weight: 700;
+    }
+
+    .admin-info {
+
+        min-width: 0;
+    }
+
+    .admin-name {
+
+        color: #ffffff;
+
+        font-size: 12px;
+
+        font-weight: 600;
+
+        white-space: nowrap;
+
+        overflow: hidden;
+
+        text-overflow: ellipsis;
+    }
+
+    .admin-role {
+
+        color: #9ca3af;
+
+        font-size: 10px;
+
+        margin-top: 3px;
+    }
+
+
+    /* =========================================================
+       MAIN
+    ========================================================= */
+
+    .main {
+
+        margin-left: 250px;
+
+        width: calc(100% - 250px);
+
+        min-height: 100vh;
+    }
+
+
+    /* =========================================================
+       TOPBAR
+    ========================================================= */
+
+    .topbar {
+
+        height: 78px;
+
+        background: #ffffff;
+
+        border-bottom: 1px solid #e5e7eb;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: space-between;
+
+        padding: 0 30px;
+
+        position: sticky;
+
+        top: 0;
+
+        z-index: 50;
+    }
+
+    .page-heading {
+
+        min-width: 0;
+    }
+
+    .page-heading h1 {
+
+        color: #111827;
+
+        font-size: 22px;
+
+        font-weight: 700;
+
+        margin-bottom: 4px;
+    }
+
+    .page-heading p {
+
+        color: #9ca3af;
+
+        font-size: 11px;
+
+        line-height: 1.4;
+    }
+
+    .topbar-admin {
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 10px;
+
+        flex-shrink: 0;
+    }
+
+    .topbar-admin-info {
+
+        text-align: right;
+    }
+
+    .topbar-admin-name {
+
+        color: #111827;
+
+        font-size: 12px;
+
+        font-weight: 600;
+    }
+
+    .topbar-admin-role {
+
+        color: #9ca3af;
+
+        font-size: 10px;
+
+        margin-top: 3px;
+    }
+
+    .topbar-admin-avatar {
+
+        width: 38px;
+        height: 38px;
+
+        min-width: 38px;
+
+        border-radius: 50%;
+
+        background: #2563eb;
+
+        color: #ffffff;
+
+        display: flex;
+
+        align-items: center;
+        justify-content: center;
+
+        font-size: 14px;
+
+        font-weight: 700;
+    }
+
+
+    /* =========================================================
+       CONTENT
+    ========================================================= */
+
+    .content {
+
+        padding: 28px 30px 40px;
+    }
+
+
+    /* =========================================================
+       DATE ROW
+    ========================================================= */
+
+    .date-row {
+
+        margin-bottom: 20px;
+
+        color: #6b7280;
+
+        font-size: 11px;
+    }
+
+
+    /* =========================================================
+       INTRO CARD
+    ========================================================= */
+
+    .page-intro {
+
+        background:
+            linear-gradient(
+                135deg,
+                #1d4ed8,
+                #2563eb 55%,
+                #3b82f6
+            );
+
+        color: #ffffff;
+
+        border-radius: 14px;
+
+        padding: 24px 26px;
+
+        margin-bottom: 22px;
+
+        position: relative;
+
+        overflow: hidden;
+
+        box-shadow:
+            0 8px 22px rgba(37,99,235,0.16);
+    }
+
+    .page-intro::before {
+
+        content: "";
+
+        position: absolute;
+
+        width: 180px;
+        height: 180px;
+
+        border-radius: 50%;
+
+        background:
+            rgba(255,255,255,0.08);
+
+        right: 70px;
+        top: -90px;
+    }
+
+    .page-intro::after {
+
+        content: "";
+
+        position: absolute;
+
+        width: 120px;
+        height: 120px;
+
+        border-radius: 50%;
+
+        background:
+            rgba(255,255,255,0.06);
+
+        right: -30px;
+        bottom: -50px;
+    }
+
+    .intro-content {
+
+        position: relative;
+
+        z-index: 2;
+    }
+
+    .intro-label {
+
+        font-size: 9px;
+
+        font-weight: 700;
+
+        letter-spacing: 1px;
+
+        text-transform: uppercase;
+
+        opacity: 0.80;
+
+        margin-bottom: 7px;
+    }
+
+    .page-intro h2 {
+
+        font-size: 21px;
+
+        margin-bottom: 7px;
+    }
+
+    .page-intro p {
+
+        max-width: 720px;
+
+        font-size: 12px;
+
+        line-height: 1.6;
+
+        opacity: 0.90;
+    }
+
+
+    /* =========================================================
+       SUMMARY GRID
+    ========================================================= */
+
+    .summary-grid {
+
+        display: grid;
+
+        grid-template-columns:
+            repeat(4, minmax(0, 1fr));
+
+        gap: 16px;
+
+        margin-bottom: 22px;
+    }
+
+    .summary-card {
+
+        background: #ffffff;
+
+        border-radius: 12px;
+
+        padding: 18px;
+
+        border: 1px solid #eef0f4;
+
+        box-shadow:
+            0 2px 8px rgba(0,0,0,0.04);
+
+        position: relative;
+
+        overflow: hidden;
+
+        transition:
+            transform 0.2s ease,
+            box-shadow 0.2s ease;
+    }
+
+    .summary-card:hover {
+
+        transform: translateY(-2px);
+
+        box-shadow:
+            0 7px 18px rgba(0,0,0,0.07);
+    }
+
+    .summary-accent {
+
+        position: absolute;
+
+        left: 0;
+        top: 0;
+
+        width: 4px;
+        height: 100%;
+
+        background: #2563eb;
+    }
+
+    .summary-card.pending
+    .summary-accent {
+
+        background: #f59e0b;
+    }
+
+    .summary-card.approved
+    .summary-accent {
+
+        background: #22c55e;
+    }
+
+    .summary-top {
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: space-between;
+
+        margin-bottom: 14px;
+    }
+
+    .summary-title {
+
+        color: #6b7280;
+
+        font-size: 10px;
+
+        font-weight: 700;
+
+        text-transform: uppercase;
+
+        letter-spacing: 0.4px;
+    }
+
+    .summary-icon {
+
+        width: 34px;
+        height: 34px;
+
+        border-radius: 8px;
+
+        background: #eff6ff;
+
+        color: #2563eb;
+
+        display: flex;
+
+        align-items: center;
+        justify-content: center;
+
+        font-size: 15px;
+    }
+
+    .summary-card.pending
+    .summary-icon {
+
+        background: #fff7ed;
+
+        color: #ea580c;
+    }
+
+    .summary-card.approved
+    .summary-icon {
+
+        background: #f0fdf4;
+
+        color: #16a34a;
+    }
+
+    .summary-number {
+
+        color: #111827;
+
+        font-size: 25px;
+
+        font-weight: 700;
+
+        margin-bottom: 5px;
+    }
+
+    .summary-description {
+
+        color: #9ca3af;
+
+        font-size: 10px;
+
+        line-height: 1.5;
+    }
+
+
+    /* =========================================================
+       APPROVAL CARD
+    ========================================================= */
+
+    .approval-card {
+
+        background: #ffffff;
+
+        border-radius: 13px;
+
+        border: 1px solid #eef0f4;
+
+        box-shadow:
+            0 2px 8px rgba(0,0,0,0.04);
+
+        overflow: hidden;
+    }
+
+
+    /* =========================================================
+       CARD HEADER
+    ========================================================= */
+
+    .approval-header {
+
+        padding: 20px 22px;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: space-between;
+
+        gap: 18px;
+
+        border-bottom:
+            1px solid #e5e7eb;
+    }
+
+    .approval-header-left {
+
+        min-width: 0;
+    }
+
+    .approval-header-left h2 {
+
+        color: #111827;
+
+        font-size: 17px;
+
+        margin-bottom: 5px;
+    }
+
+    .approval-header-left p {
+
+        color: #9ca3af;
+
+        font-size: 11px;
+
+        line-height: 1.5;
+    }
+
+    .pending-pill {
+
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 7px;
+
+        padding: 7px 12px;
+
+        border-radius: 20px;
+
+        background: #fff7ed;
+
+        color: #c2410c;
+
+        font-size: 10px;
+
+        font-weight: 700;
+
+        white-space: nowrap;
+    }
+
+    .pending-pill-dot {
+
+        width: 7px;
+        height: 7px;
+
+        border-radius: 50%;
+
+        background: #f97316;
+    }
+
+
+    /* =========================================================
+       TOOLBAR
+    ========================================================= */
+
+    .toolbar {
+
+        padding: 15px 22px;
+
+        background: #fafbfc;
+
+        border-bottom:
+            1px solid #eef0f4;
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 10px;
+
+        flex-wrap: wrap;
+    }
+
+    .search-box {
+
+        flex: 1;
+
+        min-width: 220px;
+
+        position: relative;
+    }
+
+    .search-box input {
+
+        width: 100%;
+
+        height: 38px;
+
+        border: 1px solid #dfe3e8;
+
+        border-radius: 8px;
+
+        background: #ffffff;
+
+        padding: 0 12px 0 36px;
+
+        outline: none;
+
+        color: #374151;
+
+        font-size: 11px;
+
+        transition: 0.2s;
+    }
+
+    .search-box input:focus {
+
+        border-color: #60a5fa;
+
+        box-shadow:
+            0 0 0 3px rgba(37,99,235,0.08);
+    }
+
+    .search-icon {
+
+        position: absolute;
+
+        left: 12px;
+
+        top: 50%;
+
+        transform:
+            translateY(-50%);
+
+        color: #9ca3af;
+
+        font-size: 13px;
+    }
+
+    .filter-select {
+
+        height: 38px;
+
+        border: 1px solid #dfe3e8;
+
+        border-radius: 8px;
+
+        background: #ffffff;
+
+        padding: 0 11px;
+
+        color: #4b5563;
+
+        font-size: 11px;
+
+        outline: none;
+
+        cursor: pointer;
+    }
+
+    .refresh-btn {
+
+        height: 38px;
+
+        padding: 0 14px;
+
+        border-radius: 8px;
+
+        border: 1px solid #dfe3e8;
+
+        background: #ffffff;
+
+        color: #374151;
+
+        font-size: 11px;
+
+        font-weight: 600;
+
+        cursor: pointer;
+
+        display: inline-flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        gap: 7px;
+
+        transition: 0.2s;
+    }
+
+    .refresh-btn:hover {
+
+        background: #f3f4f6;
+
+        border-color: #cbd5e1;
+    }
+
+    .refresh-btn:disabled {
+
+        opacity: 0.65;
+
+        cursor: wait;
+    }
+
+
+    /* =========================================================
+       REFRESH ERROR
+    ========================================================= */
+
+    .refresh-error {
+
+        display: none;
+
+        margin: 14px 22px;
+
+        padding: 11px 13px;
+
+        border-radius: 8px;
+
+        background: #fef2f2;
+
+        border: 1px solid #fecaca;
+
+        color: #b91c1c;
+
+        font-size: 11px;
+    }
+
+
+    /* =========================================================
+       TABLE
+    ========================================================= */
+
+    .table-container {
+
+        width: 100%;
+
+        overflow-x: auto;
+
+        -webkit-overflow-scrolling: touch;
+    }
+
+    table {
+
+        width: 100%;
+
+        min-width: 850px;
+
+        border-collapse: collapse;
+    }
+
+    th {
+
+        text-align: left;
+
+        padding: 13px 18px;
+
+        background: #f9fafb;
+
+        border-bottom:
+            1px solid #e5e7eb;
+
+        color: #6b7280;
+
+        font-size: 9px;
+
+        font-weight: 700;
+
+        text-transform: uppercase;
+
+        letter-spacing: 0.3px;
+
+        white-space: nowrap;
+    }
+
+    td {
+
+        padding: 15px 18px;
+
+        border-bottom:
+            1px solid #f0f0f0;
+
+        color: #374151;
+
+        font-size: 11px;
+
+        white-space: nowrap;
+    }
+
+    tbody tr {
+
+        transition:
+            background 0.18s ease;
+    }
+
+    tbody tr:hover {
+
+        background: #fafcff;
+    }
+
+    tbody tr:last-child td {
+
+        border-bottom: none;
+    }
+
+
+    /* =========================================================
+       EMPLOYEE CELL
+    ========================================================= */
+
+    .employee-cell {
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 10px;
+    }
+
+    .employee-avatar {
+
+        width: 38px;
+        height: 38px;
+
+        min-width: 38px;
+
+        border-radius: 50%;
+
+        background:
+            linear-gradient(
+                135deg,
+                #2563eb,
+                #60a5fa
+            );
+
+        color: #ffffff;
+
+        display: flex;
+
+        align-items: center;
+        justify-content: center;
+
+        font-size: 13px;
+
+        font-weight: 700;
+    }
+
+    .employee-info {
+
+        min-width: 0;
+    }
+
+    .employee-name {
+
+        color: #111827;
+
+        font-size: 12px;
+
+        font-weight: 700;
+
+        margin-bottom: 3px;
+    }
+
+    .employee-id {
+
+        color: #9ca3af;
+
+        font-size: 9px;
+
+        margin-top: 2px;
+    }
+
+
+    /* =========================================================
+       LOGIN TIME
+    ========================================================= */
+
+    .login-time {
+
+        color: #374151;
+
+        font-size: 11px;
+
+        font-weight: 600;
+    }
+
+    .login-date {
+
+        color: #9ca3af;
+
+        font-size: 9px;
+
+        margin-top: 4px;
+    }
+
+
+    /* =========================================================
+       DELAY
+    ========================================================= */
+
+    .late-indicator {
+
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 6px;
+
+        color: #ea580c;
+
+        font-size: 11px;
+
+        font-weight: 600;
+    }
+
+    .late-dot {
+
+        width: 7px;
+        height: 7px;
+
+        border-radius: 50%;
+
+        background: #f97316;
+    }
+
+
+    /* =========================================================
+       STATUS
+    ========================================================= */
+
+    .status {
+
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 6px;
+
+        padding: 5px 9px;
+
+        border-radius: 20px;
+
+        font-size: 9px;
+
+        font-weight: 700;
+    }
+
+    .status-dot {
+
+        width: 6px;
+        height: 6px;
+
+        border-radius: 50%;
+    }
+
+    .status-pending {
+
+        background: #fff7ed;
+
+        color: #c2410c;
+    }
+
+    .status-pending .status-dot {
+
+        background: #f97316;
+    }
+
+    .status-approved {
+
+        background: #dcfce7;
+
+        color: #166534;
+    }
+
+    .status-approved .status-dot {
+
+        background: #22c55e;
+    }
+
+    .status-rejected {
+
+        background: #fee2e2;
+
+        color: #991b1b;
+    }
+
+    .status-rejected .status-dot {
+
+        background: #ef4444;
+    }
+
+
+    /* =========================================================
+       ACTIONS
+    ========================================================= */
+
+    .actions {
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 6px;
+    }
+
+    .action-form {
+
+        margin: 0;
+    }
+
+    .action-btn {
+
+        min-width: 76px;
+
+        height: 31px;
+
+        border: none;
+
+        border-radius: 7px;
+
+        cursor: pointer;
+
+        font-size: 9px;
+
+        font-weight: 700;
+
+        display: inline-flex;
+
+        align-items: center;
+        justify-content: center;
+
+        gap: 5px;
+
+        transition:
+            transform 0.2s ease,
+            background 0.2s ease;
+    }
+
+    .approve-btn {
+
+        background: #16a34a;
+
+        color: #ffffff;
+
+        box-shadow:
+            0 3px 8px rgba(22,163,74,0.15);
+    }
+
+    .approve-btn:hover {
+
+        background: #15803d;
+
+        transform:
+            translateY(-1px);
+    }
+
+    .reject-btn {
+
+        background: #dc2626;
+
+        color: #ffffff;
+
+        box-shadow:
+            0 3px 8px rgba(220,38,38,0.12);
+    }
+
+    .reject-btn:hover {
+
+        background: #b91c1c;
+
+        transform:
+            translateY(-1px);
+    }
+
+
+    /* =========================================================
+       EMPTY STATE
+    ========================================================= */
+
+    .empty-state {
+
+        text-align: center;
+
+        padding: 65px 25px;
+    }
+
+    .empty-icon {
+
+        width: 68px;
+        height: 68px;
+
+        margin: 0 auto 16px;
+
+        border-radius: 50%;
+
+        background: #eff6ff;
+
+        color: #2563eb;
+
+        display: flex;
+
+        align-items: center;
+        justify-content: center;
+
+        font-size: 28px;
+    }
+
+    .empty-title {
+
+        color: #374151;
+
+        font-size: 16px;
+
+        font-weight: 700;
+
+        margin-bottom: 7px;
+    }
+
+    .empty-text {
+
+        max-width: 450px;
+
+        margin: 0 auto;
+
+        color: #9ca3af;
+
+        font-size: 11px;
+
+        line-height: 1.6;
+    }
+
+
+    /* =========================================================
+       FOOTER
+    ========================================================= */
+
+    .page-footer {
+
+        padding: 14px 22px;
+
+        background: #fafbfc;
+
+        border-top:
+            1px solid #eef0f4;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: space-between;
+
+        gap: 15px;
+
+        color: #9ca3af;
+
+        font-size: 9px;
+    }
+
+
+    /* =========================================================
+       RESPONSIVE - 1100px
+    ========================================================= */
+
+    @media (max-width: 1100px) {
+
+        .sidebar {
+
+            width: 220px;
+        }
+
+        .main {
+
+            margin-left: 220px;
+
+            width: calc(100% - 220px);
+        }
+
+        .topbar {
+
+            padding: 0 24px;
+        }
+
+        .content {
+
+            padding: 24px;
+        }
+
+        .summary-grid {
+
+            grid-template-columns:
+                repeat(2, minmax(0, 1fr));
+        }
+    }
+
+
+    /* =========================================================
+       RESPONSIVE - 800px
+    ========================================================= */
+
+    @media (max-width: 800px) {
+
+        .sidebar {
+
+            width: 210px;
+        }
+
+        .main {
+
+            margin-left: 210px;
+
+            width: calc(100% - 210px);
+        }
+
+        .topbar {
+
+            padding: 0 20px;
+        }
+
+        .content {
+
+            padding: 20px;
+        }
+
+        .page-heading h1 {
+
+            font-size: 20px;
+        }
+
+        .page-intro {
+
+            padding: 22px;
+        }
+
+        .summary-grid {
+
+            grid-template-columns:
+                repeat(2, minmax(0, 1fr));
+        }
+    }
+
+
+    /* =========================================================
+       RESPONSIVE - 600px
+    ========================================================= */
+
+    @media (max-width: 600px) {
+
+        .sidebar {
+
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: auto;
+
+            width: 100%;
+
+            height: 68px;
+
+            flex-direction: row;
+
+            overflow: hidden;
+        }
+
+        .logo-section {
+
+            width: 68px;
+            height: 68px;
+
+            flex-shrink: 0;
+
+            padding: 0;
+
+            justify-content: center;
+        }
+
+        .logo {
+
+            justify-content: center;
+        }
+
+        .logo-text {
+
+            display: none;
+        }
+
+        .logo-icon {
+
+            width: 40px;
+            height: 40px;
+        }
+
+        .sidebar-nav {
+
+            flex: 1;
+
+            height: 68px;
+
+            padding: 0 8px;
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 5px;
+
+            overflow-x: auto;
+
+            overflow-y: hidden;
+
+            scrollbar-width: none;
+        }
+
+        .sidebar-nav::-webkit-scrollbar {
+            display: none;
+        }
+
+        .nav-section-title {
+            display: none;
+        }
+
+        .nav-item {
+
+            height: 44px;
+
+            min-width: 44px;
+            width: 44px;
+
+            flex-shrink: 0;
+
+            justify-content: center;
+
+            padding: 0;
+
+            margin: 0;
+
+            border-radius: 8px;
+        }
+
+        .nav-item span:not(.nav-icon):not(.nav-badge) {
+            display: none;
+        }
+
+        .nav-icon {
+
+            width: auto;
+            min-width: auto;
+
+            font-size: 16px;
+        }
+
+        .nav-badge {
+
+            position: absolute;
+
+            top: 3px;
+            right: 3px;
+
+            min-width: 17px;
+            height: 17px;
+
+            padding: 0 4px;
+
+            font-size: 8px;
+
+            margin: 0;
+        }
+
+        .admin-profile {
+
+            width: 58px;
+            height: 68px;
+
+            min-height: 68px;
+
+            flex-shrink: 0;
+
+            justify-content: center;
+
+            padding: 0;
+
+            border-top: none;
+
+            border-left:
+                1px solid rgba(255,255,255,0.08);
+        }
+
+        .admin-info {
+            display: none;
+        }
+
+        .main {
+
+            margin-left: 0;
+
+            width: 100%;
+
+            padding-top: 68px;
+        }
+
+        .topbar {
+
+            height: auto;
+
+            min-height: 70px;
+
+            padding: 14px 16px;
+
+            position: relative;
+        }
+
+        .page-heading h1 {
+
+            font-size: 19px;
+        }
+
+        .page-heading p {
+
+            font-size: 10px;
+        }
+
+        .topbar-admin-info {
+
+            display: none;
+        }
+
+        .topbar-admin-avatar {
+
+            width: 34px;
+            height: 34px;
+
+            min-width: 34px;
+
+            font-size: 12px;
+        }
+
+        .content {
+
+            padding: 16px;
+
+        }
+
+        .date-row {
+
+            margin-bottom: 14px;
+
+            font-size: 10px;
+        }
+
+        .page-intro {
+
+            padding: 20px;
+
+            border-radius: 12px;
+
+            margin-bottom: 16px;
+        }
+
+        .page-intro h2 {
+
+            font-size: 19px;
+        }
+
+        .page-intro p {
+
+            font-size: 11px;
+        }
+
+        .summary-grid {
+
+            grid-template-columns: 1fr;
+
+            gap: 11px;
+
+            margin-bottom: 16px;
+        }
+
+        .summary-card {
+
+            padding: 16px;
+        }
+
+        .approval-header {
+
+            padding: 17px;
+
+            flex-direction: column;
+
+            align-items: flex-start;
+        }
+
+        .toolbar {
+
+            padding: 14px 17px;
+
+            flex-direction: column;
+
+            align-items: stretch;
+        }
+
+        .search-box {
+
+            width: 100%;
+
+            min-width: 0;
+        }
+
+        .filter-select,
+        .refresh-btn {
+
+            width: 100%;
+        }
+
+        .refresh-error {
+
+            margin: 14px 17px;
+        }
+
+        .page-footer {
+
+            flex-direction: column;
+
+            align-items: flex-start;
+
+            padding: 14px 17px;
+        }
+    }
+
+
+    /* =========================================================
+       RESPONSIVE - 400px
+    ========================================================= */
+
+    @media (max-width: 400px) {
+
+        .content {
+
+            padding: 12px;
+        }
+
+        .page-heading h1 {
+
+            font-size: 17px;
+        }
+
+        .page-intro {
+
+            padding: 17px;
+        }
+
+        .page-intro h2 {
+
+            font-size: 17px;
+        }
+
+        .summary-card {
+
+            padding: 15px;
+        }
+
+        .summary-number {
+
+            font-size: 23px;
+        }
+    }
+
+
+    /* =========================================================
+       REDUCED MOTION
+    ========================================================= */
+
+    @media (prefers-reduced-motion: reduce) {
+
+        *,
+        *::before,
+        *::after {
+
+            scroll-behavior: auto !important;
+
+            transition: none !important;
+
+            animation-duration: 0.01ms !important;
+
+            animation-iteration-count: 1 !important;
+        }
+    }
+
+
+    /* =========================================================
+       REFRESH ANIMATION
+    ========================================================= */
+
+    @keyframes refreshSpin {
+
+        from {
+            transform: rotate(0deg);
+        }
+
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+
+<div class="layout">
+
+
+  <!-- =========================================================
+       SIDEBAR
+  ========================================================= -->
+
+  <aside class="sidebar"
+         id="adminSidebar">
+
+
+    <!-- LOGO -->
+
+    <div class="logo-section">
+
+      <div class="logo">
+
+        <div class="logo-icon">
+          TL
+        </div>
+
+        <div class="logo-text">
+
+          <div class="logo-title"
+               th:text="${adminSettings.companyName}">
+            TeamLogger
+          </div>
+
+          <div class="logo-subtitle">
+            ADMIN PANEL
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         NAVIGATION
+    ===================================================== -->
+
+    <nav class="sidebar-nav"
+         id="adminNavigation">
+
+
+      <div class="nav-section-title">
+        Main
+      </div>
+
+
+      <!-- DASHBOARD -->
+
+      <a th:href="@{/admin/dashboard}"
+         class="nav-item"
+         data-path="/admin/dashboard">
+
+                <span class="nav-icon">
+                    ▦
+                </span>
+
+        <span>
+                    Dashboard
+                </span>
+
+      </a>
+
+
+      <!-- EMPLOYEES -->
+
+      <a th:href="@{/admin/employees}"
+         class="nav-item"
+         data-path="/admin/employees">
+
+                <span class="nav-icon">
+                    👥
+                </span>
+
+        <span>
+                    Employees
+                </span>
+
+      </a>
+
+
+      <!-- TODAY'S ACTIVITY -->
+
+      <a th:href="@{/admin/tracking}"
+         class="nav-item"
+         data-path="/admin/tracking">
+
+                <span class="nav-icon">
+                    ◉
+                </span>
+
+        <span>
+                    Today's Activity
+                </span>
+
+      </a>
+
+
+      <!-- PROJECTS -->
+
+      <a th:href="@{/admin/projects}"
+         class="nav-item"
+         data-path="/admin/projects">
+
+                <span class="nav-icon">
+                    ▣
+                </span>
+
+        <span>
+                    Projects
+                </span>
+
+      </a>
+
+
+      <div class="nav-section-title">
+        Management
+      </div>
+
+
+      <!-- OVERTIME -->
+
+      <a th:href="@{/admin/overtime}"
+         class="nav-item"
+         data-path="/admin/overtime">
+
+                <span class="nav-icon">
+                    ◷
+                </span>
+
+        <span>
+                    Overtime
+                </span>
+
+      </a>
+
+
+      <!-- REPORTS -->
+
+      <a th:href="@{/admin/reports}"
+         class="nav-item"
+         data-path="/admin/reports">
+
+                <span class="nav-icon">
+                    ▤
+                </span>
+
+        <span>
+                    Reports
+                </span>
+
+      </a>
+
+
+      <!-- LOGIN APPROVALS -->
+
+      <a th:href="@{/admin/login-approvals}"
+         class="nav-item"
+         data-path="/admin/login-approvals">
+
+                <span class="nav-icon">
+                    ✓
+                </span>
+
+        <span>
+                    Login Approvals
+                </span>
+
+        <span class="nav-badge"
+              id="sidebarPendingBadge"
+              th:if="${pendingApprovalCount > 0}"
+              th:text="${pendingApprovalCount}">
+                    0
+                </span>
+
+      </a>
+
+
+      <!-- SCREEN RECORDING -->
+
+      <a th:href="@{/admin/screen-recording}"
+         class="nav-item"
+         data-path="/admin/screen-recording">
+
+                <span class="nav-icon">
+                    ▧
+                </span>
+
+        <span>
+                    Screen Recording
+                </span>
+
+      </a>
+
+
+      <!-- SETTINGS -->
+
+      <a th:href="@{/admin/settings}"
+         class="nav-item"
+         data-path="/admin/settings">
+
+                <span class="nav-icon">
+                    ⚙
+                </span>
+
+        <span>
+                    Settings
+                </span>
+
+      </a>
+
+
+    </nav>
+
+
+    <!-- =====================================================
+         ADMIN PROFILE
+    ===================================================== -->
+
+    <div class="admin-profile">
+
+      <div class="admin-avatar"
+           th:text="${admin != null and admin.name != null and !admin.name.isEmpty()
+                           ? #strings.substring(admin.name,0,1).toUpperCase()
+                           : 'A'}">
+        A
+      </div>
+
+      <div class="admin-info">
+
+        <div class="admin-name"
+             th:text="${admin != null and admin.name != null
+                               ? admin.name
+                               : 'Admin'}">
+          Admin
+        </div>
+
+        <div class="admin-role">
+          Administrator
+        </div>
+
+      </div>
+
+    </div>
+
+
+  </aside>
+
+
+  <!-- =========================================================
+       MAIN CONTENT
+  ========================================================= -->
+
+  <main class="main">
+
+
+    <!-- =====================================================
+         TOPBAR
+    ===================================================== -->
+
+    <header class="topbar">
+
+
+      <div class="page-heading">
+
+        <h1>
+          Login Approvals
+        </h1>
+
+        <p>
+          Review and manage employee late-login requests
+        </p>
+
+      </div>
+
+
+      <!-- ADMIN -->
+
+      <div class="topbar-admin">
+
+        <div class="topbar-admin-info">
+
+          <div class="topbar-admin-name"
+               th:text="${admin != null and admin.name != null
+                                   ? admin.name
+                                   : 'Admin'}">
+            Admin
+          </div>
+
+          <div class="topbar-admin-role">
+            Administrator
+          </div>
+
+        </div>
+
+        <div class="topbar-admin-avatar"
+             th:text="${admin != null and admin.name != null and !admin.name.isEmpty()
+                               ? #strings.substring(admin.name,0,1).toUpperCase()
+                               : 'A'}">
+          A
+        </div>
+
+      </div>
+
+
+    </header>
+
+
+    <!-- =====================================================
+         PAGE CONTENT
+    ===================================================== -->
+
+    <div class="content">
+
+
+      <!-- DATE -->
+
+      <div class="date-row"
+           th:text="${#temporals.format(
+                            T(java.time.LocalDate).now(),
+                            'EEEE, dd MMMM yyyy'
+                          )}">
+
+        Thursday, 24 September 2026
+
+      </div>
+
+
+      <!-- =================================================
+           INTRO
+      ================================================= -->
+
+      <section class="page-intro">
+
+        <div class="intro-content">
+
+          <div class="intro-label">
+            Access Control
+          </div>
+
+          <h2>
+            Employee Login Approval Center
+          </h2>
+
+          <p>
+            Employees who attempt to sign in after
+            the scheduled login threshold require
+            administrator approval before they can
+            continue to their employee dashboard.
+          </p>
+
+        </div>
+
+      </section>
+
+
+      <!-- =================================================
+           SUMMARY CARDS
+      ================================================= -->
+
+      <div class="summary-grid">
+
+
+        <!-- PENDING -->
+
+        <div class="summary-card pending">
+
+          <div class="summary-accent"></div>
+
+          <div class="summary-top">
+
+            <div class="summary-title">
+              Approval Queue
+            </div>
+
+            <div class="summary-icon">
+              📋
+            </div>
+
+          </div>
+
+          <div class="summary-number"
+               id="pendingApprovalCount"
+               th:text="${pendingApprovalCount}">
+            0
+          </div>
+
+          <div class="summary-description">
+            Requests currently requiring review
+          </div>
+
+        </div>
+
+
+        <!-- LIVE QUEUE -->
+
+        <div class="summary-card approved">
+
+          <div class="summary-accent"></div>
+
+          <div class="summary-top">
+
+            <div class="summary-title">
+              Live Queue
+            </div>
+
+            <div class="summary-icon">
+              ✓
+            </div>
+
+          </div>
+
+          <div class="summary-number"
+               id="liveQueueCount"
+               th:text="${pendingApprovalCount}">
+            0
+          </div>
+
+          <div class="summary-description">
+            Pending requests currently visible
+          </div>
+
+        </div>
+
+
+        <!-- LOGIN RULE -->
+
+        <div class="summary-card">
+
+          <div class="summary-accent"></div>
+
+          <div class="summary-top">
+
+            <div class="summary-title">
+              Login Rule
+            </div>
+
+            <div class="summary-icon">
+              ⏰
+            </div>
+
+          </div>
+
+          <div class="summary-number">
+            10:05
+          </div>
+
+          <div class="summary-description">
+            Approval required after this time
+          </div>
+
+        </div>
+
+
+        <!-- ACCESS CONTROL -->
+
+        <div class="summary-card">
+
+          <div class="summary-accent"></div>
+
+          <div class="summary-top">
+
+            <div class="summary-title">
+              Access Control
+            </div>
+
+            <div class="summary-icon">
+              🔐
+            </div>
+
+          </div>
+
+          <div class="summary-number">
+            Active
+          </div>
+
+          <div class="summary-description">
+            Pending employees remain blocked
+          </div>
+
+        </div>
+
+
+      </div>
+
+
+      <!-- =================================================
+           APPROVAL TABLE CARD
+      ================================================= -->
+
+      <section class="approval-card">
+
+
+        <!-- CARD HEADER -->
+
+        <div class="approval-header">
+
+          <div class="approval-header-left">
+
+            <h2>
+              Pending Login Requests
+            </h2>
+
+            <p>
+              Review each employee's late-login
+              request before granting dashboard access.
+            </p>
+
+          </div>
+
+
+          <div class="pending-pill">
+
+            <span class="pending-pill-dot"></span>
+
+            <span id="pendingPill"
+                  th:text="${pendingApprovalCount + ' Pending'}">
+                            0 Pending
+                        </span>
+
+          </div>
+
+        </div>
+
+
+        <!-- =================================================
+             TOOLBAR
+        ================================================= -->
+
+        <div class="toolbar">
+
+
+          <!-- SEARCH -->
+
+          <div class="search-box">
+
+                        <span class="search-icon">
+                            🔍
+                        </span>
+
+            <input type="text"
+                   id="employeeSearch"
+                   placeholder="Search employee...">
+
+          </div>
+
+
+          <!-- STATUS FILTER -->
+
+          <select class="filter-select"
+                  id="statusFilter">
+
+            <option value="ALL">
+              All Requests
+            </option>
+
+            <option value="PENDING"
+                    selected>
+              Pending
+            </option>
+
+          </select>
+
+
+          <!-- REFRESH -->
+
+          <button type="button"
+                  class="refresh-btn"
+                  id="refreshButton"
+                  onclick="refreshLoginApprovals(this)">
+
+                        <span class="refresh-icon">
+                            ↻
+                        </span>
+
+            <span class="refresh-text">
+                            Refresh
+                        </span>
+
+          </button>
+
+
+        </div>
+
+
+        <!-- REFRESH ERROR -->
+
+        <div class="refresh-error"
+             id="refreshError">
+
+          Unable to refresh login approvals.
+          Please try again.
+
+        </div>
+
+
+        <!-- =================================================
+             TABLE
+        ================================================= -->
+
+        <div class="table-container">
+
+          <table id="approvalTable">
+
+            <thead>
+
+            <tr>
+
+              <th>
+                Employee
+              </th>
+
+              <th>
+                Login Time
+              </th>
+
+              <th>
+                Delay
+              </th>
+
+              <th>
+                Status
+              </th>
+
+              <th>
+                Action
+              </th>
+
+            </tr>
+
+            </thead>
+
+
+            <tbody id="approvalTableBody">
+
+
+            <!-- =================================================
+                 SERVER-SIDE REQUESTS
+            ================================================= -->
+
+            <tr th:each="row : ${requests}"
+                class="approval-row"
+                th:attr="
+                                data-status=${row.request.status},
+                                data-employee=${row.employee.name}">
+
+
+              <!-- EMPLOYEE -->
+
+              <td>
+
+                <div class="employee-cell">
+
+                  <div class="employee-avatar"
+                       th:text="${row.employee.name != null
+                                                   and !row.employee.name.isEmpty()
+                                                   ? #strings.substring(
+                                                       row.employee.name,
+                                                       0,
+                                                       1
+                                                     ).toUpperCase()
+                                                   : 'E'}">
+                    E
+                  </div>
+
+
+                  <div class="employee-info">
+
+                    <div class="employee-name"
+                         th:text="${row.employee.name}">
+                      Employee
+                    </div>
+
+
+                    <div class="employee-id">
+
+                                            <span th:if="${row.employee.employeeLoginId != null}"
+                                                  th:text="${row.employee.employeeLoginId}">
+                                                EMP001
+                                            </span>
+
+                      <span th:if="${row.employee.employeeLoginId == null}">
+                                                No Login ID
+                                            </span>
+
+                    </div>
+
+
+                    <div class="employee-id"
+                         th:if="${row.employee.designation != null}"
+                         th:text="${row.employee.designation}">
+                      Java Developer
+                    </div>
+
+
+                    <div class="employee-id"
+                         th:if="${row.employee.domain != null}"
+                         th:text="${row.employee.domain}">
+                      Development
+                    </div>
+
+                  </div>
+
+                </div>
+
+              </td>
+
+
+              <!-- LOGIN TIME -->
+
+              <td>
+
+                <div class="login-time"
+                     th:text="${#temporals.format(
+                                                row.request.loginTime,
+                                                'hh:mm a'
+                                              )}">
+                  10:32 AM
+                </div>
+
+                <div class="login-date"
+                     th:text="${#temporals.format(
+                                                row.request.loginTime,
+                                                'dd MMM yyyy'
+                                              )}">
+                  24 Sep 2026
+                </div>
+
+              </td>
+
+
+              <!-- DELAY -->
+
+              <td>
+
+                <div class="late-indicator">
+
+                  <span class="late-dot"></span>
+
+                  <span th:if="${row.delayMinutes > 0}"
+                        th:text="${'+' + row.delayMinutes + ' min'}">
+                                        +32 min
+                                    </span>
+
+                  <span th:if="${row.delayMinutes == 0}">
+                                        On Time
+                                    </span>
+
+                </div>
+
+              </td>
+
+
+              <!-- STATUS -->
+
+              <td>
+
+
+                                <span class="status status-pending"
+                                      th:if="${row.request.status == 'PENDING'}">
+
+                                    <span class="status-dot"></span>
+
+                                    PENDING
+
+                                </span>
+
+
+                <span class="status status-approved"
+                      th:if="${row.request.status == 'APPROVED'}">
+
+                                    <span class="status-dot"></span>
+
+                                    APPROVED
+
+                                </span>
+
+
+                <span class="status status-rejected"
+                      th:if="${row.request.status == 'REJECTED'}">
+
+                                    <span class="status-dot"></span>
+
+                                    REJECTED
+
+                                </span>
+
+
+              </td>
+
+
+              <!-- ACTION -->
+
+              <td>
+
+                <div class="actions"
+                     th:if="${row.request.status == 'PENDING'}">
+
+
+                  <!-- APPROVE -->
+
+                  <form class="action-form"
+                        th:action="@{'/admin/login-approvals/approve/' + ${row.request.id}}"
+                        method="post">
+
+                    <button type="submit"
+                            class="action-btn approve-btn"
+                            onclick="return confirm('Approve this late login request?');">
+
+                      ✓ Approve
+
+                    </button>
+
+                  </form>
+
+
+                  <!-- REJECT -->
+
+                  <form class="action-form"
+                        th:action="@{'/admin/login-approvals/reject/' + ${row.request.id}}"
+                        method="post">
+
+                    <button type="submit"
+                            class="action-btn reject-btn"
+                            onclick="return confirm('Reject this late login request?');">
+
+                      ✕ Reject
+
+                    </button>
+
+                  </form>
+
+
+                </div>
+
+
+                <span th:if="${row.request.status != 'PENDING'}"
+                      style="color:#9ca3af;font-size:10px;">
+                                    Processed
+                                </span>
+
+              </td>
+
+
+            </tr>
+
+
+            <!-- =================================================
+                 EMPTY STATE
+            ================================================= -->
+
+            <tr id="emptyStateRow"
+                th:if="${#lists.isEmpty(requests)}">
+
+              <td colspan="5">
+
+                <div class="empty-state">
+
+                  <div class="empty-icon">
+                    ✓
+                  </div>
+
+                  <div class="empty-title">
+                    No Pending Login Approvals
+                  </div>
+
+                  <div class="empty-text">
+                    There are currently no employee
+                    late-login requests waiting for
+                    administrator approval.
+                  </div>
+
+                </div>
+
+              </td>
+
+            </tr>
+
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+
+        <!-- =================================================
+             FOOTER
+        ================================================= -->
+
+        <div class="page-footer">
+
+                    <span>
+                        TeamLogger Access Control
+                    </span>
+
+          <span>
+                        Late login threshold: 10:05 AM
+                    </span>
+
+        </div>
+
+
+      </section>
+
+
+    </div>
+
+
+  </main>
+
+
+</div>
+
+
+<script th:inline="javascript">
+
+
+  /* ============================================================
+     LOGIN APPROVAL DATA URL
+  ============================================================ */
+
+  const LOGIN_APPROVAL_DATA_URL =
+      /*[[@{/admin/login-approvals/data}]]*/
+      '/admin/login-approvals/data';
+
+
+  /* ============================================================
+     ACTIVE ADMIN NAVIGATION
+
+     Dashboard uses exact matching.
+
+     Other pages also match child URLs.
+  ============================================================ */
+
+  function setActiveAdminNavigation() {
+
+      const currentPath =
+          window.location.pathname.replace(/\/+$/, "") || "/";
+
+
+      const navItems =
+          document.querySelectorAll(
+              ".nav-item[data-path]"
+          );
+
+
+      navItems.forEach(function(item) {
+
+          const path =
+              item.getAttribute("data-path");
+
+
+          if (!path) {
+              return;
+          }
+
+
+          const normalizedPath =
+              path.replace(/\/+$/, "");
+
+
+          const isDashboard =
+              normalizedPath === "/admin/dashboard";
+
+
+          const isActive =
+              isDashboard
+                  ? currentPath === normalizedPath
+                  : (
+                      currentPath === normalizedPath ||
+                      currentPath.startsWith(
+                          normalizedPath + "/"
+                      )
+                  );
+
+
+          if (isActive) {
+
+              item.classList.add("active");
+
+          } else {
+
+              item.classList.remove("active");
+
+          }
+
+      });
+
+  }
+
+
+  /* ============================================================
+     INITIAL PAGE LOAD
+  ============================================================ */
+
+  document.addEventListener(
+      "DOMContentLoaded",
+      function() {
+
+          setActiveAdminNavigation();
+
+          applyApprovalFilters();
+
+      }
+  );
+
+
+  /* ============================================================
+     REFRESH LOGIN APPROVALS
+  ============================================================ */
+
+  async function refreshLoginApprovals(button) {
+
+      if (!button) {
+          return;
+      }
+
+
+      button.disabled = true;
+
+
+      const text =
+          button.querySelector(
+              ".refresh-text"
+          );
+
+
+      const icon =
+          button.querySelector(
+              ".refresh-icon"
+          );
+
+
+      if (text) {
+
+          text.textContent =
+              "Refreshing...";
+
+      }
+
+
+      if (icon) {
+
+          icon.style.display =
+              "inline-block";
+
+          icon.style.animation =
+              "refreshSpin 0.8s linear infinite";
+
+      }
+
+
+      hideRefreshError();
+
+
+      try {
+
+          const response =
+              await fetch(
+                  LOGIN_APPROVAL_DATA_URL +
+                  "?_=" +
+                  Date.now(),
+                  {
+                      method: "GET",
+
+                      credentials:
+                          "same-origin",
+
+                      cache:
+                          "no-store",
+
+                      headers: {
+
+                          "Accept":
+                              "application/json",
+
+                          "Cache-Control":
+                              "no-cache"
+
+                      }
+                  }
+              );
+
+
+          /* ====================================================
+             SESSION EXPIRED
+          ==================================================== */
+
+          if (response.status === 401) {
+
+              window.location.href =
+                  "/login?error=session-expired";
+
+              return;
+          }
+
+
+          /* ====================================================
+             FORBIDDEN
+          ==================================================== */
+
+          if (response.status === 403) {
+
+              showRefreshError(
+                  "Access denied. Your admin session may have expired. Please login again."
+              );
+
+              return;
+          }
+
+
+          /* ====================================================
+             SERVER ERROR
+          ==================================================== */
+
+          if (!response.ok) {
+
+              throw new Error(
+                  "HTTP " +
+                  response.status
+              );
+
+          }
+
+
+          /* ====================================================
+             READ JSON
+          ==================================================== */
+
+          const data =
+              await response.json();
+
+
+          /* ====================================================
+             UPDATE COUNTS
+          ==================================================== */
+
+          updateApprovalCounts(
+              data.pendingApprovalCount || 0
+          );
+
+
+          /* ====================================================
+             UPDATE TABLE
+          ==================================================== */
+
+          updateApprovalTable(
+              data.requests || []
+          );
+
+
+          /* ====================================================
+             RE-APPLY FILTER
+          ==================================================== */
+
+          applyApprovalFilters();
+
+
+      } catch (error) {
+
+          console.error(
+              "Login approval refresh error:",
+              error
+          );
+
+
+          showRefreshError(
+              "Unable to refresh login approvals. Please try again."
+          );
+
+
+      } finally {
+
+          button.disabled = false;
+
+
+          if (text) {
+
+              text.textContent =
+                  "Refresh";
+
+          }
+
+
+          if (icon) {
+
+              icon.style.animation =
+                  "";
+
+          }
+
+      }
+
+  }
+
+
+  /* ============================================================
+     UPDATE COUNTS
+  ============================================================ */
+
+  function updateApprovalCounts(count) {
+
+      const pendingCount =
+          Number(count) || 0;
+
+
+      /* MAIN COUNT */
+
+      const pendingApprovalCount =
+          document.getElementById(
+              "pendingApprovalCount"
+          );
+
+
+      if (pendingApprovalCount) {
+
+          pendingApprovalCount.textContent =
+              pendingCount;
+
+      }
+
+
+      /* LIVE QUEUE */
+
+      const liveQueueCount =
+          document.getElementById(
+              "liveQueueCount"
+          );
+
+
+      if (liveQueueCount) {
+
+          liveQueueCount.textContent =
+              pendingCount;
+
+      }
+
+
+      /* PENDING PILL */
+
+      const pendingPill =
+          document.getElementById(
+              "pendingPill"
+          );
+
+
+      if (pendingPill) {
+
+          pendingPill.textContent =
+              pendingCount +
+              " Pending";
+
+      }
+
+
+      /* SIDEBAR BADGE */
+
+      const existingBadge =
+          document.getElementById(
+              "sidebarPendingBadge"
+          );
+
+
+      if (pendingCount > 0) {
+
+          if (existingBadge) {
+
+              existingBadge.textContent =
+                  pendingCount;
+
+              existingBadge.style.display =
+                  "inline-flex";
+
+          } else {
+
+              const loginApprovalLink =
+                  document.querySelector(
+                      '#adminNavigation a[data-path="/admin/login-approvals"]'
+                  );
+
+
+              if (loginApprovalLink) {
+
+                  const badge =
+                      document.createElement(
+                          "span"
+                      );
+
+                  badge.className =
+                      "nav-badge";
+
+                  badge.id =
+                      "sidebarPendingBadge";
+
+                  badge.textContent =
+                      pendingCount;
+
+                  loginApprovalLink.appendChild(
+                      badge
+                  );
+
+              }
+
+          }
+
+      } else {
+
+          if (existingBadge) {
+
+              existingBadge.style.display =
+                  "none";
+
+          }
+
+      }
+
+  }
+
+
+  /* ============================================================
+     UPDATE TABLE
+  ============================================================ */
+
+  function updateApprovalTable(requests) {
+
+      const tableBody =
+          document.getElementById(
+              "approvalTableBody"
+          );
+
+
+      if (!tableBody) {
+          return;
+      }
+
+
+      tableBody.innerHTML =
+          "";
+
+
+      /* ========================================================
+         EMPTY STATE
+      ======================================================== */
+
+      if (
+          !requests ||
+          requests.length === 0
+      ) {
+
+          const emptyRow =
+              document.createElement(
+                  "tr"
+              );
+
+          emptyRow.id =
+              "emptyStateRow";
+
+
+          const emptyCell =
+              document.createElement(
+                  "td"
+              );
+
+          emptyCell.colSpan =
+              5;
+
+
+          emptyCell.innerHTML = `
+
+              <div class="empty-state">
+
+                  <div class="empty-icon">
+                      ✓
+                  </div>
+
+                  <div class="empty-title">
+                      No Pending Login Approvals
+                  </div>
+
+                  <div class="empty-text">
+                      There are currently no employee
+                      late-login requests waiting for
+                      administrator approval.
+                  </div>
+
+              </div>
+
+          `;
+
+
+          emptyRow.appendChild(
+              emptyCell
+          );
+
+
+          tableBody.appendChild(
+              emptyRow
+          );
+
+
+          return;
+      }
+
+
+      /* ========================================================
+         CREATE ROWS
+      ======================================================== */
+
+      requests.forEach(
+          function(request) {
+
+              tableBody.appendChild(
+                  createApprovalRow(request)
+              );
+
+          }
+      );
+
+  }
+
+
+  /* ============================================================
+     CREATE APPROVAL ROW
+  ============================================================ */
+
+  function createApprovalRow(request) {
+
+      const row =
+          document.createElement(
+              "tr"
+          );
+
+
+      row.className =
+          "approval-row";
+
+
+      row.setAttribute(
+          "data-status",
+          request.status || "PENDING"
+      );
+
+
+      row.setAttribute(
+          "data-employee",
+          request.employeeName || ""
+      );
+
+
+      /* ========================================================
+         EMPLOYEE
+      ======================================================== */
+
+      const employeeCell =
+          document.createElement(
+              "td"
+          );
+
+
+      const employeeWrapper =
+          document.createElement(
+              "div"
+          );
+
+
+      employeeWrapper.className =
+          "employee-cell";
+
+
+      const avatar =
+          document.createElement(
+              "div"
+          );
+
+
+      avatar.className =
+          "employee-avatar";
+
+
+      const employeeName =
+          request.employeeName ||
+          "Unknown";
+
+
+      avatar.textContent =
+          employeeName
+              .trim()
+              .charAt(0)
+              .toUpperCase();
+
+
+      const employeeInfo =
+          document.createElement(
+              "div"
+          );
+
+
+      employeeInfo.className =
+          "employee-info";
+
+
+      const name =
+          document.createElement(
+              "div"
+          );
+
+
+      name.className =
+          "employee-name";
+
+
+      name.textContent =
+          employeeName;
+
+
+      const loginId =
+          document.createElement(
+              "div"
+          );
+
+
+      loginId.className =
+          "employee-id";
+
+
+      loginId.textContent =
+          request.employeeLoginId ||
+          "No Login ID";
+
+
+      employeeInfo.appendChild(
+          name
+      );
+
+
+      employeeInfo.appendChild(
+          loginId
+      );
+
+
+      if (request.designation) {
+
+          const designation =
+              document.createElement(
+                  "div"
+              );
+
+
+          designation.className =
+              "employee-id";
+
+
+          designation.textContent =
+              request.designation;
+
+
+          employeeInfo.appendChild(
+              designation
+          );
+
+      }
+
+
+      if (request.domain) {
+
+          const domain =
+              document.createElement(
+                  "div"
+              );
+
+
+          domain.className =
+              "employee-id";
+
+
+          domain.textContent =
+              request.domain;
+
+
+          employeeInfo.appendChild(
+              domain
+          );
+
+      }
+
+
+      employeeWrapper.appendChild(
+          avatar
+      );
+
+
+      employeeWrapper.appendChild(
+          employeeInfo
+      );
+
+
+      employeeCell.appendChild(
+          employeeWrapper
+      );
+
+
+      /* ========================================================
+         LOGIN TIME
+      ======================================================== */
+
+      const loginTimeCell =
+          document.createElement(
+              "td"
+          );
+
+
+      const loginTime =
+          document.createElement(
+              "div"
+          );
+
+
+      loginTime.className =
+          "login-time";
+
+
+      const loginDate =
+          document.createElement(
+              "div"
+          );
+
+
+      loginDate.className =
+          "login-date";
+
+
+      const parsedDate =
+          request.loginTime
+              ? new Date(
+                  request.loginTime
+              )
+              : null;
+
+
+      if (
+          parsedDate &&
+          !isNaN(
+              parsedDate.getTime()
+          )
+      ) {
+
+          loginTime.textContent =
+              parsedDate.toLocaleTimeString(
+                  "en-IN",
+                  {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: true
+                  }
+              );
+
+
+          loginDate.textContent =
+              parsedDate.toLocaleDateString(
+                  "en-IN",
+                  {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric"
+                  }
+              );
+
+      } else {
+
+          loginTime.textContent =
+              "Unknown";
+
+          loginDate.textContent =
+              "";
+
+      }
+
+
+      loginTimeCell.appendChild(
+          loginTime
+      );
+
+
+      loginTimeCell.appendChild(
+          loginDate
+      );
+
+
+      /* ========================================================
+         DELAY
+      ======================================================== */
+
+      const delayCell =
+          document.createElement(
+              "td"
+          );
+
+
+      const lateIndicator =
+          document.createElement(
+              "div"
+          );
+
+
+      lateIndicator.className =
+          "late-indicator";
+
+
+      const lateDot =
+          document.createElement(
+              "span"
+          );
+
+
+      lateDot.className =
+          "late-dot";
+
+
+      const delayText =
+          document.createElement(
+              "span"
+          );
+
+
+      const delayMinutes =
+          Number(
+              request.delayMinutes || 0
+          );
+
+
+      delayText.textContent =
+          delayMinutes > 0
+              ? "+" +
+                delayMinutes +
+                " min"
+              : "On Time";
+
+
+      lateIndicator.appendChild(
+          lateDot
+      );
+
+
+      lateIndicator.appendChild(
+          delayText
+      );
+
+
+      delayCell.appendChild(
+          lateIndicator
+      );
+
+
+      /* ========================================================
+         STATUS
+      ======================================================== */
+
+      const statusCell =
+          document.createElement(
+              "td"
+          );
+
+
+      const status =
+          String(
+              request.status ||
+              "PENDING"
+          ).toUpperCase();
+
+
+      const statusBadge =
+          document.createElement(
+              "span"
+          );
+
+
+      statusBadge.className =
+          "status";
+
+
+      const statusDot =
+          document.createElement(
+              "span"
+          );
+
+
+      statusDot.className =
+          "status-dot";
+
+
+      if (status === "APPROVED") {
+
+          statusBadge.classList.add(
+              "status-approved"
+          );
+
+      } else if (
+          status === "REJECTED"
+      ) {
+
+          statusBadge.classList.add(
+              "status-rejected"
+          );
+
+      } else {
+
+          statusBadge.classList.add(
+              "status-pending"
+          );
+
+      }
+
+
+      statusBadge.appendChild(
+          statusDot
+      );
+
+
+      statusBadge.appendChild(
+          document.createTextNode(
+              " " + status
+          )
+      );
+
+
+      statusCell.appendChild(
+          statusBadge
+      );
+
+
+      /* ========================================================
+         ACTION
+      ======================================================== */
+
+      const actionCell =
+          document.createElement(
+              "td"
+          );
+
+
+      if (status === "PENDING") {
+
+          const actions =
+              document.createElement(
+                  "div"
+              );
+
+
+          actions.className =
+              "actions";
+
+
+          /* APPROVE */
+
+          const approveForm =
+              document.createElement(
+                  "form"
+              );
+
+
+          approveForm.className =
+              "action-form";
+
+
+          approveForm.method =
+              "post";
+
+
+          approveForm.action =
+              "/admin/login-approvals/approve/" +
+              request.id;
+
+
+          const approveButton =
+              document.createElement(
+                  "button"
+              );
+
+
+          approveButton.type =
+              "submit";
+
+
+          approveButton.className =
+              "action-btn approve-btn";
+
+
+          approveButton.textContent =
+              "✓ Approve";
+
+
+          approveButton.addEventListener(
+              "click",
+              function(event) {
+
+                  if (
+                      !confirm(
+                          "Approve this late login request?"
+                      )
+                  ) {
+
+                      event.preventDefault();
+
+                  }
+
+              }
+          );
+
+
+          approveForm.appendChild(
+              approveButton
+          );
+
+
+          /* REJECT */
+
+          const rejectForm =
+              document.createElement(
+                  "form"
+              );
+
+
+          rejectForm.className =
+              "action-form";
+
+
+          rejectForm.method =
+              "post";
+
+
+          rejectForm.action =
+              "/admin/login-approvals/reject/" +
+              request.id;
+
+
+          const rejectButton =
+              document.createElement(
+                  "button"
+              );
+
+
+          rejectButton.type =
+              "submit";
+
+
+          rejectButton.className =
+              "action-btn reject-btn";
+
+
+          rejectButton.textContent =
+              "✕ Reject";
+
+
+          rejectButton.addEventListener(
+              "click",
+              function(event) {
+
+                  if (
+                      !confirm(
+                          "Reject this late login request?"
+                      )
+                  ) {
+
+                      event.preventDefault();
+
+                  }
+
+              }
+          );
+
+
+          rejectForm.appendChild(
+              rejectButton
+          );
+
+
+          actions.appendChild(
+              approveForm
+          );
+
+
+          actions.appendChild(
+              rejectForm
+          );
+
+
+          actionCell.appendChild(
+              actions
+          );
+
+
+      } else {
+
+          const processed =
+              document.createElement(
+                  "span"
+              );
+
+
+          processed.style.color =
+              "#9ca3af";
+
+
+          processed.style.fontSize =
+              "10px";
+
+
+          processed.textContent =
+              "Processed";
+
+
+          actionCell.appendChild(
+              processed
+          );
+
+      }
+
+
+      /* ========================================================
+         APPEND CELLS
+      ======================================================== */
+
+      row.appendChild(
+          employeeCell
+      );
+
+
+      row.appendChild(
+          loginTimeCell
+      );
+
+
+      row.appendChild(
+          delayCell
+      );
+
+
+      row.appendChild(
+          statusCell
+      );
+
+
+      row.appendChild(
+          actionCell
+      );
+
+
+      return row;
+
+  }
+
+
+  /* ============================================================
+     SEARCH + FILTER
+  ============================================================ */
+
+  function applyApprovalFilters() {
+
+      const searchInput =
+          document.getElementById(
+              "employeeSearch"
+          );
+
+
+      const statusFilter =
+          document.getElementById(
+              "statusFilter"
+          );
+
+
+      const searchTerm =
+          searchInput
+              ? searchInput.value
+                  .trim()
+                  .toLowerCase()
+              : "";
+
+
+      const selectedStatus =
+          statusFilter
+              ? statusFilter.value
+              : "ALL";
+
+
+      const rows =
+          document.querySelectorAll(
+              "#approvalTableBody .approval-row"
+          );
+
+
+      rows.forEach(
+          function(row) {
+
+              const employee =
+                  (
+                      row.getAttribute(
+                          "data-employee"
+                      ) || ""
+                  ).toLowerCase();
+
+
+              const status =
+                  (
+                      row.getAttribute(
+                          "data-status"
+                      ) || ""
+                  ).toUpperCase();
+
+
+              const matchesSearch =
+                  employee.includes(
+                      searchTerm
+                  );
+
+
+              const matchesStatus =
+                  selectedStatus === "ALL" ||
+                  status === selectedStatus;
+
+
+              row.style.display =
+                  matchesSearch &&
+                  matchesStatus
+                      ? ""
+                      : "none";
+
+          }
+      );
+
+  }
+
+
+  /* ============================================================
+     SEARCH EVENT
+  ============================================================ */
+
+  const employeeSearch =
+      document.getElementById(
+          "employeeSearch"
+      );
+
+
+  if (employeeSearch) {
+
+      employeeSearch.addEventListener(
+          "input",
+          applyApprovalFilters
+      );
+
+  }
+
+
+  /* ============================================================
+     FILTER EVENT
+  ============================================================ */
+
+  const statusFilter =
+      document.getElementById(
+          "statusFilter"
+      );
+
+
+  if (statusFilter) {
+
+      statusFilter.addEventListener(
+          "change",
+          applyApprovalFilters
+      );
+
+  }
+
+
+  /* ============================================================
+     REFRESH ERROR
+  ============================================================ */
+
+  function showRefreshError(message) {
+
+      const errorBox =
+          document.getElementById(
+              "refreshError"
+          );
+
+
+      if (!errorBox) {
+          return;
+      }
+
+
+      errorBox.textContent =
+          message;
+
+
+      errorBox.style.display =
+          "block";
+
+  }
+
+
+  function hideRefreshError() {
+
+      const errorBox =
+          document.getElementById(
+              "refreshError"
+          );
+
+
+      if (!errorBox) {
+          return;
+      }
+
+
+      errorBox.style.display =
+          "none";
+
+  }
+
+
+</script>
+
+
+</body>
+
+</html>

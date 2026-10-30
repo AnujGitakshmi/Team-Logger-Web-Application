@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+  <title>Notifications | TeamLogger</title>
+
+  <style>
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body {
+        background: #f5f7fb;
+        color: #1f2937;
+    }
+
+    /* ================================
+       SIDEBAR
+       ================================ */
+
+    .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+
+        width: 245px;
+        height: 100vh;
+
+        background: #111827;
+
+        display: flex;
+        flex-direction: column;
+
+        z-index: 1000;
+    }
+
+    .logo-section {
+        height: 75px;
+
+        display: flex;
+        align-items: center;
+
+        padding: 0 25px;
+
+        border-bottom: 1px solid #273244;
+    }
+
+    .logo {
+        color: #ffffff;
+        font-size: 22px;
+        font-weight: 700;
+    }
+
+    .logo span {
+        color: #60a5fa;
+    }
+
+    /* ================================
+       NAVIGATION
+       ================================ */
+
+    .nav-section {
+        padding: 20px 12px;
+        flex: 1;
+    }
+
+    .nav-link {
+        display: flex;
+        align-items: center;
+
+        width: 100%;
+
+        padding: 12px 14px;
+        margin-bottom: 6px;
+
+        border-radius: 8px;
+
+        color: #9ca3af;
+        text-decoration: none;
+
+        font-size: 14px;
+        font-weight: 500;
+
+        transition: 0.2s;
+    }
+
+    .nav-link:hover {
+        background: #1f2937;
+        color: #ffffff;
+    }
+
+    .nav-link.active {
+        background: #2563eb;
+        color: #ffffff;
+    }
+
+    .nav-icon {
+        width: 25px;
+        margin-right: 10px;
+
+        font-size: 17px;
+        text-align: center;
+    }
+
+    .notification-badge {
+        margin-left: auto;
+
+        min-width: 22px;
+        height: 22px;
+
+        padding: 0 6px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        background: #ef4444;
+        color: white;
+
+        border-radius: 50%;
+
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    /* ================================
+       PROFILE
+       ================================ */
+
+    .profile-section {
+        padding: 16px;
+
+        border-top: 1px solid #273244;
+    }
+
+    .profile-box {
+        display: flex;
+        align-items: center;
+
+        padding: 10px;
+
+        border-radius: 8px;
+
+        background: #1f2937;
+    }
+
+    .profile-avatar {
+        width: 38px;
+        height: 38px;
+
+        border-radius: 50%;
+
+        background: #2563eb;
+
+        color: white;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        font-weight: 700;
+
+        margin-right: 10px;
+    }
+
+    .profile-info {
+        overflow: hidden;
+    }
+
+    .profile-name {
+        color: white;
+        font-size: 13px;
+        font-weight: 600;
+
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .profile-role {
+        color: #9ca3af;
+        font-size: 11px;
+
+        margin-top: 3px;
+    }
+
+    /* ================================
+       MAIN CONTENT
+       ================================ */
+
+    .main-content {
+        margin-left: 245px;
+
+        min-height: 100vh;
+
+        padding: 30px;
+    }
+
+    /* ================================
+       TOP HEADER
+       ================================ */
+
+    .top-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        margin-bottom: 25px;
+    }
+
+    .page-title h1 {
+        font-size: 26px;
+        color: #111827;
+    }
+
+    .page-title p {
+        margin-top: 6px;
+
+        color: #6b7280;
+
+        font-size: 13px;
+    }
+
+    .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .btn {
+        border: none;
+
+        padding: 10px 15px;
+
+        border-radius: 7px;
+
+        font-size: 13px;
+        font-weight: 600;
+
+        cursor: pointer;
+    }
+
+    .btn-primary {
+        background: #2563eb;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #1d4ed8;
+    }
+
+    /* ================================
+       NOTIFICATION CONTAINER
+       ================================ */
+
+    .notification-container {
+        background: white;
+
+        border-radius: 12px;
+
+        border: 1px solid #e5e7eb;
+
+        overflow: hidden;
+    }
+
+    .notification-header {
+        padding: 18px 20px;
+
+        border-bottom: 1px solid #e5e7eb;
+
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .notification-header-left h2 {
+        font-size: 17px;
+        color: #111827;
+    }
+
+    .notification-header-left p {
+        margin-top: 4px;
+
+        color: #6b7280;
+
+        font-size: 12px;
+    }
+
+    /* ================================
+       NOTIFICATION ITEM
+       ================================ */
+
+    .notification-item {
+        display: flex;
+
+        gap: 15px;
+
+        padding: 18px 20px;
+
+        border-bottom: 1px solid #eef0f4;
+
+        transition: 0.2s;
+    }
+
+    .notification-item:last-child {
+        border-bottom: none;
+    }
+
+    .notification-item:hover {
+        background: #f9fafb;
+    }
+
+    .notification-item.unread {
+        background: #eff6ff;
+    }
+
+    .notification-icon {
+        width: 42px;
+        height: 42px;
+
+        min-width: 42px;
+
+        border-radius: 50%;
+
+        background: #dbeafe;
+
+        color: #2563eb;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        font-size: 18px;
+    }
+
+    .notification-content {
+        flex: 1;
+    }
+
+    .notification-title {
+        font-size: 14px;
+
+        font-weight: 700;
+
+        color: #111827;
+    }
+
+    .notification-message {
+        margin-top: 5px;
+
+        color: #4b5563;
+
+        font-size: 13px;
+
+        line-height: 1.5;
+    }
+
+    .notification-time {
+        margin-top: 7px;
+
+        color: #9ca3af;
+
+        font-size: 11px;
+    }
+
+    .notification-action {
+        display: flex;
+        align-items: center;
+    }
+
+    .read-btn {
+        border: 1px solid #d1d5db;
+
+        background: white;
+
+        color: #374151;
+
+        padding: 7px 10px;
+
+        border-radius: 6px;
+
+        font-size: 11px;
+
+        cursor: pointer;
+    }
+
+    .read-btn:hover {
+        background: #f3f4f6;
+    }
+
+    .unread-dot {
+        width: 8px;
+        height: 8px;
+
+        background: #2563eb;
+
+        border-radius: 50%;
+
+        margin-right: 8px;
+    }
+
+    /* ================================
+       EMPTY STATE
+       ================================ */
+
+    .empty-state {
+        padding: 70px 20px;
+
+        text-align: center;
+    }
+
+    .empty-icon {
+        font-size: 45px;
+
+        margin-bottom: 15px;
+    }
+
+    .empty-state h3 {
+        font-size: 17px;
+
+        color: #374151;
+
+        margin-bottom: 6px;
+    }
+
+    .empty-state p {
+        font-size: 13px;
+
+        color: #9ca3af;
+    }
+
+    /* ================================
+       RESPONSIVE
+       ================================ */
+
+    @media (max-width: 900px) {
+
+        .sidebar {
+            width: 210px;
+        }
+
+        .main-content {
+            margin-left: 210px;
+            padding: 20px;
+        }
+
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+
+<!-- =====================================================
+     SIDEBAR
+     ===================================================== -->
+
+<div class="sidebar">
+
+  <!-- LOGO -->
+
+  <div class="logo-section">
+
+    <div class="logo">
+      Team<span>Logger</span>
+    </div>
+
+  </div>
+
+
+  <!-- NAVIGATION -->
+
+  <div class="nav-section">
+
+    <a th:href="@{/employee/dashboard}"
+       class="nav-link">
+
+      <span class="nav-icon">⌂</span>
+
+      <span>Dashboard</span>
+
+    </a>
+
+
+    <a th:href="@{/employee/projects}"
+       class="nav-link">
+
+      <span class="nav-icon">▣</span>
+
+      <span>My Projects</span>
+
+    </a>
+
+
+    <a th:href="@{/employee/tasks}"
+       class="nav-link">
+
+      <span class="nav-icon">✓</span>
+
+      <span>My Tasks</span>
+
+    </a>
+
+
+    <a th:href="@{/employee/attendance}"
+       class="nav-link">
+
+      <span class="nav-icon">◷</span>
+
+      <span>Attendance</span>
+
+    </a>
+
+
+    <a th:href="@{/employee/overtime}"
+       class="nav-link">
+
+      <span class="nav-icon">⏱</span>
+
+      <span>Overtime</span>
+
+    </a>
+
+
+    <a href="#"
+       class="nav-link">
+
+      <span class="nav-icon">▤</span>
+
+      <span>Screenshots</span>
+
+    </a>
+
+
+    <!-- ACTIVE NOTIFICATION LINK -->
+
+    <a th:href="@{/employee/notifications}"
+       class="nav-link active">
+
+      <span class="nav-icon">🔔</span>
+
+      <span>Notifications</span>
+
+      <span class="notification-badge"
+            th:if="${unreadNotificationCount > 0}"
+            th:text="${unreadNotificationCount}">
+            </span>
+
+    </a>
+
+
+    <a href="#"
+       class="nav-link">
+
+      <span class="nav-icon">⚙</span>
+
+      <span>Settings</span>
+
+    </a>
+
+
+    <a th:href="@{/logout}"
+       class="nav-link">
+
+      <span class="nav-icon">↪</span>
+
+      <span>Logout</span>
+
+    </a>
+
+  </div>
+
+
+  <!-- PROFILE -->
+
+  <div class="profile-section">
+
+    <div class="profile-box">
+
+      <div class="profile-avatar"
+           th:text="${#strings.substring(user.name, 0, 1).toUpperCase()}">
+        U
+      </div>
+
+      <div class="profile-info">
+
+        <div class="profile-name"
+             th:text="${user.name}">
+          Employee
+        </div>
+
+        <div class="profile-role"
+             th:text="${user.designation}">
+          Employee
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- =====================================================
+     MAIN CONTENT
+     ===================================================== -->
+
+<div class="main-content">
+
+
+  <!-- HEADER -->
+
+  <div class="top-header">
+
+    <div class="page-title">
+
+      <h1>Notifications</h1>
+
+      <p>
+        Stay updated with your latest TeamLogger activities.
+      </p>
+
+    </div>
+
+
+    <div class="header-actions">
+
+      <form th:action="@{/employee/notifications/read-all}"
+            method="post">
+
+        <button type="submit">
+          Mark all as read
+        </button>
+
+      </form>
+
+    </div>
+
+  </div>
+
+
+  <!-- =================================================
+       NOTIFICATIONS
+       ================================================= -->
+
+  <div class="notification-container">
+
+
+    <!-- HEADER -->
+
+    <div class="notification-header">
+
+      <div class="notification-header-left">
+
+        <h2>
+          Your Notifications
+        </h2>
+
+        <p>
+                    <span th:text="${unreadNotificationCount}">
+                        0
+                    </span>
+
+          unread notification(s)
+        </p>
+
+      </div>
+
+    </div>
+
+
+    <!-- =================================================
+         EMPTY STATE
+         ================================================= -->
+
+    <div class="empty-state"
+         th:if="${#lists.isEmpty(notifications)}">
+
+      <div class="empty-icon">
+        🔔
+      </div>
+
+      <h3>
+        No notifications
+      </h3>
+
+      <p>
+        You don't have any notifications yet.
+      </p>
+
+    </div>
+
+
+    <!-- =================================================
+         NOTIFICATION LIST
+         ================================================= -->
+
+    <div th:each="notification : ${notifications}"
+         class="notification-item"
+         th:classappend="${!notification.read} ? ' unread' : ''">
+
+
+      <!-- ICON -->
+
+      <div class="notification-icon">
+
+                <span th:if="${notification.type == 'PROJECT'}">
+                    📁
+                </span>
+
+        <span th:if="${notification.type == 'LOGIN_REQUEST'}">
+                    🔐
+                </span>
+
+        <span th:if="${notification.type == 'LOGIN_APPROVED'}">
+                    ✅
+                </span>
+
+        <span th:if="${notification.type == 'LOGIN_REJECTED'}">
+                    ❌
+                </span>
+
+        <span th:if="${notification.type == 'TASK'}">
+                    ✓
+                </span>
+
+        <span th:if="${notification.type != 'PROJECT'
+                              and notification.type != 'LOGIN_REQUEST'
+                              and notification.type != 'LOGIN_APPROVED'
+                              and notification.type != 'LOGIN_REJECTED'
+                              and notification.type != 'TASK'}">
+                    🔔
+                </span>
+
+      </div>
+
+
+      <!-- CONTENT -->
+
+      <div class="notification-content">
+
+        <div class="notification-title">
+
+                    <span class="unread-dot"
+                          th:if="${!notification.read}">
+                    </span>
+
+          <span th:text="${notification.title}">
+                        Notification title
+                    </span>
+
+        </div>
+
+
+        <div class="notification-message"
+             th:text="${notification.message}">
+
+          Notification message
+
+        </div>
+
+
+        <div class="notification-time"
+             th:text="${#temporals.format(notification.createdAt, 'dd MMM yyyy, hh:mm a')}">
+
+          24 Sep 2026, 10:30 AM
+
+        </div>
+
+      </div>
+
+
+      <!-- MARK READ -->
+
+      <div class="notification-action"
+           th:if="${!notification.read}">
+
+        <form th:action="@{'/employee/notifications/read/' + ${notification.id}}"
+              method="post">
+
+          <button type="submit" class="read-btn">
+            Mark read
+          </button>
+
+        </form>
+
+      </div>
+
+
+    </div>
+
+  </div>
+
+</div>
+
+
+</body>
+</html>

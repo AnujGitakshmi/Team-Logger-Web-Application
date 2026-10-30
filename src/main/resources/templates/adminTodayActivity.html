@@ -1,0 +1,2664 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title th:text="${adminSettings.companyName + ' | Today''s Activity'}">
+        Today's Activity | TeamLogger
+    </title>
+
+
+    <style>
+
+        /* =========================================================
+           RESET
+        ========================================================= */
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: Inter, -apple-system, BlinkMacSystemFont,
+                         "Segoe UI", Roboto, Arial, sans-serif;
+
+            background: #f5f7fb;
+
+            color: #111827;
+
+            min-height: 100vh;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        button,
+        input,
+        select {
+            font-family: inherit;
+        }
+
+
+        /* =========================================================
+           FIXED SIDEBAR
+        ========================================================= */
+
+        .sidebar {
+            position: fixed;
+
+            top: 0;
+            left: 0;
+            bottom: 0;
+
+            width: 250px;
+
+            background: #111827;
+
+            color: #ffffff;
+
+            display: flex;
+            flex-direction: column;
+
+            z-index: 1000;
+
+            overflow: hidden;
+        }
+
+
+        /* =========================================================
+           LOGO
+        ========================================================= */
+
+        .logo-section {
+            height: 78px;
+
+            display: flex;
+            align-items: center;
+
+            padding: 0 22px;
+
+            border-bottom:
+                1px solid rgba(255,255,255,.08);
+
+            flex-shrink: 0;
+        }
+
+        .logo {
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+
+            min-width: 0;
+        }
+
+        .logo-icon {
+            width: 38px;
+            height: 38px;
+
+            min-width: 38px;
+
+            border-radius: 9px;
+
+            background: #2563eb;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            color: #ffffff;
+
+            font-size: 18px;
+
+            font-weight: 700;
+        }
+
+        .logo-text {
+            display: flex;
+
+            flex-direction: column;
+
+            min-width: 0;
+        }
+
+        .logo-title {
+            font-size: 16px;
+
+            font-weight: 700;
+
+            color: #ffffff;
+
+            white-space: nowrap;
+
+            overflow: hidden;
+
+            text-overflow: ellipsis;
+        }
+
+        .logo-subtitle {
+            font-size: 10px;
+
+            color: #9ca3af;
+
+            margin-top: 2px;
+
+            letter-spacing: .08em;
+        }
+
+
+        /* =========================================================
+           NAVIGATION
+        ========================================================= */
+
+        .sidebar-nav {
+            flex: 1;
+
+            padding: 20px 14px;
+
+            overflow-y: auto;
+
+            overflow-x: hidden;
+        }
+
+        .sidebar-nav::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .sidebar-nav::-webkit-scrollbar-thumb {
+            background: #374151;
+
+            border-radius: 10px;
+        }
+
+        .nav-section-title {
+            padding: 0 10px;
+
+            margin: 8px 0 10px;
+
+            font-size: 10px;
+
+            font-weight: 700;
+
+            letter-spacing: .08em;
+
+            color: #6b7280;
+
+            text-transform: uppercase;
+        }
+
+        .nav-item {
+            height: 44px;
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+
+            padding: 0 12px;
+
+            margin-bottom: 5px;
+
+            border-radius: 8px;
+
+            color: #9ca3af;
+
+            font-size: 13px;
+
+            font-weight: 500;
+
+            transition:
+                background .2s ease,
+                color .2s ease,
+                transform .2s ease;
+        }
+
+        .nav-item:hover {
+            background: #1f2937;
+
+            color: #ffffff;
+
+            transform: translateX(2px);
+        }
+
+        .nav-item.active {
+            background: #2563eb;
+
+            color: #ffffff;
+
+            box-shadow:
+                0 4px 12px rgba(37,99,235,.20);
+        }
+
+        .nav-icon {
+            width: 22px;
+
+            min-width: 22px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            font-size: 16px;
+
+            line-height: 1;
+        }
+
+
+        /* =========================================================
+           ADMIN PROFILE
+        ========================================================= */
+
+        .admin-profile {
+            padding: 16px;
+
+            border-top:
+                1px solid rgba(255,255,255,.08);
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 11px;
+
+            flex-shrink: 0;
+
+            min-width: 0;
+        }
+
+        .admin-avatar {
+            width: 38px;
+            height: 38px;
+
+            min-width: 38px;
+
+            border-radius: 50%;
+
+            background: #2563eb;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            color: #ffffff;
+
+            font-size: 13px;
+
+            font-weight: 700;
+        }
+
+        .admin-info {
+            min-width: 0;
+
+            display: flex;
+
+            flex-direction: column;
+        }
+
+        .admin-name {
+            color: #ffffff;
+
+            font-size: 13px;
+
+            font-weight: 600;
+
+            white-space: nowrap;
+
+            overflow: hidden;
+
+            text-overflow: ellipsis;
+        }
+
+        .admin-role {
+            color: #9ca3af;
+
+            font-size: 10px;
+
+            margin-top: 2px;
+        }
+
+
+        /* =========================================================
+           MAIN
+        ========================================================= */
+
+        .main {
+            margin-left: 250px;
+
+            min-height: 100vh;
+
+            width: calc(100% - 250px);
+        }
+
+
+        /* =========================================================
+           TOPBAR
+        ========================================================= */
+
+        .topbar {
+            height: 78px;
+
+            background: #ffffff;
+
+            border-bottom:
+                1px solid #e5e7eb;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            padding: 0 30px;
+
+            position: sticky;
+
+            top: 0;
+
+            z-index: 100;
+        }
+
+        .page-heading {
+            min-width: 0;
+        }
+
+        .page-heading h1 {
+            font-size: 21px;
+
+            font-weight: 700;
+
+            color: #111827;
+        }
+
+        .page-heading p {
+            margin-top: 4px;
+
+            font-size: 12px;
+
+            color: #6b7280;
+        }
+
+        .topbar-right {
+            display: flex;
+
+            align-items: center;
+
+            gap: 10px;
+
+            flex-shrink: 0;
+        }
+
+        .today-badge {
+            background: #eff6ff;
+
+            color: #2563eb;
+
+            padding: 8px 12px;
+
+            border-radius: 7px;
+
+            font-size: 11px;
+
+            font-weight: 600;
+
+            white-space: nowrap;
+        }
+
+        .refresh-btn {
+            display: inline-flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            gap: 6px;
+
+            height: 36px;
+
+            border: 1px solid #dbe1e8;
+
+            background: #ffffff;
+
+            color: #374151;
+
+            padding: 0 13px;
+
+            border-radius: 7px;
+
+            cursor: pointer;
+
+            font-size: 11px;
+
+            font-weight: 600;
+
+            transition:
+                background .2s ease,
+                border-color .2s ease,
+                transform .2s ease;
+        }
+
+        .refresh-btn:hover {
+            background: #f8fafc;
+
+            border-color: #cbd5e1;
+
+            transform: translateY(-1px);
+        }
+
+
+        /* =========================================================
+           CONTENT
+        ========================================================= */
+
+        .content {
+            padding: 28px 30px 40px;
+
+            max-width: 1800px;
+
+            margin: 0 auto;
+        }
+
+
+        /* =========================================================
+           STATISTICS
+        ========================================================= */
+
+        .stats-grid {
+            display: grid;
+
+            grid-template-columns:
+                repeat(4, minmax(0, 1fr));
+
+            gap: 18px;
+
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: #ffffff;
+
+            border: 1px solid #e5e7eb;
+
+            border-radius: 10px;
+
+            padding: 20px;
+
+            box-shadow:
+                0 1px 2px rgba(0,0,0,.02);
+
+            transition:
+                transform .2s ease,
+                box-shadow .2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+
+            box-shadow:
+                0 5px 15px rgba(15,23,42,.06);
+        }
+
+        .stat-top {
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+        }
+
+        .stat-title {
+            color: #6b7280;
+
+            font-size: 10px;
+
+            font-weight: 700;
+
+            text-transform: uppercase;
+
+            letter-spacing: .05em;
+        }
+
+        .stat-icon {
+            width: 30px;
+            height: 30px;
+
+            border-radius: 8px;
+
+            background: #f1f5f9;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            color: #64748b;
+
+            font-size: 14px;
+        }
+
+        .stat-value {
+            margin-top: 8px;
+
+            font-size: 27px;
+
+            font-weight: 700;
+
+            color: #111827;
+        }
+
+        .stat-description {
+            color: #9ca3af;
+
+            font-size: 11px;
+
+            margin-top: 4px;
+        }
+
+
+        /* =========================================================
+           ACTIVITY PANEL
+        ========================================================= */
+
+        .activity-panel {
+            background: #ffffff;
+
+            border: 1px solid #e5e7eb;
+
+            border-radius: 10px;
+
+            overflow: hidden;
+
+            box-shadow:
+                0 1px 2px rgba(0,0,0,.02);
+        }
+
+
+        /* =========================================================
+           PANEL HEADER
+        ========================================================= */
+
+        .panel-header {
+            padding: 18px 20px;
+
+            border-bottom:
+                1px solid #e5e7eb;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            gap: 20px;
+        }
+
+        .panel-title {
+            font-size: 15px;
+
+            font-weight: 700;
+
+            color: #111827;
+        }
+
+        .panel-subtitle {
+            font-size: 11px;
+
+            color: #9ca3af;
+
+            margin-top: 4px;
+        }
+
+
+        /* =========================================================
+           FILTERS
+        ========================================================= */
+
+        .filters {
+            display: flex;
+
+            align-items: center;
+
+            gap: 8px;
+
+            flex-shrink: 0;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-box input {
+            width: 220px;
+
+            height: 36px;
+
+            border: 1px solid #d9dee7;
+
+            border-radius: 7px;
+
+            padding: 0 12px 0 34px;
+
+            font-size: 11px;
+
+            outline: none;
+
+            background: #ffffff;
+
+            color: #374151;
+        }
+
+        .search-box input::placeholder {
+            color: #9ca3af;
+        }
+
+        .search-box input:focus {
+            border-color: #2563eb;
+
+            box-shadow:
+                0 0 0 3px rgba(37,99,235,.08);
+        }
+
+        .search-icon {
+            position: absolute;
+
+            left: 11px;
+
+            top: 10px;
+
+            color: #9ca3af;
+
+            font-size: 13px;
+
+            pointer-events: none;
+        }
+
+        .status-select {
+            height: 36px;
+
+            border: 1px solid #d9dee7;
+
+            border-radius: 7px;
+
+            padding: 0 10px;
+
+            font-size: 11px;
+
+            color: #374151;
+
+            background: #ffffff;
+
+            outline: none;
+
+            cursor: pointer;
+        }
+
+        .status-select:focus {
+            border-color: #2563eb;
+
+            box-shadow:
+                0 0 0 3px rgba(37,99,235,.08);
+        }
+
+
+        /* =========================================================
+           TABLE
+        ========================================================= */
+
+        .table-container {
+            width: 100%;
+
+            overflow-x: auto;
+        }
+
+        .table-container::-webkit-scrollbar {
+            height: 7px;
+        }
+
+        .table-container::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+
+            border-radius: 10px;
+        }
+
+        .activity-table {
+            width: 100%;
+
+            border-collapse: collapse;
+
+            min-width: 1250px;
+        }
+
+        .activity-table th {
+            background: #f9fafb;
+
+            color: #6b7280;
+
+            font-size: 10px;
+
+            text-transform: uppercase;
+
+            letter-spacing: .04em;
+
+            font-weight: 700;
+
+            text-align: left;
+
+            padding: 13px 15px;
+
+            border-bottom:
+                1px solid #e5e7eb;
+
+            white-space: nowrap;
+        }
+
+        .activity-table td {
+            padding: 15px;
+
+            border-bottom:
+                1px solid #f0f1f3;
+
+            font-size: 12px;
+
+            color: #374151;
+
+            vertical-align: middle;
+        }
+
+        .activity-table tbody tr {
+            transition:
+                background .15s ease;
+        }
+
+        .activity-table tbody tr:hover {
+            background: #fafbff;
+        }
+
+        .activity-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+
+        /* =========================================================
+           EMPLOYEE
+        ========================================================= */
+
+        .employee-cell {
+            display: flex;
+
+            align-items: center;
+
+            min-width: 175px;
+        }
+
+        .employee-avatar {
+            width: 36px;
+            height: 36px;
+
+            min-width: 36px;
+
+            border-radius: 9px;
+
+            background: #e0e7ff;
+
+            color: #3730a3;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            font-size: 12px;
+
+            font-weight: 700;
+
+            margin-right: 10px;
+        }
+
+        .employee-name {
+            font-weight: 700;
+
+            color: #111827;
+
+            font-size: 12px;
+
+            white-space: nowrap;
+        }
+
+        .employee-id {
+            font-size: 10px;
+
+            color: #9ca3af;
+
+            margin-top: 3px;
+
+            white-space: nowrap;
+        }
+
+
+        /* =========================================================
+           TIME
+        ========================================================= */
+
+        .time-main {
+            font-weight: 600;
+
+            color: #374151;
+
+            white-space: nowrap;
+        }
+
+        .time-label {
+            font-size: 10px;
+
+            color: #9ca3af;
+
+            margin-top: 3px;
+        }
+
+        .duration-active {
+            color: #15803d;
+
+            font-weight: 700;
+
+            white-space: nowrap;
+        }
+
+        .duration-idle {
+            color: #d97706;
+
+            font-weight: 700;
+
+            white-space: nowrap;
+        }
+
+
+        /* =========================================================
+           APPLICATION
+        ========================================================= */
+
+        .application-name {
+            font-weight: 600;
+
+            color: #374151;
+
+            white-space: nowrap;
+
+            max-width: 190px;
+
+            overflow: hidden;
+
+            text-overflow: ellipsis;
+        }
+
+        .window-title {
+            max-width: 190px;
+
+            overflow: hidden;
+
+            text-overflow: ellipsis;
+
+            white-space: nowrap;
+
+            font-size: 10px;
+
+            color: #9ca3af;
+
+            margin-top: 3px;
+        }
+
+
+        /* =========================================================
+           STATUS
+        ========================================================= */
+
+        .status-badge {
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 6px;
+
+            padding: 6px 10px;
+
+            border-radius: 20px;
+
+            font-size: 10px;
+
+            font-weight: 700;
+
+            white-space: nowrap;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+
+            border-radius: 50%;
+        }
+
+        .status-working {
+            background: #ecfdf5;
+
+            color: #059669;
+        }
+
+        .status-working .status-dot {
+            background: #10b981;
+        }
+
+        .status-idle {
+            background: #fff7ed;
+
+            color: #ea580c;
+        }
+
+        .status-idle .status-dot {
+            background: #f97316;
+        }
+
+        .status-offline {
+            background: #f3f4f6;
+
+            color: #6b7280;
+        }
+
+        .status-offline .status-dot {
+            background: #9ca3af;
+        }
+
+
+        /* =========================================================
+           INPUT ACTIVITY
+        ========================================================= */
+
+        .activity-counts {
+            display: flex;
+
+            align-items: center;
+
+            gap: 7px;
+        }
+
+        .count-item {
+            min-width: 43px;
+
+            padding: 6px 5px;
+
+            background: #f8fafc;
+
+            border: 1px solid #edf0f4;
+
+            border-radius: 6px;
+
+            text-align: center;
+        }
+
+        .count-value {
+            display: block;
+
+            font-size: 12px;
+
+            font-weight: 700;
+
+            color: #111827;
+        }
+
+        .count-label {
+            display: block;
+
+            font-size: 8px;
+
+            color: #9ca3af;
+
+            margin-top: 2px;
+
+            text-transform: uppercase;
+        }
+
+
+        /* =========================================================
+           EMPTY STATE
+        ========================================================= */
+
+        .empty-row {
+            text-align: center;
+
+            padding: 65px 20px !important;
+        }
+
+        .empty-icon {
+            width: 60px;
+            height: 60px;
+
+            margin: 0 auto 15px;
+
+            border-radius: 50%;
+
+            background: #f1f5f9;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            color: #64748b;
+
+            font-size: 25px;
+        }
+
+        .empty-title {
+            font-size: 15px;
+
+            font-weight: 700;
+
+            color: #374151;
+        }
+
+        .empty-description {
+            font-size: 12px;
+
+            color: #9ca3af;
+
+            margin-top: 6px;
+        }
+
+
+        /* =========================================================
+           PANEL FOOTER
+        ========================================================= */
+
+        .panel-footer {
+            padding: 13px 20px;
+
+            background: #fafbfc;
+
+            border-top:
+                1px solid #edf0f4;
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            gap: 15px;
+        }
+
+        .footer-text {
+            font-size: 11px;
+
+            color: #9ca3af;
+        }
+
+        .footer-text strong {
+            color: #374151;
+        }
+
+        .live-indicator {
+            display: flex;
+
+            align-items: center;
+
+            gap: 7px;
+
+            font-size: 11px;
+
+            color: #15803d;
+
+            font-weight: 600;
+        }
+
+        .live-dot {
+            width: 7px;
+            height: 7px;
+
+            border-radius: 50%;
+
+            background: #22c55e;
+
+            box-shadow:
+                0 0 0 4px rgba(34,197,94,.1);
+        }
+
+
+        /* =========================================================
+           RESPONSIVE - 1100
+        ========================================================= */
+
+        @media (max-width: 1100px) {
+
+            .stats-grid {
+                grid-template-columns:
+                    repeat(2, minmax(0, 1fr));
+            }
+
+            .panel-header {
+                align-items: flex-start;
+
+                flex-direction: column;
+
+                gap: 15px;
+            }
+
+            .filters {
+                width: 100%;
+            }
+
+            .search-box {
+                flex: 1;
+            }
+
+            .search-box input {
+                width: 100%;
+            }
+
+        }
+
+
+        /* =========================================================
+           RESPONSIVE - 800
+        ========================================================= */
+
+        @media (max-width: 800px) {
+
+            .sidebar {
+                width: 210px;
+            }
+
+            .main {
+                margin-left: 210px;
+
+                width: calc(100% - 210px);
+            }
+
+            .topbar {
+                padding: 0 20px;
+            }
+
+            .content {
+                padding: 22px 20px 35px;
+            }
+
+            .today-badge {
+                display: none;
+            }
+
+        }
+
+
+        /* =========================================================
+           RESPONSIVE - 600
+        ========================================================= */
+
+        @media (max-width: 600px) {
+
+            .sidebar {
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: auto;
+
+                width: 100%;
+
+                height: 68px;
+
+                flex-direction: row;
+
+                overflow: hidden;
+            }
+
+            .logo-section {
+                width: 68px;
+
+                height: 68px;
+
+                flex-shrink: 0;
+
+                justify-content: center;
+
+                padding: 0;
+            }
+
+            .logo-text {
+                display: none;
+            }
+
+            .sidebar-nav {
+                flex: 1;
+
+                height: 68px;
+
+                padding: 0 8px;
+
+                display: flex;
+
+                align-items: center;
+
+                gap: 5px;
+
+                overflow-x: auto;
+
+                overflow-y: hidden;
+            }
+
+            .nav-section-title {
+                display: none;
+            }
+
+            .nav-item {
+                height: 44px;
+
+                min-width: 44px;
+
+                width: 44px;
+
+                flex-shrink: 0;
+
+                justify-content: center;
+
+                padding: 0;
+
+                margin: 0;
+
+                border-radius: 8px;
+            }
+
+            .nav-item span:not(.nav-icon) {
+                display: none;
+            }
+
+            .admin-profile {
+                width: 58px;
+
+                height: 68px;
+
+                flex-shrink: 0;
+
+                justify-content: center;
+
+                padding: 0;
+
+                border-top: none;
+
+                border-left:
+                    1px solid rgba(255,255,255,.08);
+            }
+
+            .admin-info {
+                display: none;
+            }
+
+            .main {
+                margin-left: 0;
+
+                width: 100%;
+
+                padding-top: 68px;
+            }
+
+            .topbar {
+                height: 70px;
+
+                padding: 0 15px;
+            }
+
+            .page-heading p {
+                display: none;
+            }
+
+            .page-heading h1 {
+                font-size: 18px;
+            }
+
+            .topbar-right {
+                gap: 6px;
+            }
+
+            .refresh-btn {
+                height: 34px;
+
+                padding: 0 10px;
+
+                font-size: 10px;
+            }
+
+            .content {
+                padding: 18px 14px 30px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+
+                gap: 12px;
+
+                margin-bottom: 18px;
+            }
+
+            .stat-card {
+                padding: 17px;
+            }
+
+            .panel-header {
+                padding: 16px;
+            }
+
+            .filters {
+                flex-direction: column;
+
+                align-items: stretch;
+
+                width: 100%;
+            }
+
+            .search-box {
+                width: 100%;
+            }
+
+            .status-select {
+                width: 100%;
+            }
+
+            .panel-footer {
+                padding: 13px 16px;
+
+                align-items: flex-start;
+
+                flex-direction: column;
+
+                gap: 9px;
+            }
+
+        }
+
+
+        /* =========================================================
+           REDUCED MOTION
+        ========================================================= */
+
+        @media (prefers-reduced-motion: reduce) {
+
+            html {
+                scroll-behavior: auto;
+            }
+
+            *,
+            *::before,
+            *::after {
+                transition: none !important;
+
+                animation: none !important;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<!-- =============================================================
+     FIXED SIDEBAR
+============================================================== -->
+
+<aside class="sidebar">
+
+
+    <!-- =========================================================
+         LOGO
+    ========================================================== -->
+
+    <div class="logo-section">
+
+        <div class="logo">
+
+            <div class="logo-icon">
+                TL
+            </div>
+
+            <div class="logo-text">
+
+                <div class="logo-title"
+                     th:text="${adminSettings.companyName}">
+                    TeamLogger
+                </div>
+
+                <div class="logo-subtitle">
+                    ADMIN PANEL
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================================================
+         NAVIGATION
+    ========================================================== -->
+
+    <nav class="sidebar-nav">
+
+
+        <div class="nav-section-title">
+            Main
+        </div>
+
+
+        <!-- DASHBOARD -->
+
+        <a th:href="@{/admin/dashboard}"
+           class="nav-item"
+           data-path="/admin/dashboard">
+
+            <span class="nav-icon">
+                ▦
+            </span>
+
+            <span>
+                Dashboard
+            </span>
+
+        </a>
+
+
+        <!-- EMPLOYEES -->
+
+        <a th:href="@{/admin/employees}"
+           class="nav-item"
+           data-path="/admin/employees">
+
+            <span class="nav-icon">
+                👥
+            </span>
+
+            <span>
+                Employees
+            </span>
+
+        </a>
+
+
+        <!-- TODAY'S ACTIVITY -->
+
+        <a th:href="@{/admin/tracking}"
+           class="nav-item"
+           data-path="/admin/tracking">
+
+            <span class="nav-icon">
+                ◉
+            </span>
+
+            <span>
+                Today's Activity
+            </span>
+
+        </a>
+
+
+        <!-- PROJECTS -->
+
+        <a th:href="@{/admin/projects}"
+           class="nav-item"
+           data-path="/admin/projects">
+
+            <span class="nav-icon">
+                ▣
+            </span>
+
+            <span>
+                Projects
+            </span>
+
+        </a>
+
+
+        <div class="nav-section-title">
+            Management
+        </div>
+
+
+        <!-- OVERTIME -->
+
+        <a th:href="@{/admin/overtime}"
+           class="nav-item"
+           data-path="/admin/overtime">
+
+            <span class="nav-icon">
+                ◷
+            </span>
+
+            <span>
+                Overtime
+            </span>
+
+        </a>
+
+
+        <!-- REPORTS -->
+
+        <a th:href="@{/admin/reports}"
+           class="nav-item"
+           data-path="/admin/reports">
+
+            <span class="nav-icon">
+                ▤
+            </span>
+
+            <span>
+                Reports
+            </span>
+
+        </a>
+
+
+        <!-- LOGIN APPROVALS -->
+
+        <a th:href="@{/admin/login-approvals}"
+           class="nav-item"
+           data-path="/admin/login-approvals">
+
+            <span class="nav-icon">
+                ✓
+            </span>
+
+            <span>
+                Login Approvals
+            </span>
+
+        </a>
+
+
+        <!-- SCREEN RECORDING -->
+
+        <a th:href="@{/admin/screen-recording}"
+           class="nav-item"
+           data-path="/admin/screen-recording">
+
+            <span class="nav-icon">
+                ▧
+            </span>
+
+            <span>
+                Screen Recording
+            </span>
+
+        </a>
+
+
+        <!-- SETTINGS -->
+
+        <a th:href="@{/admin/settings}"
+           class="nav-item"
+           data-path="/admin/settings">
+
+            <span class="nav-icon">
+                ⚙
+            </span>
+
+            <span>
+                Settings
+            </span>
+
+        </a>
+
+
+    </nav>
+
+
+    <!-- =========================================================
+         ADMIN PROFILE
+    ========================================================== -->
+
+    <div class="admin-profile">
+
+
+        <div class="admin-avatar"
+             th:text="${admin != null
+                       and admin.name != null
+                       and !admin.name.isEmpty()
+                       ? #strings.substring(admin.name,0,1).toUpperCase()
+                       : 'A'}">
+            A
+        </div>
+
+
+        <div class="admin-info">
+
+            <div class="admin-name"
+                 th:text="${admin != null
+                           and admin.name != null
+                           ? admin.name
+                           : 'Admin'}">
+                Admin
+            </div>
+
+            <div class="admin-role">
+                Administrator
+            </div>
+
+        </div>
+
+
+    </div>
+
+
+</aside>
+
+
+
+<!-- =============================================================
+     MAIN
+============================================================== -->
+
+<main class="main">
+
+
+    <!-- =========================================================
+         TOPBAR
+    ========================================================== -->
+
+    <header class="topbar">
+
+
+        <div class="page-heading">
+
+            <h1>
+                Today's Activity
+            </h1>
+
+            <p>
+                Monitor employee activity and working status
+            </p>
+
+        </div>
+
+
+        <div class="topbar-right">
+
+
+            <!-- TODAY -->
+
+            <div class="today-badge"
+                 th:text="${#temporals.format(
+                     T(java.time.LocalDate).now(),
+                     'dd MMM yyyy'
+                 )}">
+                29 Sep 2026
+            </div>
+
+
+            <!-- REFRESH -->
+
+            <button type="button"
+                    class="refresh-btn"
+                    onclick="window.location.reload()">
+
+                <span>
+                    ↻
+                </span>
+
+                <span>
+                    Refresh
+                </span>
+
+            </button>
+
+
+        </div>
+
+
+    </header>
+
+
+
+    <!-- =========================================================
+         CONTENT
+    ========================================================== -->
+
+    <section class="content">
+
+
+        <!-- =====================================================
+             STATISTICS
+        ====================================================== -->
+
+        <div class="stats-grid">
+
+
+            <!-- EMPLOYEES TRACKED -->
+
+            <div class="stat-card">
+
+
+                <div class="stat-top">
+
+                    <div class="stat-title">
+                        Employees Tracked
+                    </div>
+
+                    <div class="stat-icon">
+                        👥
+                    </div>
+
+                </div>
+
+
+                <div class="stat-value"
+                     th:text="${activities != null
+                               ? #lists.size(activities)
+                               : 0}">
+                    0
+                </div>
+
+
+                <div class="stat-description">
+                    Employees with today's activity
+                </div>
+
+
+            </div>
+
+
+
+            <!-- WORKING -->
+
+            <div class="stat-card">
+
+
+                <div class="stat-top">
+
+                    <div class="stat-title">
+                        Working Now
+                    </div>
+
+                    <div class="stat-icon">
+                        ▶
+                    </div>
+
+                </div>
+
+
+                <div class="stat-value"
+                     id="workingCount">
+                    0
+                </div>
+
+
+                <div class="stat-description">
+                    Currently active employees
+                </div>
+
+
+            </div>
+
+
+
+            <!-- IDLE -->
+
+            <div class="stat-card">
+
+
+                <div class="stat-top">
+
+                    <div class="stat-title">
+                        Idle
+                    </div>
+
+                    <div class="stat-icon">
+                        ◷
+                    </div>
+
+                </div>
+
+
+                <div class="stat-value"
+                     id="idleCount">
+                    0
+                </div>
+
+
+                <div class="stat-description">
+                    Employees currently idle
+                </div>
+
+
+            </div>
+
+
+
+            <!-- OFFLINE -->
+
+            <div class="stat-card">
+
+
+                <div class="stat-top">
+
+                    <div class="stat-title">
+                        Offline
+                    </div>
+
+                    <div class="stat-icon">
+                        ●
+                    </div>
+
+                </div>
+
+
+                <div class="stat-value"
+                     id="offlineCount">
+                    0
+                </div>
+
+
+                <div class="stat-description">
+                    Employees not currently working
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+
+
+        <!-- =====================================================
+             ACTIVITY PANEL
+        ====================================================== -->
+
+        <div class="activity-panel">
+
+
+            <!-- =================================================
+                 PANEL HEADER
+            ================================================== -->
+
+            <div class="panel-header">
+
+
+                <div>
+
+                    <div class="panel-title">
+                        Employee Activity
+                    </div>
+
+                    <div class="panel-subtitle">
+                        Live overview of today's employee sessions
+                    </div>
+
+                </div>
+
+
+
+                <!-- FILTERS -->
+
+                <div class="filters">
+
+
+                    <!-- SEARCH -->
+
+                    <div class="search-box">
+
+                        <span class="search-icon">
+                            ⌕
+                        </span>
+
+                        <input
+                                type="text"
+                                id="employeeSearch"
+                                placeholder="Search employee..."
+                                autocomplete="off"
+                                onkeyup="filterActivities()">
+
+                    </div>
+
+
+                    <!-- STATUS -->
+
+                    <select
+                            class="status-select"
+                            id="statusFilter"
+                            onchange="filterActivities()">
+
+                        <option value="ALL">
+                            All Status
+                        </option>
+
+                        <option value="WORKING">
+                            Working
+                        </option>
+
+                        <option value="IDLE">
+                            Idle
+                        </option>
+
+                        <option value="OFFLINE">
+                            Offline
+                        </option>
+
+                    </select>
+
+
+                </div>
+
+
+            </div>
+
+
+
+            <!-- =================================================
+                 TABLE
+            ================================================== -->
+
+            <div class="table-container">
+
+
+                <table class="activity-table">
+
+
+                    <thead>
+
+                    <tr>
+
+                        <th>
+                            Employee
+                        </th>
+
+                        <th>
+                            Login
+                        </th>
+
+                        <th>
+                            Logout
+                        </th>
+
+                        <th>
+                            Active Time
+                        </th>
+
+                        <th>
+                            Idle Time
+                        </th>
+
+                        <th>
+                            Current Application
+                        </th>
+
+                        <th>
+                            Status
+                        </th>
+
+                        <th>
+                            Input Activity
+                        </th>
+
+                    </tr>
+
+                    </thead>
+
+
+
+                    <tbody id="activityTableBody">
+
+
+                    <!-- =================================================
+                         ACTIVITY ROWS
+                    ================================================== -->
+
+                    <tr th:each="activity : ${activities}"
+                        class="activity-row"
+                        th:attr="
+                            data-name=${activity.employeeName},
+                            data-status=${activity.status
+                        }">
+
+
+                        <!-- =================================================
+                             EMPLOYEE
+                        ================================================== -->
+
+                        <td>
+
+
+                            <div class="employee-cell">
+
+
+                                <div class="employee-avatar"
+                                     th:text="${activity.employeeName != null
+                                               and !activity.employeeName.isEmpty()
+                                               ? #strings.substring(
+                                                   activity.employeeName,
+                                                   0,
+                                                   1
+                                               ).toUpperCase()
+                                               : 'U'}">
+                                    U
+                                </div>
+
+
+                                <div>
+
+
+                                    <div class="employee-name"
+                                         th:text="${activity.employeeName != null
+                                                   ? activity.employeeName
+                                                   : 'Unknown Employee'}">
+                                        Employee
+                                    </div>
+
+
+                                    <div class="employee-id"
+                                         th:text="${activity.employeeLoginId != null
+                                                   ? activity.employeeLoginId
+                                                   : '-'}">
+                                        employee-id
+                                    </div>
+
+
+                                </div>
+
+
+                            </div>
+
+
+                        </td>
+
+
+
+                        <!-- =================================================
+                             LOGIN
+                        ================================================== -->
+
+                        <td>
+
+
+                            <div class="time-main"
+                                 th:text="${activity.loginTime != null
+                                           ? activity.loginTime
+                                           : '-'}">
+                                -
+                            </div>
+
+
+                            <div class="time-label">
+                                Login time
+                            </div>
+
+
+                        </td>
+
+
+
+                        <!-- =================================================
+                             LOGOUT
+                        ================================================== -->
+
+                        <td>
+
+
+                            <div class="time-main"
+                                 th:text="${activity.logoutTime != null
+                                           ? activity.logoutTime
+                                           : '-'}">
+                                -
+                            </div>
+
+
+                            <div class="time-label">
+                                Logout time
+                            </div>
+
+
+                        </td>
+
+
+
+                        <!-- =================================================
+                             ACTIVE TIME
+                        ================================================== -->
+
+                        <td>
+
+
+                            <div class="duration-active"
+                                 th:text="${activity.activeTime != null
+                                           ? activity.activeTime
+                                           : '0m'}">
+                                0m
+                            </div>
+
+
+                            <div class="time-label">
+                                Active
+                            </div>
+
+
+                        </td>
+
+
+
+                        <!-- =================================================
+                             IDLE TIME
+                        ================================================== -->
+
+                        <td>
+
+
+                            <div class="duration-idle"
+                                 th:text="${activity.idleTime != null
+                                           ? activity.idleTime
+                                           : '0m'}">
+                                0m
+                            </div>
+
+
+                            <div class="time-label">
+                                Idle
+                            </div>
+
+
+                        </td>
+
+
+
+                        <!-- =================================================
+                             APPLICATION
+                        ================================================== -->
+
+                        <td>
+
+
+                            <div class="application-name"
+                                 th:text="${activity.currentApplication != null
+                                           ? activity.currentApplication
+                                           : '-'}">
+                                -
+                            </div>
+
+
+                            <div class="window-title"
+                                 th:text="${activity.currentWindow != null
+                                           ? activity.currentWindow
+                                           : '-'}"
+                                 th:title="${activity.currentWindow != null
+                                            ? activity.currentWindow
+                                            : ''}">
+                                -
+                            </div>
+
+
+                        </td>
+
+
+
+                        <!-- =================================================
+                             STATUS
+                        ================================================== -->
+
+                        <td>
+
+
+                            <!-- WORKING -->
+
+                            <span th:if="${activity.status == 'WORKING'}"
+                                  class="status-badge status-working">
+
+                                <span class="status-dot"></span>
+
+                                Working
+
+                            </span>
+
+
+                            <!-- IDLE -->
+
+                            <span th:if="${activity.status == 'IDLE'}"
+                                  class="status-badge status-idle">
+
+                                <span class="status-dot"></span>
+
+                                Idle
+
+                            </span>
+
+
+                            <!-- OFFLINE -->
+
+                            <span th:if="${activity.status == 'OFFLINE'}"
+                                  class="status-badge status-offline">
+
+                                <span class="status-dot"></span>
+
+                                Offline
+
+                            </span>
+
+
+                        </td>
+
+
+
+                        <!-- =================================================
+                             INPUT ACTIVITY
+                        ================================================== -->
+
+                        <td>
+
+
+                            <div class="activity-counts">
+
+
+                                <!-- CLICKS -->
+
+                                <div class="count-item">
+
+                                    <span class="count-value"
+                                          th:text="${activity.mouseClicks != null
+                                                    ? activity.mouseClicks
+                                                    : 0}">
+                                        0
+                                    </span>
+
+                                    <span class="count-label">
+                                        Click
+                                    </span>
+
+                                </div>
+
+
+                                <!-- KEYBOARD -->
+
+                                <div class="count-item">
+
+                                    <span class="count-value"
+                                          th:text="${activity.keyboardActivity != null
+                                                    ? activity.keyboardActivity
+                                                    : 0}">
+                                        0
+                                    </span>
+
+                                    <span class="count-label">
+                                        Keys
+                                    </span>
+
+                                </div>
+
+
+                                <!-- MOUSE MOVEMENT -->
+
+                                <div class="count-item">
+
+                                    <span class="count-value"
+                                          th:text="${activity.mouseMovement != null
+                                                    ? activity.mouseMovement
+                                                    : 0}">
+                                        0
+                                    </span>
+
+                                    <span class="count-label">
+                                        Move
+                                    </span>
+
+                                </div>
+
+
+                            </div>
+
+
+                        </td>
+
+
+                    </tr>
+
+
+
+                    <!-- =================================================
+                         EMPTY STATE
+                    ================================================== -->
+
+                    <tr th:if="${activities == null
+                                or #lists.isEmpty(activities)}">
+
+
+                        <td colspan="8"
+                            class="empty-row">
+
+
+                            <div class="empty-icon">
+                                ◌
+                            </div>
+
+
+                            <div class="empty-title">
+                                No activity found
+                            </div>
+
+
+                            <div class="empty-description">
+                                No employee sessions have been recorded today.
+                            </div>
+
+
+                        </td>
+
+
+                    </tr>
+
+
+                    </tbody>
+
+
+                </table>
+
+
+            </div>
+
+
+
+            <!-- =================================================
+                 PANEL FOOTER
+            ================================================== -->
+
+            <div class="panel-footer">
+
+
+                <div class="footer-text">
+
+                    Showing
+                    <strong id="visibleCount">0</strong>
+                    employee session(s)
+
+                </div>
+
+
+                <div class="live-indicator">
+
+                    <span class="live-dot"></span>
+
+                    Activity monitoring active
+
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+
+    </section>
+
+
+</main>
+
+
+
+<!-- =============================================================
+     AUTOMATIC ACTIVE SIDEBAR
+============================================================== -->
+
+<script>
+
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const currentPath =
+            window.location.pathname.replace(/\/+$/, "") || "/";
+
+
+        const navItems =
+            document.querySelectorAll(".nav-item");
+
+
+        navItems.forEach(function (item) {
+
+            const path =
+                item.getAttribute("data-path");
+
+
+            if (!path) {
+                return;
+            }
+
+
+            const normalizedPath =
+                path.replace(/\/+$/, "");
+
+
+            const isDashboard =
+                normalizedPath === "/admin/dashboard";
+
+
+            const isActive =
+                isDashboard
+                    ? currentPath === normalizedPath
+                    : (
+                        currentPath === normalizedPath ||
+                        currentPath.startsWith(
+                            normalizedPath + "/"
+                        )
+                    );
+
+
+            if (isActive) {
+
+                item.classList.add("active");
+
+            } else {
+
+                item.classList.remove("active");
+
+            }
+
+        });
+
+
+    });
+
+
+
+    /* =========================================================
+       FILTER ACTIVITIES
+    ========================================================= */
+
+    function filterActivities() {
+
+        const searchInput =
+            document.getElementById("employeeSearch");
+
+        const statusFilter =
+            document.getElementById("statusFilter");
+
+
+        const search =
+            searchInput.value
+                .toLowerCase()
+                .trim();
+
+
+        const selectedStatus =
+            statusFilter.value;
+
+
+        const rows =
+            document.querySelectorAll(".activity-row");
+
+
+        let visibleCount = 0;
+
+
+        rows.forEach(function (row) {
+
+
+            const name =
+                (row.dataset.name || "")
+                    .toLowerCase();
+
+
+            const status =
+                (row.dataset.status || "")
+                    .toUpperCase();
+
+
+            const matchesName =
+                name.includes(search);
+
+
+            const matchesStatus =
+                selectedStatus === "ALL" ||
+                status === selectedStatus;
+
+
+            if (matchesName && matchesStatus) {
+
+                row.style.display = "";
+
+                visibleCount++;
+
+            } else {
+
+                row.style.display = "none";
+
+            }
+
+
+        });
+
+
+        const visibleCountElement =
+            document.getElementById("visibleCount");
+
+
+        if (visibleCountElement) {
+
+            visibleCountElement.textContent =
+                visibleCount;
+
+        }
+
+    }
+
+
+
+    /* =========================================================
+       CALCULATE STATUS COUNTS
+    ========================================================= */
+
+    function calculateStatusCounts() {
+
+        const rows =
+            document.querySelectorAll(".activity-row");
+
+
+        let working = 0;
+
+        let idle = 0;
+
+        let offline = 0;
+
+
+        rows.forEach(function (row) {
+
+
+            const status =
+                (row.dataset.status || "")
+                    .toUpperCase();
+
+
+            if (status === "WORKING") {
+
+                working++;
+
+            } else if (status === "IDLE") {
+
+                idle++;
+
+            } else if (status === "OFFLINE") {
+
+                offline++;
+
+            }
+
+
+        });
+
+
+        const workingElement =
+            document.getElementById("workingCount");
+
+        const idleElement =
+            document.getElementById("idleCount");
+
+        const offlineElement =
+            document.getElementById("offlineCount");
+
+
+        if (workingElement) {
+
+            workingElement.textContent =
+                working;
+
+        }
+
+
+        if (idleElement) {
+
+            idleElement.textContent =
+                idle;
+
+        }
+
+
+        if (offlineElement) {
+
+            offlineElement.textContent =
+                offline;
+
+        }
+
+    }
+
+
+
+    /* =========================================================
+       INITIALIZE
+    ========================================================= */
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        function () {
+
+            calculateStatusCounts();
+
+            filterActivities();
+
+        }
+    );
+
+</script>
+
+
+</body>
+
+</html>

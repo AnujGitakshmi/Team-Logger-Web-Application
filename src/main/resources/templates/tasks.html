@@ -1,0 +1,1770 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+  <title>My Tasks - TeamLogger</title>
+
+  <style>
+
+    /* =====================================================
+       RESET
+    ===================================================== */
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: Arial, Helvetica, sans-serif;
+
+        background: #f5f7fb;
+
+        color: #1f2937;
+
+        min-height: 100vh;
+    }
+
+    a {
+        text-decoration: none;
+        color: inherit;
+    }
+
+
+    /* =====================================================
+       LAYOUT
+    ===================================================== */
+
+    .layout {
+        display: flex;
+        min-height: 100vh;
+    }
+
+
+    /* =====================================================
+       SIDEBAR
+    ===================================================== */
+
+    .sidebar {
+        position: fixed;
+
+        left: 0;
+        top: 0;
+
+        width: 245px;
+        height: 100vh;
+
+        background: #111827;
+
+        color: #ffffff;
+
+        display: flex;
+        flex-direction: column;
+
+        z-index: 1000;
+
+        border-right: 1px solid #1f2937;
+    }
+
+
+    /* =====================================================
+       BRAND
+    ===================================================== */
+
+    .brand {
+        height: 75px;
+
+        display: flex;
+        align-items: center;
+
+        padding: 0 22px;
+
+        border-bottom: 1px solid #1f2937;
+
+        flex-shrink: 0;
+    }
+
+    .brand-icon {
+        width: 38px;
+        height: 38px;
+
+        border-radius: 10px;
+
+        background: #2563eb;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        font-size: 19px;
+        font-weight: 700;
+
+        margin-right: 11px;
+
+        flex-shrink: 0;
+    }
+
+    .brand-text {
+        font-size: 18px;
+
+        font-weight: 700;
+
+        color: #ffffff;
+
+        white-space: nowrap;
+    }
+
+
+    /* =====================================================
+       NAVIGATION
+    ===================================================== */
+
+    .nav {
+        flex: 1;
+
+        padding: 20px 12px;
+
+        overflow-y: auto;
+    }
+
+    .nav::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .nav::-webkit-scrollbar-thumb {
+        background: #374151;
+        border-radius: 10px;
+    }
+
+    .nav-section {
+        padding: 0 13px 9px;
+
+        color: #6b7280;
+
+        font-size: 10px;
+
+        font-weight: 700;
+
+        text-transform: uppercase;
+
+        letter-spacing: 1px;
+    }
+
+    .nav-section.account {
+        margin-top: 25px;
+    }
+
+    .nav-link {
+        display: flex;
+
+        align-items: center;
+
+        width: 100%;
+
+        min-height: 44px;
+
+        padding: 10px 13px;
+
+        margin-bottom: 5px;
+
+        border-radius: 8px;
+
+        color: #9ca3af;
+
+        background: transparent;
+
+        font-size: 14px;
+
+        font-weight: 500;
+
+        transition:
+                background .18s ease,
+                color .18s ease;
+    }
+
+    .nav-link:hover {
+        background: #1f2937;
+
+        color: #ffffff;
+    }
+
+    .nav-link.active {
+        background: #2563eb;
+
+        color: #ffffff;
+    }
+
+    .nav-icon {
+        width: 25px;
+
+        min-width: 25px;
+
+        margin-right: 10px;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        text-align: center;
+
+        font-size: 17px;
+
+        line-height: 1;
+    }
+
+
+    /* =====================================================
+       SIDEBAR PROFILE
+    ===================================================== */
+
+    .sidebar-profile {
+        padding: 14px;
+
+        border-top: 1px solid #1f2937;
+
+        flex-shrink: 0;
+    }
+
+    .profile-box {
+        display: flex;
+
+        align-items: center;
+
+        padding: 10px;
+
+        border-radius: 9px;
+
+        background: #1a2332;
+    }
+
+    .profile-avatar-sidebar {
+        width: 38px;
+        height: 38px;
+
+        border-radius: 50%;
+
+        background: #2563eb;
+
+        color: #ffffff;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        font-size: 14px;
+
+        font-weight: 700;
+
+        margin-right: 10px;
+
+        flex-shrink: 0;
+    }
+
+    .sidebar-profile-info {
+        min-width: 0;
+
+        flex: 1;
+    }
+
+    .sidebar-profile-name {
+        font-size: 13px;
+
+        font-weight: 600;
+
+        color: #ffffff;
+
+        white-space: nowrap;
+
+        overflow: hidden;
+
+        text-overflow: ellipsis;
+    }
+
+    .sidebar-profile-role {
+        display: flex;
+
+        align-items: center;
+
+        margin-top: 3px;
+
+        font-size: 11px;
+
+        color: #9ca3af;
+
+        white-space: nowrap;
+
+        overflow: hidden;
+
+        text-overflow: ellipsis;
+    }
+
+    .status-dot {
+        width: 7px;
+        height: 7px;
+
+        border-radius: 50%;
+
+        background: #22c55e;
+
+        display: inline-block;
+
+        margin-right: 5px;
+
+        flex-shrink: 0;
+    }
+
+
+    /* =====================================================
+       MAIN
+    ===================================================== */
+
+    .main {
+        margin-left: 245px;
+
+        width: calc(100% - 245px);
+
+        min-height: 100vh;
+    }
+
+
+    /* =====================================================
+       TOPBAR
+    ===================================================== */
+
+    .topbar {
+        height: 72px;
+
+        background: #ffffff;
+
+        border-bottom: 1px solid #e5e7eb;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: space-between;
+
+        padding: 0 32px;
+    }
+
+    .page-title {
+        font-size: 22px;
+
+        font-weight: 700;
+
+        color: #111827;
+    }
+
+    .page-subtitle {
+        margin-top: 4px;
+
+        font-size: 12px;
+
+        color: #6b7280;
+    }
+
+    .profile {
+        display: flex;
+
+        align-items: center;
+
+        gap: 11px;
+    }
+
+    .profile-avatar {
+        width: 38px;
+        height: 38px;
+
+        border-radius: 50%;
+
+        background: #e8eefc;
+
+        color: #2563eb;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        font-weight: 700;
+
+        font-size: 14px;
+    }
+
+    .profile-info {
+        text-align: right;
+    }
+
+    .profile-name {
+        font-size: 13px;
+
+        font-weight: 700;
+
+        color: #111827;
+    }
+
+    .profile-role {
+        font-size: 11px;
+
+        color: #6b7280;
+
+        margin-top: 2px;
+    }
+
+
+    /* =====================================================
+       CONTENT
+    ===================================================== */
+
+    .content {
+        padding: 30px 32px 40px;
+    }
+
+    .welcome {
+        margin-bottom: 25px;
+    }
+
+    .welcome h2 {
+        font-size: 25px;
+
+        color: #111827;
+
+        margin-bottom: 6px;
+    }
+
+    .welcome p {
+        color: #6b7280;
+
+        font-size: 14px;
+    }
+
+
+    /* =====================================================
+       STATS
+    ===================================================== */
+
+    .stats {
+        display: grid;
+
+        grid-template-columns:
+                repeat(3, 1fr);
+
+        gap: 18px;
+
+        margin-bottom: 28px;
+    }
+
+    .stat-card {
+        background: #ffffff;
+
+        border: 1px solid #e5e7eb;
+
+        border-radius: 12px;
+
+        padding: 20px;
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 15px;
+
+        box-shadow:
+                0 2px 7px rgba(15, 23, 42, 0.03);
+    }
+
+    .stat-icon {
+        width: 44px;
+        height: 44px;
+
+        border-radius: 10px;
+
+        background: #eef4ff;
+
+        color: #2563eb;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        font-size: 18px;
+
+        font-weight: 700;
+    }
+
+    .stat-number {
+        font-size: 23px;
+
+        font-weight: 700;
+
+        color: #111827;
+    }
+
+    .stat-label {
+        margin-top: 3px;
+
+        color: #6b7280;
+
+        font-size: 12px;
+    }
+
+
+    /* =====================================================
+       PROJECT COLUMNS
+    ===================================================== */
+
+    .project-columns {
+        display: grid;
+
+        grid-template-columns:
+                1fr 1fr;
+
+        gap: 22px;
+
+        align-items: start;
+    }
+
+    .project-section {
+        background: #ffffff;
+
+        border: 1px solid #e5e7eb;
+
+        border-radius: 14px;
+
+        overflow: hidden;
+
+        box-shadow:
+                0 2px 8px rgba(15, 23, 42, 0.03);
+    }
+
+    .section-header {
+        padding: 20px 22px;
+
+        border-bottom: 1px solid #e5e7eb;
+
+        display: flex;
+
+        justify-content: space-between;
+
+        align-items: center;
+    }
+
+    .section-header-left {
+        display: flex;
+
+        align-items: center;
+
+        gap: 10px;
+    }
+
+    .section-header h3 {
+        font-size: 16px;
+
+        color: #111827;
+    }
+
+    .section-header p {
+        font-size: 11px;
+
+        color: #6b7280;
+
+        margin-top: 3px;
+    }
+
+    .section-badge {
+        min-width: 28px;
+
+        height: 28px;
+
+        padding: 0 8px;
+
+        border-radius: 20px;
+
+        background: #eef4ff;
+
+        color: #2563eb;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        font-size: 12px;
+
+        font-weight: 700;
+    }
+
+    .completed-section .section-badge {
+        background: #f0fdf4;
+
+        color: #16a34a;
+    }
+
+
+    /* =====================================================
+       PROJECT LIST
+    ===================================================== */
+
+    .project-list {
+        padding: 12px;
+    }
+
+    .project-card {
+        border: 1px solid #e5e7eb;
+
+        border-radius: 11px;
+
+        padding: 17px;
+
+        margin-bottom: 10px;
+
+        transition: 0.2s ease;
+    }
+
+    .project-card:last-child {
+        margin-bottom: 0;
+    }
+
+    .project-card:hover {
+        border-color: #cbd5e1;
+
+        box-shadow:
+                0 4px 12px rgba(15, 23, 42, 0.05);
+    }
+
+    .project-top {
+        display: flex;
+
+        align-items: flex-start;
+
+        justify-content: space-between;
+
+        gap: 12px;
+    }
+
+    .project-name {
+        font-size: 15px;
+
+        font-weight: 700;
+
+        color: #111827;
+
+        line-height: 1.4;
+    }
+
+    .project-description {
+        margin-top: 6px;
+
+        color: #6b7280;
+
+        font-size: 12px;
+
+        line-height: 1.5;
+    }
+
+
+    /* =====================================================
+       STATUS
+    ===================================================== */
+
+    .status {
+        flex-shrink: 0;
+
+        padding: 5px 9px;
+
+        border-radius: 20px;
+
+        font-size: 10px;
+
+        font-weight: 700;
+
+        text-transform: uppercase;
+
+        letter-spacing: 0.3px;
+    }
+
+    .status-active {
+        background: #eff6ff;
+
+        color: #2563eb;
+    }
+
+    .status-pending {
+        background: #fff7ed;
+
+        color: #ea580c;
+    }
+
+    .status-completed {
+        background: #f0fdf4;
+
+        color: #16a34a;
+    }
+
+
+    /* =====================================================
+       PROJECT META
+    ===================================================== */
+
+    .project-meta {
+        display: flex;
+
+        gap: 18px;
+
+        margin-top: 13px;
+
+        color: #6b7280;
+
+        font-size: 11px;
+    }
+
+    .project-meta-item {
+        display: flex;
+
+        align-items: center;
+
+        gap: 5px;
+    }
+
+
+    /* =====================================================
+       PROJECT ACTIONS
+    ===================================================== */
+
+    .project-actions {
+        display: flex;
+
+        gap: 8px;
+
+        margin-top: 15px;
+
+        padding-top: 14px;
+
+        border-top: 1px solid #f0f1f3;
+    }
+
+    .btn {
+        border: none;
+
+        border-radius: 7px;
+
+        padding: 9px 13px;
+
+        font-size: 11px;
+
+        font-weight: 600;
+
+        cursor: pointer;
+
+        transition: 0.2s ease;
+
+        display: inline-flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        gap: 6px;
+    }
+
+    .btn-primary {
+        background: #2563eb;
+
+        color: #ffffff;
+    }
+
+    .btn-primary:hover {
+        background: #1d4ed8;
+    }
+
+    .btn-secondary {
+        background: #f3f4f6;
+
+        color: #374151;
+    }
+
+    .btn-secondary:hover {
+        background: #e5e7eb;
+    }
+
+
+    /* =====================================================
+       EMPTY STATE
+    ===================================================== */
+
+    .empty-state {
+        padding: 45px 20px;
+
+        text-align: center;
+    }
+
+    .empty-icon {
+        width: 48px;
+        height: 48px;
+
+        border-radius: 12px;
+
+        background: #f3f4f6;
+
+        color: #9ca3af;
+
+        margin: 0 auto 12px;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        font-size: 20px;
+    }
+
+    .empty-state h4 {
+        font-size: 14px;
+
+        color: #374151;
+
+        margin-bottom: 5px;
+    }
+
+    .empty-state p {
+        color: #9ca3af;
+
+        font-size: 12px;
+    }
+
+
+    /* =====================================================
+       TODAY'S WORK
+    ===================================================== */
+
+    .today-section {
+        margin-top: 25px;
+
+        background: #ffffff;
+
+        border: 1px solid #e5e7eb;
+
+        border-radius: 14px;
+
+        overflow: hidden;
+
+        box-shadow:
+                0 2px 8px rgba(15, 23, 42, 0.03);
+    }
+
+    .today-header {
+        padding: 19px 22px;
+
+        border-bottom: 1px solid #e5e7eb;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: space-between;
+    }
+
+    .today-header h3 {
+        font-size: 16px;
+
+        color: #111827;
+    }
+
+    .today-date {
+        color: #6b7280;
+
+        font-size: 12px;
+    }
+
+    .today-list {
+        padding: 15px 22px;
+    }
+
+    .today-item {
+        padding: 14px 0;
+
+        border-bottom: 1px solid #f0f1f3;
+    }
+
+    .today-item:last-child {
+        border-bottom: none;
+    }
+
+    .today-project {
+        font-size: 12px;
+
+        font-weight: 700;
+
+        color: #2563eb;
+
+        margin-bottom: 5px;
+    }
+
+    .today-description {
+        font-size: 13px;
+
+        line-height: 1.6;
+
+        color: #374151;
+    }
+
+    .today-time {
+        margin-top: 5px;
+
+        color: #9ca3af;
+
+        font-size: 10px;
+    }
+
+
+    /* =====================================================
+       RESPONSIVE
+    ===================================================== */
+
+    @media (max-width: 1000px) {
+
+        .project-columns {
+            grid-template-columns: 1fr;
+        }
+
+        .stats {
+            grid-template-columns:
+                    repeat(3, 1fr);
+        }
+    }
+
+
+    @media (max-width: 750px) {
+
+        .sidebar {
+            width: 70px;
+        }
+
+        .brand {
+            justify-content: center;
+
+            padding: 0;
+        }
+
+        .brand-text,
+        .nav-section {
+            display: none;
+        }
+
+        .brand-icon {
+            margin-right: 0;
+        }
+
+        .nav {
+            padding: 18px 8px;
+        }
+
+        .nav-link {
+            justify-content: center;
+
+            padding: 10px 0;
+        }
+
+        .nav-link span {
+            display: none;
+        }
+
+        .nav-icon {
+            margin-right: 0;
+        }
+
+        .sidebar-profile {
+            padding: 12px 8px;
+        }
+
+        .profile-box {
+            justify-content: center;
+
+            padding: 8px;
+        }
+
+        .sidebar-profile-info {
+            display: none;
+        }
+
+        .profile-avatar-sidebar {
+            margin-right: 0;
+        }
+
+        .main {
+            margin-left: 70px;
+
+            width: calc(100% - 70px);
+        }
+
+        .topbar {
+            padding: 0 18px;
+        }
+
+        .profile-info {
+            display: none;
+        }
+
+        .content {
+            padding: 22px 18px;
+        }
+
+        .stats {
+            grid-template-columns: 1fr;
+        }
+    }
+
+
+    @media (max-width: 500px) {
+
+        .topbar {
+            height: 64px;
+        }
+
+        .page-title {
+            font-size: 18px;
+        }
+
+        .welcome h2 {
+            font-size: 21px;
+        }
+
+        .project-actions {
+            flex-direction: column;
+        }
+
+        .btn {
+            width: 100%;
+        }
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+<div class="layout">
+
+
+  <!-- =====================================================
+       SIDEBAR
+  ====================================================== -->
+
+  <aside class="sidebar">
+
+
+    <!-- BRAND -->
+
+    <div class="brand">
+
+      <div class="brand-icon">
+        T
+      </div>
+
+      <div class="brand-text">
+        TeamLogger
+      </div>
+
+    </div>
+
+
+    <!-- NAVIGATION -->
+
+    <nav class="nav">
+
+      <div class="nav-section">
+        Workspace
+      </div>
+
+
+      <!-- DASHBOARD -->
+
+      <a th:href="@{/employee/dashboard}"
+         class="nav-link">
+
+        <div class="nav-icon">⌂</div>
+
+        <span>
+                    Dashboard
+                </span>
+
+      </a>
+
+
+      <!-- MY PROJECTS -->
+
+      <a th:href="@{/employee/projects}"
+         class="nav-link">
+
+        <div class="nav-icon">▣</div>
+
+        <span>
+                    My Projects
+                </span>
+
+      </a>
+
+
+      <!-- MY TASKS -->
+
+      <a th:href="@{/employee/tasks}"
+         class="nav-link active">
+
+        <div class="nav-icon">✓</div>
+
+        <span>
+                    My Tasks
+                </span>
+
+      </a>
+
+
+      <!-- ATTENDANCE -->
+
+      <a th:href="@{/employee/attendance}"
+         class="nav-link">
+
+        <div class="nav-icon">◉</div>
+
+        <span>
+                    Attendance
+                </span>
+
+      </a>
+
+
+      <!-- OVERTIME -->
+
+      <a th:href="@{/employee/overtime}"
+         class="nav-link">
+
+        <div class="nav-icon">+</div>
+
+        <span>
+                    Overtime
+                </span>
+
+      </a>
+
+
+      <!-- NOTIFICATIONS -->
+
+      <a th:href="@{/employee/notifications}"
+         class="nav-link">
+
+        <div class="nav-icon">●</div>
+
+        <span>
+                    Notifications
+                </span>
+
+      </a>
+
+
+      <!-- ACCOUNT -->
+
+      <div class="nav-section account">
+        Account
+      </div>
+
+
+      <!-- SETTINGS -->
+
+      <a th:href="@{/employee/settings}"
+         class="nav-link">
+
+        <div class="nav-icon">⚙</div>
+
+        <span>
+                    Settings
+                </span>
+
+      </a>
+
+
+      <!-- LOGOUT -->
+
+      <a th:href="@{/logout}"
+         class="nav-link">
+
+        <div class="nav-icon">↪</div>
+
+        <span>
+                    Logout
+                </span>
+
+      </a>
+
+    </nav>
+
+
+    <!-- EMPLOYEE PROFILE -->
+
+    <div class="sidebar-profile">
+
+      <div class="profile-box">
+
+        <div class="profile-avatar-sidebar"
+             th:text="${employee.name != null and !employee.name.isEmpty()
+                               ? #strings.substring(employee.name,0,1).toUpperCase()
+                               : 'E'}">
+          E
+        </div>
+
+        <div class="sidebar-profile-info">
+
+          <div class="sidebar-profile-name"
+               th:text="${employee.name}">
+            Employee
+          </div>
+
+          <div class="sidebar-profile-role">
+
+            <span class="status-dot"></span>
+
+            <span th:text="${employee.status != null
+                                         ? employee.status
+                                         : 'ACTIVE'}">
+                            ACTIVE
+                        </span>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </aside>
+
+
+  <!-- =====================================================
+       MAIN
+  ====================================================== -->
+
+  <main class="main">
+
+
+    <!-- TOPBAR -->
+
+    <header class="topbar">
+
+      <div>
+
+        <div class="page-title">
+          My Tasks
+        </div>
+
+        <div class="page-subtitle">
+          Track your daily work and project progress
+        </div>
+
+      </div>
+
+
+      <div class="profile">
+
+        <div class="profile-info">
+
+          <div class="profile-name"
+               th:text="${employee.name}">
+            Employee Name
+          </div>
+
+          <div class="profile-role"
+               th:text="${employee.designation}">
+            Employee
+          </div>
+
+        </div>
+
+        <div class="profile-avatar"
+             th:text="${#strings.substring(employee.name, 0, 1).toUpperCase()}">
+          E
+        </div>
+
+      </div>
+
+    </header>
+
+
+    <!-- CONTENT -->
+
+    <section class="content">
+
+
+      <div class="welcome">
+
+        <h2>
+          Hello,
+          <span th:text="${employee.name}">
+                        Employee
+                    </span>
+        </h2>
+
+        <p>
+          Record what you worked on today and review your project work history.
+        </p>
+
+      </div>
+
+
+      <!-- STATS -->
+
+      <div class="stats">
+
+
+        <div class="stat-card">
+
+          <div class="stat-icon">
+            P
+          </div>
+
+          <div>
+
+            <div class="stat-number"
+                 th:text="${currentProjects.size()}">
+              0
+            </div>
+
+            <div class="stat-label">
+              Current Projects
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+          <div class="stat-icon">
+            ✓
+          </div>
+
+          <div>
+
+            <div class="stat-number"
+                 th:text="${completedProjects.size()}">
+              0
+            </div>
+
+            <div class="stat-label">
+              Completed Projects
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+          <div class="stat-icon">
+            W
+          </div>
+
+          <div>
+
+            <div class="stat-number"
+                 th:text="${todayWork.size()}">
+              0
+            </div>
+
+            <div class="stat-label">
+              Today's Work Entries
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- PROJECT COLUMNS -->
+
+      <div class="project-columns">
+
+
+        <!-- CURRENT PROJECTS -->
+
+        <section class="project-section">
+
+          <div class="section-header">
+
+            <div class="section-header-left">
+
+              <div>
+
+                <h3>
+                  Current Projects
+                </h3>
+
+                <p>
+                  Add and manage your daily work
+                </p>
+
+              </div>
+
+            </div>
+
+            <div class="section-badge"
+                 th:text="${currentProjects.size()}">
+              0
+            </div>
+
+          </div>
+
+
+          <div class="project-list">
+
+
+            <div class="project-card"
+                 th:each="project : ${currentProjects}">
+
+
+              <div class="project-top">
+
+                <div>
+
+                  <div class="project-name"
+                       th:text="${project.projectName}">
+                    Project Name
+                  </div>
+
+                  <div class="project-description"
+                       th:if="${project.description != null and !project.description.isEmpty()}"
+                       th:text="${project.description}">
+                    Project description
+                  </div>
+
+                </div>
+
+
+                <span class="status status-active"
+                      th:if="${project.status.equalsIgnoreCase('ASSIGNED')}"
+                      th:text="${project.status}">
+                                    ASSIGNED
+                                </span>
+
+
+                <span class="status status-pending"
+                      th:if="${project.status.equalsIgnoreCase('PENDING')}"
+                      th:text="${project.status}">
+                                    PENDING
+                                </span>
+
+
+                <span class="status status-active"
+                      th:if="${!project.status.equalsIgnoreCase('ASSIGNED')
+                                             and !project.status.equalsIgnoreCase('PENDING')}"
+                      th:text="${project.status}">
+                                    ACTIVE
+                                </span>
+
+              </div>
+
+
+              <div class="project-meta">
+
+                <div class="project-meta-item"
+                     th:if="${project.startDate != null}">
+
+                                    <span>
+                                        Start:
+                                    </span>
+
+                  <span th:text="${project.startDate}">
+                                        2026-09-01
+                                    </span>
+
+                </div>
+
+
+                <div class="project-meta-item"
+                     th:if="${project.expectedCompletionDate != null}">
+
+                                    <span>
+                                        Due:
+                                    </span>
+
+                  <span th:text="${project.expectedCompletionDate}">
+                                        2026-10-01
+                                    </span>
+
+                </div>
+
+              </div>
+
+
+              <div class="project-actions">
+
+                <a class="btn btn-primary"
+                   th:href="@{/employee/tasks/project/{id}/add(id=${project.id})}">
+
+                                    <span>
+                                        +
+                                    </span>
+
+                  Add Today's Work
+
+                </a>
+
+
+                <a class="btn btn-secondary"
+                   th:href="@{/employee/tasks/project/{id}(id=${project.id})}">
+
+                  View Work History
+
+                </a>
+
+              </div>
+
+            </div>
+
+
+            <div class="empty-state"
+                 th:if="${#lists.isEmpty(currentProjects)}">
+
+              <div class="empty-icon">
+                P
+              </div>
+
+              <h4>
+                No Current Projects
+              </h4>
+
+              <p>
+                You currently have no active projects.
+              </p>
+
+            </div>
+
+          </div>
+
+        </section>
+
+
+        <!-- COMPLETED PROJECTS -->
+
+        <section class="project-section completed-section">
+
+
+          <div class="section-header">
+
+            <div>
+
+              <h3>
+                Completed Projects
+              </h3>
+
+              <p>
+                View your previous project work
+              </p>
+
+            </div>
+
+            <div class="section-badge"
+                 th:text="${completedProjects.size()}">
+              0
+            </div>
+
+          </div>
+
+
+          <div class="project-list">
+
+
+            <div class="project-card"
+                 th:each="project : ${completedProjects}">
+
+
+              <div class="project-top">
+
+                <div>
+
+                  <div class="project-name"
+                       th:text="${project.projectName}">
+                    Project Name
+                  </div>
+
+                  <div class="project-description"
+                       th:if="${project.description != null and !project.description.isEmpty()}"
+                       th:text="${project.description}">
+                    Project description
+                  </div>
+
+                </div>
+
+
+                <span class="status status-completed">
+                                    COMPLETED
+                                </span>
+
+              </div>
+
+
+              <div class="project-meta">
+
+                <div class="project-meta-item"
+                     th:if="${project.completedAt != null}">
+
+                                    <span>
+                                        Completed:
+                                    </span>
+
+                  <span th:text="${#temporals.format(project.completedAt, 'dd MMM yyyy')}">
+                                        23 Sep 2026
+                                    </span>
+
+                </div>
+
+              </div>
+
+
+              <div class="project-actions">
+
+                <a class="btn btn-secondary"
+                   th:href="@{/employee/tasks/project/{id}(id=${project.id})}">
+
+                  View Work History
+
+                </a>
+
+              </div>
+
+            </div>
+
+
+            <div class="empty-state"
+                 th:if="${#lists.isEmpty(completedProjects)}">
+
+              <div class="empty-icon">
+                ✓
+              </div>
+
+              <h4>
+                No Completed Projects
+              </h4>
+
+              <p>
+                Your completed projects will appear here.
+              </p>
+
+            </div>
+
+          </div>
+
+        </section>
+
+      </div>
+
+
+      <!-- TODAY'S WORK -->
+
+      <section class="today-section">
+
+
+        <div class="today-header">
+
+          <div>
+
+            <h3>
+              Today's Work
+            </h3>
+
+          </div>
+
+          <div class="today-date"
+               th:text="${#temporals.format(today, 'dd MMM yyyy')}">
+            23 Sep 2026
+          </div>
+
+        </div>
+
+
+        <div class="today-list">
+
+
+          <div class="today-item"
+               th:each="work : ${todayWork}">
+
+
+            <div class="today-project">
+
+                            <span
+                                    th:each="project : ${projects}"
+                                    th:if="${project.id.equals(work.projectId)}"
+                                    th:text="${project.projectName}">
+                                Project Name
+                            </span>
+
+            </div>
+
+
+            <div class="today-description"
+                 th:text="${work.description}">
+              Work description
+            </div>
+
+
+            <div class="today-time"
+                 th:if="${work.createdAt != null}"
+                 th:text="${#temporals.format(work.createdAt, 'hh:mm a')}">
+              10:30 AM
+            </div>
+
+          </div>
+
+
+          <div class="empty-state"
+               th:if="${#lists.isEmpty(todayWork)}">
+
+            <div class="empty-icon">
+              W
+            </div>
+
+            <h4>
+              No Work Recorded Today
+            </h4>
+
+            <p>
+              Add your first daily work entry from a current project.
+            </p>
+
+          </div>
+
+        </div>
+
+      </section>
+
+    </section>
+
+  </main>
+
+</div>
+
+</body>
+
+</html>

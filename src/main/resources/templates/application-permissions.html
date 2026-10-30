@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Application &amp; Website Blocking - TeamLogger</title>
+
+  <style>
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        font-family: "Segoe UI", Arial, sans-serif;
+        background: #f5f7fb;
+        color: #172033;
+    }
+
+    /* =========================
+       MAIN LAYOUT
+    ========================= */
+
+    .layout {
+        display: flex;
+        min-height: 100vh;
+    }
+
+    /* =========================
+       DASHBOARD-MATCHING SIDEBAR
+    ========================= */
+
+    .sidebar {
+        width: 250px;
+        flex: 0 0 250px;
+        background: #111827;
+        color: #fff;
+        padding: 22px 14px 16px;
+        position: fixed;
+        inset: 0 auto 0 0;
+        height: 100vh;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        z-index: 1000;
+    }
+
+    .logo-section {
+        padding: 0 8px 24px;
+        border-bottom: 1px solid #263244;
+        margin-bottom: 20px;
+    }
+
+    .logo {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        min-width: 0;
+    }
+
+    .logo-icon {
+        width: 42px;
+        height: 42px;
+        flex: 0 0 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        background: #4f46e5;
+        color: #fff;
+        font-size: 17px;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+    }
+
+    .logo-text {
+        min-width: 0;
+    }
+
+    .logo-title {
+        color: #fff;
+        font-size: 15px;
+        font-weight: 750;
+        line-height: 1.4;
+        overflow-wrap: anywhere;
+    }
+
+    .logo-subtitle {
+        color: #9ca3af;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        margin-top: 4px;
+    }
+
+    .sidebar-nav {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .nav-section-title {
+        color: #9ca3af;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
+        padding: 12px 12px 7px;
+    }
+
+    .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-height: 43px;
+        padding: 11px 12px;
+        border-radius: 9px;
+        color: #cbd5e1;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 500;
+        transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    .nav-item:hover {
+        background: #1f2937;
+        color: #fff;
+    }
+
+    .nav-item.active {
+        background: #312e81;
+        color: #fff;
+        font-weight: 700;
+    }
+
+    .nav-icon {
+        width: 21px;
+        min-width: 21px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+    }
+
+    .nav-badge {
+        margin-left: auto;
+        min-width: 20px;
+        padding: 3px 6px;
+        border-radius: 20px;
+        background: #dc2626;
+        color: #fff;
+        text-align: center;
+        font-size: 10px;
+        font-weight: 800;
+    }
+
+    .admin-profile {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        padding: 17px 8px 4px;
+        margin-top: auto;
+        border-top: 1px solid #263244;
+        margin-top: 24px;
+    }
+
+    .admin-avatar {
+        width: 38px;
+        height: 38px;
+        flex: 0 0 38px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: #3730a3;
+        color: #fff;
+        font-size: 15px;
+        font-weight: 800;
+    }
+
+    .admin-info {
+        min-width: 0;
+    }
+
+    .admin-name {
+        color: #fff;
+        font-size: 12px;
+        font-weight: 700;
+        overflow-wrap: anywhere;
+    }
+
+    .admin-role {
+        color: #9ca3af;
+        font-size: 11px;
+        margin-top: 4px;
+    }
+
+    /* =========================
+       MAIN CONTENT
+    ========================= */
+
+    .main {
+        margin-left: 250px;
+        padding: 30px;
+        width: calc(100% - 250px);
+        min-width: 0;
+    }
+
+    .topbar {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 20px;
+        margin-bottom: 25px;
+    }
+
+    h1 {
+        font-size: 26px;
+        line-height: 1.3;
+        margin-bottom: 8px;
+        color: #172033;
+    }
+
+    h2 {
+        font-size: 17px;
+        line-height: 1.4;
+        margin-bottom: 7px;
+    }
+
+    .muted {
+        color: #667085;
+        font-size: 13px;
+        line-height: 1.7;
+    }
+
+    .card {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        padding: 22px;
+        margin-bottom: 22px;
+        box-shadow: 0 2px 5px rgb(16 24 40 / 3%);
+    }
+
+    .subheading {
+        color: #667085;
+        font-size: 12px;
+        line-height: 1.7;
+        margin-bottom: 20px;
+    }
+
+    /* =========================
+       STATISTICS
+    ========================= */
+
+    .stats {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+        margin-bottom: 22px;
+    }
+
+    .stat {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 18px;
+        min-width: 0;
+    }
+
+    .stat-label {
+        color: #667085;
+        font-size: 12px;
+    }
+
+    .stat-value {
+        color: #172033;
+        font-size: 25px;
+        font-weight: 750;
+        margin-top: 7px;
+        overflow-wrap: anywhere;
+    }
+
+    /* =========================
+       FORM
+    ========================= */
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 17px;
+    }
+
+    .field {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+        min-width: 0;
+    }
+
+    .field.full {
+        grid-column: 1 / -1;
+    }
+
+    label {
+        font-size: 12px;
+        font-weight: 650;
+        color: #344054;
+    }
+
+    input,
+    select {
+        width: 100%;
+        min-width: 0;
+        padding: 11px 12px;
+        border: 1px solid #d0d5dd;
+        border-radius: 8px;
+        background: #fff;
+        color: #172033;
+        font-family: inherit;
+        font-size: 13px;
+    }
+
+    input:focus,
+    select:focus {
+        outline: 2px solid #c7d2fe;
+        border-color: #6366f1;
+    }
+
+    input:disabled,
+    select:disabled {
+        background: #f2f4f7;
+        color: #667085;
+        cursor: not-allowed;
+    }
+
+    .help {
+        color: #667085;
+        font-size: 11px;
+        line-height: 1.6;
+    }
+
+    /* =========================
+       BUTTONS
+    ========================= */
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 0;
+        border-radius: 8px;
+        padding: 10px 14px;
+        cursor: pointer;
+        text-decoration: none;
+        font-family: inherit;
+        font-size: 12px;
+        font-weight: 700;
+        white-space: nowrap;
+        transition: background 0.2s ease;
+    }
+
+    .primary {
+        background: #4f46e5;
+        color: #fff;
+    }
+
+    .secondary {
+        background: #f2f4f7;
+        color: #344054;
+    }
+
+    .danger {
+        background: #fff1f0;
+        color: #b42318;
+    }
+
+    .primary:hover {
+        background: #4338ca;
+    }
+
+    .secondary:hover {
+        background: #e4e7ec;
+    }
+
+    .danger:hover {
+        background: #fee4e2;
+    }
+
+    .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .actions form {
+        margin: 0;
+    }
+
+    .form-actions {
+        grid-column: 1 / -1;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 5px;
+    }
+
+    /* =========================
+       MESSAGES
+    ========================= */
+
+    .message {
+        padding: 12px 15px;
+        border-radius: 8px;
+        margin-bottom: 16px;
+        font-size: 13px;
+        line-height: 1.6;
+    }
+
+    .success-message {
+        background: #ecfdf3;
+        color: #027a48;
+        border: 1px solid #abefc6;
+    }
+
+    .error-message {
+        background: #fef3f2;
+        color: #b42318;
+        border: 1px solid #fecdca;
+    }
+
+    /* =========================
+       RULES TABLE
+    ========================= */
+
+    .table-wrap {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 850px;
+    }
+
+    th {
+        text-align: left;
+        font-size: 11px;
+        color: #667085;
+        background: #f9fafb;
+        padding: 13px 12px;
+        white-space: nowrap;
+    }
+
+    td {
+        padding: 14px 12px;
+        border-bottom: 1px solid #eef0f3;
+        font-size: 12px;
+        vertical-align: middle;
+    }
+
+    tbody tr:hover {
+        background: #fcfcfd;
+    }
+
+    tr:last-child td {
+        border-bottom: 0;
+    }
+
+    .target {
+        display: inline-block;
+        padding: 5px 8px;
+        border-radius: 6px;
+        font-weight: 700;
+        font-size: 10px;
+        white-space: nowrap;
+    }
+
+    .application {
+        background: #eef2ff;
+        color: #4338ca;
+    }
+
+    .website {
+        background: #ecfeff;
+        color: #0f766e;
+    }
+
+    .permission {
+        font-weight: 800;
+        font-size: 10px;
+        white-space: nowrap;
+    }
+
+    .allow {
+        color: #027a48;
+    }
+
+    .block {
+        color: #b42318;
+    }
+
+    .active-status {
+        color: #027a48;
+        white-space: nowrap;
+    }
+
+    .inactive-status {
+        color: #667085;
+        white-space: nowrap;
+    }
+
+    .empty {
+        padding: 35px 20px;
+        text-align: center;
+        color: #667085;
+        font-size: 13px;
+        line-height: 1.7;
+    }
+
+    /* =========================
+       RESPONSIVE LAYOUT
+    ========================= */
+
+    @media (max-width: 1100px) {
+        .sidebar {
+            width: 220px;
+            flex-basis: 220px;
+        }
+
+        .main {
+            margin-left: 220px;
+            width: calc(100% - 220px);
+            padding: 24px;
+        }
+
+        .stats {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 700px) {
+        .layout {
+            display: block;
+        }
+
+        .sidebar {
+            position: relative;
+            width: 100%;
+            height: auto;
+            min-height: 0;
+            padding: 14px;
+            overflow: visible;
+        }
+
+        .logo-section {
+            padding: 0 5px 14px;
+            margin-bottom: 12px;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            flex-basis: 36px;
+        }
+
+        .sidebar-nav {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .nav-section-title {
+            display: none;
+        }
+
+        .nav-item {
+            min-height: 38px;
+            padding: 9px 10px;
+            margin: 0;
+            gap: 7px;
+            font-size: 12px;
+        }
+
+        .nav-icon {
+            width: auto;
+            min-width: 16px;
+            font-size: 14px;
+        }
+
+        .admin-profile {
+            margin-top: 13px;
+            padding: 12px 5px 0;
+        }
+
+        .main {
+            margin: 0;
+            width: 100%;
+            padding: 18px 14px;
+        }
+
+        .topbar {
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        h1 {
+            font-size: 23px;
+        }
+
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .field.full,
+        .form-actions {
+            grid-column: auto;
+        }
+
+        .card {
+            padding: 16px;
+        }
+    }
+
+    @media (max-width: 400px) {
+        .stats {
+            grid-template-columns: 1fr;
+        }
+
+        .nav-item {
+            padding: 8px;
+            font-size: 11px;
+        }
+
+        .main {
+            padding: 14px 10px;
+        }
+
+        .card {
+            padding: 13px;
+        }
+    }
+  </style>
+</head>
+
+<body>
+<div class="layout">
+
+  <!-- =========================
+       ADMIN SIDEBAR
+  ========================== -->
+
+  <aside class="sidebar">
+
+    <div class="logo-section">
+      <div class="logo">
+        <div class="logo-icon">TL</div>
+
+        <div class="logo-text">
+          <div class="logo-title"
+               th:text="${adminSettings != null and adminSettings.companyName != null
+                             and !#strings.isEmpty(adminSettings.companyName)
+                             ? adminSettings.companyName : 'TeamLogger'}">
+            TeamLogger
+          </div>
+
+          <div class="logo-subtitle">ADMIN PANEL</div>
+        </div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+
+      <div class="nav-section-title">Main</div>
+
+      <a th:href="@{/admin/dashboard}"
+         class="nav-item"
+         data-path="/admin/dashboard">
+        <span class="nav-icon">▦</span>
+        <span>Dashboard</span>
+      </a>
+
+      <a th:href="@{/admin/employees}"
+         class="nav-item"
+         data-path="/admin/employees">
+        <span class="nav-icon">👥</span>
+        <span>Employees</span>
+      </a>
+
+      <a th:href="@{/admin/tracking}"
+         class="nav-item"
+         data-path="/admin/tracking">
+        <span class="nav-icon">◉</span>
+        <span>Today's Activity</span>
+      </a>
+
+      <a th:href="@{/admin/projects}"
+         class="nav-item"
+         data-path="/admin/projects">
+        <span class="nav-icon">▣</span>
+        <span>Projects</span>
+      </a>
+
+      <div class="nav-section-title">Management</div>
+
+      <a th:href="@{/admin/overtime}"
+         class="nav-item"
+         data-path="/admin/overtime">
+        <span class="nav-icon">◷</span>
+        <span>Overtime</span>
+      </a>
+
+      <a th:href="@{/admin/reports}"
+         class="nav-item"
+         data-path="/admin/reports">
+        <span class="nav-icon">▤</span>
+        <span>Reports</span>
+      </a>
+
+      <a th:href="@{/admin/login-approvals}"
+         class="nav-item"
+         data-path="/admin/login-approvals">
+        <span class="nav-icon">✓</span>
+        <span>Login Approvals</span>
+
+        <span class="nav-badge"
+              th:if="${pendingApprovalCount != null and pendingApprovalCount > 0}"
+              th:text="${pendingApprovalCount}">
+                    0
+                </span>
+      </a>
+
+      <a th:href="@{/admin/ip-approvals}"
+         class="nav-item"
+         data-path="/admin/ip-approvals">
+        <span class="nav-icon">⌁</span>
+        <span>IP Approvals</span>
+      </a>
+
+      <a th:href="@{/admin/ip-application-rules}"
+         class="nav-item"
+         data-path="/admin/ip-application-rules">
+        <span class="nav-icon">🛡</span>
+        <span>IP Application Rules</span>
+      </a>
+
+      <a th:href="@{/admin/screen-recording}"
+         class="nav-item"
+         data-path="/admin/screen-recording">
+        <span class="nav-icon">▧</span>
+        <span>Screen Recording</span>
+      </a>
+
+      <a th:href="@{/admin/settings}"
+         class="nav-item"
+         data-path="/admin/settings">
+        <span class="nav-icon">⚙</span>
+        <span>Settings</span>
+      </a>
+
+    </nav>
+
+    <div class="admin-profile">
+      <div class="admin-avatar"
+           th:text="${admin != null and admin.name != null
+                     and !#strings.isEmpty(admin.name)
+                     ? #strings.toUpperCase(#strings.substring(admin.name, 0, 1))
+                     : 'A'}">
+        A
+      </div>
+
+      <div class="admin-info">
+        <div class="admin-name"
+             th:text="${admin != null and admin.name != null
+                         ? admin.name : 'Admin'}">
+          Admin
+        </div>
+
+        <div class="admin-role">Administrator</div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- =========================
+       PAGE CONTENT
+  ========================== -->
+
+  <main class="main">
+
+    <header class="topbar">
+      <div>
+        <h1>Application &amp; Website Blocking</h1>
+
+        <p class="muted">
+          Manage Windows application and website rules from one place.
+          Rules are associated with an IP address and can be set to
+          ALLOW or BLOCK.
+        </p>
+      </div>
+    </header>
+
+    <!-- Success and error messages -->
+
+    <div class="message success-message"
+         th:if="${successMessage != null}"
+         th:text="${successMessage}">
+    </div>
+
+    <div class="message error-message"
+         th:if="${errorMessage != null}"
+         th:text="${errorMessage}">
+    </div>
+
+    <!-- Statistics -->
+
+    <section class="stats">
+
+      <div class="stat">
+        <div class="stat-label">All Rules</div>
+        <div class="stat-value"
+             th:text="${totalRuleCount}">
+          0
+        </div>
+      </div>
+
+      <div class="stat">
+        <div class="stat-label">Windows Applications</div>
+        <div class="stat-value"
+             th:text="${applicationRuleCount}">
+          0
+        </div>
+      </div>
+
+      <div class="stat">
+        <div class="stat-label">Websites</div>
+        <div class="stat-value"
+             th:text="${websiteRuleCount}">
+          0
+        </div>
+      </div>
+
+      <div class="stat">
+        <div class="stat-label">Active Rules</div>
+        <div class="stat-value"
+             th:text="${activeRuleCount}">
+          0
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Add or edit rule -->
+
+    <section class="card" id="rule-form">
+
+      <h2 th:text="${editRule != null and editRule.id != null
+                ? 'Edit Rule'
+                : 'Add Application or Website Rule'}">
+        Add Application or Website Rule
+      </h2>
+
+      <p class="subheading">
+        Choose the target type, IP address, target name and permission.
+      </p>
+
+      <form th:action="@{/admin/ip-application-rules/save}"
+            method="post"
+            id="ruleForm">
+
+        <input type="hidden"
+               name="id"
+               th:value="${editRule != null ? editRule.id : ''}">
+
+        <div class="form-grid">
+
+          <div class="field">
+            <label for="targetType">Target Type</label>
+
+            <select id="targetType"
+                    name="targetType"
+                    required>
+
+              <option value="APPLICATION"
+                      th:selected="${editRule != null
+                                        and editRule.targetType == 'APPLICATION'}">
+                Windows Application
+              </option>
+
+              <option value="WEBSITE"
+                      th:selected="${editRule != null
+                                        and editRule.targetType == 'WEBSITE'}">
+                Website
+              </option>
+
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="ipSource">IP Address Source</label>
+
+            <select id="ipSource" name="ipSource" required>
+              <option value="MANUAL">Enter IP Manually</option>
+              <option value="EMPLOYEE">Select Employee's Approved IP</option>
+            </select>
+
+            <span class="help">
+                            You can enter an IP manually or select an IP already
+                            approved for an employee.
+                        </span>
+          </div>
+
+          <div class="field" id="manualIpField">
+            <label for="ipAddress">IP Address</label>
+
+            <input type="text"
+                   id="ipAddress"
+                   name="ipAddress"
+                   placeholder="e.g. 192.168.1.25"
+                   th:value="${editRule != null ? editRule.ipAddress : ''}">
+
+            <span class="help">
+                            Enter the IP address to which this rule applies.
+                        </span>
+          </div>
+
+          <div class="field" id="employeeIpField">
+            <label for="approvedIpChoice">Employee and Approved IP</label>
+
+            <select id="approvedIpChoice">
+              <option value="">-- Select an approved IP --</option>
+
+              <option th:each="option : ${approvedIpOptions}"
+                      th:value="${option.employeeId + '|' + option.ipAddress}"
+                      th:text="${option.employeeName + ' — ' + option.ipAddress + ' (' + option.accessType + ')'}"
+                      th:selected="${editRule != null
+                                        and editRule.ipAddress == option.ipAddress}">
+              </option>
+            </select>
+
+            <input type="hidden"
+                   name="employeeId"
+                   id="employeeId">
+
+            <input type="hidden"
+                   name="selectedIpAddress"
+                   id="selectedIpAddress">
+
+            <span class="help">
+                            Only approved employee IPs should be available here.
+                        </span>
+          </div>
+
+          <div class="field full">
+            <label for="applicationName" id="targetNameLabel">
+              Application Name
+            </label>
+
+            <input type="text"
+                   id="applicationName"
+                   name="applicationName"
+                   required
+                   placeholder="e.g. Discord"
+                   th:value="${editRule != null
+                                   ? editRule.applicationName : ''}">
+
+            <span class="help" id="targetNameHelp">
+                            For applications, enter the application name.
+                            For websites, enter a domain such as youtube.com.
+                        </span>
+          </div>
+
+          <div class="field" id="executableField">
+            <label for="executableName">
+              Executable Name (Windows only)
+            </label>
+
+            <input type="text"
+                   id="executableName"
+                   name="executableName"
+                   placeholder="e.g. Discord.exe"
+                   th:value="${editRule != null
+                                   ? editRule.executableName : ''}">
+
+            <span class="help">
+                            Enter the Windows process executable name when known.
+                        </span>
+          </div>
+
+          <div class="field">
+            <label for="permission">Permission</label>
+
+            <select id="permission"
+                    name="permission"
+                    required>
+
+              <option value="ALLOW"
+                      th:selected="${editRule != null
+                                        and editRule.permission == 'ALLOW'}">
+                ALLOW
+              </option>
+
+              <option value="BLOCK"
+                      th:selected="${editRule != null
+                                        and editRule.permission == 'BLOCK'}">
+                BLOCK
+              </option>
+
+            </select>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn primary"
+                    type="submit"
+                    th:text="${editRule != null and editRule.id != null
+                                    ? 'Update Rule' : 'Save Rule'}">
+              Save Rule
+            </button>
+
+            <a class="btn secondary"
+               th:if="${editRule != null and editRule.id != null}"
+               th:href="@{/admin/ip-application-rules}">
+              Cancel Edit
+            </a>
+          </div>
+
+        </div>
+      </form>
+    </section>
+
+    <!-- Application and website rules -->
+
+    <section class="card">
+
+      <h2>All Application &amp; Website Rules</h2>
+
+      <p class="subheading">
+        Manage application and website rules together. You can edit,
+        activate, deactivate or delete a rule.
+      </p>
+
+      <div class="table-wrap"
+           th:if="${rules != null and !rules.isEmpty()}">
+
+        <table>
+          <thead>
+          <tr>
+            <th>TYPE</th>
+            <th>APPLICATION / WEBSITE</th>
+            <th>IP ADDRESS</th>
+            <th>EXECUTABLE</th>
+            <th>PERMISSION</th>
+            <th>STATUS</th>
+            <th>ACTIONS</th>
+          </tr>
+          </thead>
+
+          <tbody>
+          <tr th:each="rule : ${rules}">
+
+            <td>
+                            <span class="target application"
+                                  th:if="${rule.targetType == 'APPLICATION'}">
+                                WINDOWS APP
+                            </span>
+
+              <span class="target website"
+                    th:if="${rule.targetType == 'WEBSITE'}">
+                                WEBSITE
+                            </span>
+
+              <span th:if="${rule.targetType != 'APPLICATION'
+                                and rule.targetType != 'WEBSITE'}"
+                    th:text="${rule.targetType}">
+                                UNKNOWN
+                            </span>
+            </td>
+
+            <td>
+              <strong th:text="${rule.applicationName}">
+                Target
+              </strong>
+            </td>
+
+            <td th:text="${rule.ipAddress}">
+              192.168.1.25
+            </td>
+
+            <td>
+                            <span th:if="${rule.targetType == 'APPLICATION'}"
+                                  th:text="${rule.executableName != null
+                                      and !#strings.isEmpty(rule.executableName)
+                                      ? rule.executableName : 'Not specified'}">
+                                app.exe
+                            </span>
+
+              <span th:if="${rule.targetType == 'WEBSITE'}">—</span>
+            </td>
+
+            <td>
+                            <span class="permission allow"
+                                  th:if="${rule.permission == 'ALLOW'}">
+                                ✓ ALLOW
+                            </span>
+
+              <span class="permission block"
+                    th:if="${rule.permission == 'BLOCK'}">
+                                ✕ BLOCK
+                            </span>
+            </td>
+
+            <td>
+                            <span class="active-status"
+                                  th:if="${rule.status == 'ACTIVE'}">
+                                ● Active
+                            </span>
+
+              <span class="inactive-status"
+                    th:unless="${rule.status == 'ACTIVE'}">
+                                ● Inactive
+                            </span>
+            </td>
+
+            <td>
+              <div class="actions">
+
+                <a class="btn secondary"
+                   th:href="@{/admin/ip-application-rules/edit/{id}(id=${rule.id})}">
+                  Edit
+                </a>
+
+                <form th:action="@{/admin/ip-application-rules/toggle/{id}(id=${rule.id})}"
+                      method="post">
+
+                  <button class="btn secondary"
+                          type="submit"
+                          th:text="${rule.status == 'ACTIVE'
+                                                ? 'Deactivate' : 'Activate'}">
+                    Toggle
+                  </button>
+                </form>
+
+                <form th:action="@{/admin/ip-application-rules/delete/{id}(id=${rule.id})}"
+                      method="post"
+                      onsubmit="return confirm('Delete this rule permanently?');">
+
+                  <button class="btn danger" type="submit">
+                    Delete
+                  </button>
+                </form>
+
+              </div>
+            </td>
+
+          </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="empty"
+           th:if="${rules == null or rules.isEmpty()}">
+        No rules have been configured yet. Use the form above to add a
+        Windows application or website rule.
+      </div>
+
+    </section>
+
+  </main>
+</div>
+
+<script>
+  /* =========================
+     SIDEBAR ACTIVE LINK
+  ========================= */
+
+  (function () {
+      const currentPath = window.location.pathname.replace(/\/+$/, '') || '/';
+
+      document.querySelectorAll('.sidebar-nav .nav-item').forEach(function (link) {
+          const linkPath = (link.getAttribute('data-path') || '').replace(/\/+$/, '');
+
+          if (linkPath && linkPath === currentPath) {
+              link.classList.add('active');
+          } else {
+              link.classList.remove('active');
+          }
+      });
+  })();
+
+  /* =========================
+     RULE FORM CONTROLS
+  ========================= */
+
+  const targetType = document.getElementById('targetType');
+  const ipSource = document.getElementById('ipSource');
+
+  const manualIpField = document.getElementById('manualIpField');
+  const employeeIpField = document.getElementById('employeeIpField');
+
+  const ipAddress = document.getElementById('ipAddress');
+  const approvedIpChoice = document.getElementById('approvedIpChoice');
+  const employeeId = document.getElementById('employeeId');
+  const selectedIpAddress = document.getElementById('selectedIpAddress');
+
+  const executableField = document.getElementById('executableField');
+  const executableName = document.getElementById('executableName');
+
+  const targetNameLabel = document.getElementById('targetNameLabel');
+  const targetNameHelp = document.getElementById('targetNameHelp');
+  const applicationName = document.getElementById('applicationName');
+
+  function updateSelectedIp() {
+      const value = approvedIpChoice.value;
+
+      if (value && value.includes('|')) {
+          const separatorIndex = value.indexOf('|');
+
+          employeeId.value = value.substring(0, separatorIndex);
+          selectedIpAddress.value = value.substring(separatorIndex + 1);
+      } else {
+          employeeId.value = '';
+          selectedIpAddress.value = '';
+      }
+  }
+
+  function updateIpSource() {
+      const manual = ipSource.value === 'MANUAL';
+
+      manualIpField.style.display = manual ? 'flex' : 'none';
+      employeeIpField.style.display = manual ? 'none' : 'flex';
+
+      ipAddress.required = manual;
+      approvedIpChoice.required = !manual;
+
+      ipAddress.disabled = !manual;
+      approvedIpChoice.disabled = manual;
+      employeeId.disabled = manual;
+      selectedIpAddress.disabled = manual;
+
+      if (manual) {
+          employeeId.value = '';
+          selectedIpAddress.value = '';
+      } else {
+          ipAddress.value = '';
+          updateSelectedIp();
+      }
+  }
+
+  function updateTargetType() {
+      const website = targetType.value === 'WEBSITE';
+
+      executableField.style.display = website ? 'none' : 'flex';
+      executableName.disabled = website;
+
+      targetNameLabel.textContent = website
+          ? 'Website Domain'
+          : 'Application Name';
+
+      targetNameHelp.textContent = website
+          ? 'Enter a domain such as youtube.com. Do not include https:// or a page path.'
+          : 'Enter the Windows application name, for example Discord.';
+
+      applicationName.placeholder = website
+          ? 'e.g. youtube.com'
+          : 'e.g. Discord';
+
+      if (website) {
+          executableName.value = '';
+      }
+  }
+
+  ipSource.addEventListener('change', updateIpSource);
+  approvedIpChoice.addEventListener('change', updateSelectedIp);
+  targetType.addEventListener('change', updateTargetType);
+
+  /* Initialize form visibility and validation. */
+  updateIpSource();
+  updateTargetType();
+
+  /*
+   * If editing a rule, preserve its IP in the manual input.
+   * The approved-IP selector remains optional until that source is selected.
+   */
+</script>
+
+</body>
+</html>

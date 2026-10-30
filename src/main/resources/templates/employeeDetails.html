@@ -1,0 +1,2892 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Employee Details | TeamLogger</title>
+
+    <style>
+
+        /* =================================================
+           RESET
+        ================================================= */
+
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+        }
+
+        body{
+            font-family:"Segoe UI",Arial,sans-serif;
+            background:#f4f6f9;
+            color:#1f2937;
+        }
+
+        a{
+            text-decoration:none;
+        }
+
+        button{
+            font-family:inherit;
+        }
+
+
+        /* =================================================
+           LAYOUT
+        ================================================= */
+
+        .app{
+            display:flex;
+            min-height:100vh;
+        }
+
+
+        /* =================================================
+           SIDEBAR
+        ================================================= */
+
+        .sidebar{
+            width:240px;
+            background:#172033;
+            color:white;
+            position:fixed;
+            top:0;
+            left:0;
+            bottom:0;
+            display:flex;
+            flex-direction:column;
+            z-index:100;
+        }
+
+        .logo{
+            height:78px;
+            display:flex;
+            align-items:center;
+            gap:12px;
+            padding:0 22px;
+            border-bottom:1px solid #29344a;
+            flex-shrink:0;
+        }
+
+        .logo-icon{
+            width:40px;
+            height:40px;
+            background:#3b82f6;
+            border-radius:10px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-weight:bold;
+            font-size:14px;
+            flex-shrink:0;
+        }
+
+        .logo-text{
+            font-size:18px;
+            font-weight:700;
+            white-space:nowrap;
+        }
+
+        .nav{
+            padding:20px 12px;
+            display:flex;
+            flex-direction:column;
+            gap:6px;
+            overflow-y:auto;
+        }
+
+        .nav a{
+            color:#aeb8c9;
+            padding:13px 16px;
+            border-radius:8px;
+            display:flex;
+            align-items:center;
+            gap:10px;
+            transition:.2s;
+            font-size:14px;
+        }
+
+        .nav a:hover{
+            background:#222d43;
+            color:white;
+        }
+
+        .nav .active{
+            background:#2e6dd8;
+            color:white;
+        }
+
+        .logout{
+            margin-top:auto;
+            padding:15px;
+            border-top:1px solid #29344a;
+            flex-shrink:0;
+        }
+
+        .logout button{
+            width:100%;
+            border:none;
+            background:#dc2626;
+            color:white;
+            padding:12px;
+            border-radius:8px;
+            cursor:pointer;
+            font-size:14px;
+            font-weight:600;
+            transition:.2s;
+        }
+
+        .logout button:hover{
+            background:#b91c1c;
+        }
+
+
+        /* =================================================
+           MAIN
+        ================================================= */
+
+        .main{
+            margin-left:240px;
+            width:calc(100% - 240px);
+            padding:30px;
+            min-height:100vh;
+        }
+
+
+        /* =================================================
+           TOP HEADER
+        ================================================= */
+
+        .top{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom:25px;
+            gap:20px;
+        }
+
+        .top h1{
+            font-size:28px;
+            color:#172033;
+            margin-bottom:5px;
+        }
+
+        .top p{
+            color:#6b7280;
+            font-size:14px;
+        }
+
+        .back-btn{
+            background:white;
+            border:1px solid #dfe3ea;
+            color:#374151;
+            padding:10px 16px;
+            border-radius:8px;
+            font-size:14px;
+            font-weight:600;
+            transition:.2s;
+            white-space:nowrap;
+        }
+
+        .back-btn:hover{
+            border-color:#3b82f6;
+            color:#3b82f6;
+            transform:translateY(-1px);
+        }
+
+
+        /* =================================================
+           PROFILE CARD
+        ================================================= */
+
+        .profile-card{
+            background:white;
+            border-radius:15px;
+            box-shadow:0 4px 15px rgba(0,0,0,.05);
+            overflow:hidden;
+        }
+
+
+        /* =================================================
+           PROFILE HEADER
+        ================================================= */
+
+        .profile-header{
+            background:linear-gradient(135deg,#2e6dd8,#5b8def);
+            color:white;
+            padding:35px;
+            display:flex;
+            align-items:center;
+            gap:25px;
+        }
+
+
+        /* =================================================
+           AVATAR
+        ================================================= */
+
+        .avatar{
+            width:100px;
+            height:100px;
+            border-radius:50%;
+            background:rgba(255,255,255,.2);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:36px;
+            font-weight:bold;
+            border:3px solid rgba(255,255,255,.35);
+            overflow:hidden;
+            flex-shrink:0;
+        }
+
+        .avatar img{
+            width:100%;
+            height:100%;
+            object-fit:cover;
+            display:block;
+        }
+
+        .avatar span{
+            color:white;
+            line-height:1;
+        }
+
+
+        /* =================================================
+           PROFILE INFO
+        ================================================= */
+
+        .profile-info{
+            min-width:0;
+        }
+
+        .profile-info h2{
+            font-size:30px;
+            margin-bottom:8px;
+            word-break:break-word;
+        }
+
+        .profile-info p{
+            opacity:.95;
+            font-size:15px;
+        }
+
+
+        /* =================================================
+           DETAILS
+        ================================================= */
+
+        .details{
+            padding:30px;
+        }
+
+        .details h3{
+            margin-bottom:20px;
+            color:#172033;
+            font-size:18px;
+        }
+
+
+        /* =================================================
+           ABOUT
+        ================================================= */
+
+        .about-section{
+            margin-bottom:30px;
+        }
+
+        .about-section h3{
+            margin-bottom:14px;
+            color:#172033;
+            font-size:18px;
+        }
+
+        .description-box{
+            background:#f8fafc;
+            border:1px solid #edf0f4;
+            border-radius:10px;
+            padding:18px 20px;
+            color:#374151;
+            font-size:14px;
+            line-height:1.7;
+            white-space:pre-wrap;
+            overflow-wrap:anywhere;
+            min-height:60px;
+        }
+
+        .empty-description{
+            color:#9ca3af;
+            font-style:italic;
+        }
+
+
+        /* =================================================
+           INFORMATION GRID
+        ================================================= */
+
+        .grid{
+            display:grid;
+            grid-template-columns:repeat(2,1fr);
+            gap:20px;
+        }
+
+        .item{
+            background:#f8fafc;
+            border:1px solid #edf0f4;
+            border-radius:10px;
+            padding:18px;
+            min-width:0;
+            transition:.2s;
+        }
+
+        .item:hover{
+            border-color:#d8e1ef;
+            box-shadow:0 2px 8px rgba(0,0,0,.03);
+        }
+
+        .item span{
+            display:block;
+            font-size:12px;
+            color:#6b7280;
+            margin-bottom:8px;
+            text-transform:uppercase;
+            letter-spacing:.5px;
+        }
+
+        .item strong{
+            font-size:16px;
+            color:#1f2937;
+            word-break:break-word;
+        }
+
+
+        /* =================================================
+           STATUS
+        ================================================= */
+
+        .status{
+            display:inline-block;
+            padding:6px 14px;
+            border-radius:20px;
+            font-size:12px;
+            font-weight:bold;
+        }
+
+        .active-status{
+            background:#dcfce7;
+            color:#15803d !important;
+        }
+
+        .inactive-status{
+            background:#fee2e2;
+            color:#b91c1c !important;
+        }
+
+
+        /* =================================================
+           IP ACCESS SECTION
+        ================================================= */
+
+        .ip-section{
+            margin-top:35px;
+            padding-top:30px;
+            border-top:1px solid #edf0f4;
+        }
+
+        .ip-section-header{
+            display:flex;
+            justify-content:space-between;
+            align-items:flex-start;
+            gap:20px;
+            margin-bottom:20px;
+        }
+
+        .ip-section-header h3{
+            margin-bottom:6px;
+        }
+
+        .ip-section-description{
+            color:#6b7280;
+            font-size:13px;
+            line-height:1.6;
+            max-width:850px;
+        }
+
+
+        /* =================================================
+           ADMIN CONTROL NOTICE
+        ================================================= */
+
+        .ip-admin-notice{
+            display:flex;
+            align-items:flex-start;
+            gap:12px;
+            background:#eff6ff;
+            border:1px solid #bfdbfe;
+            color:#1e40af;
+            border-radius:10px;
+            padding:13px 15px;
+            margin-bottom:18px;
+            font-size:13px;
+            line-height:1.55;
+        }
+
+        .ip-admin-notice-icon{
+            width:28px;
+            height:28px;
+            border-radius:8px;
+            background:#dbeafe;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            flex-shrink:0;
+            font-size:14px;
+        }
+
+        .ip-admin-notice strong{
+            display:block;
+            margin-bottom:2px;
+            color:#1e3a8a;
+        }
+
+
+        /* =================================================
+           IP CARD
+        ================================================= */
+
+        .ip-list{
+            display:flex;
+            flex-direction:column;
+            gap:14px;
+        }
+
+        .ip-card{
+            border:1px solid #e5e7eb;
+            border-radius:12px;
+            padding:18px;
+            background:#fff;
+            transition:.2s;
+        }
+
+        .ip-card:hover{
+            border-color:#cbd5e1;
+            box-shadow:0 3px 10px rgba(0,0,0,.04);
+        }
+
+        .ip-card-main{
+            display:grid;
+            grid-template-columns:1.3fr .8fr 1.4fr auto;
+            align-items:center;
+            gap:20px;
+        }
+
+        .ip-label{
+            font-size:11px;
+            text-transform:uppercase;
+            letter-spacing:.5px;
+            color:#9ca3af;
+            margin-bottom:6px;
+        }
+
+        .ip-address{
+            font-size:16px;
+            font-weight:700;
+            color:#172033;
+            word-break:break-all;
+        }
+
+
+        /* =================================================
+           IP STATUS
+        ================================================= */
+
+        .ip-status{
+            display:inline-flex;
+            align-items:center;
+            width:max-content;
+            padding:6px 11px;
+            border-radius:20px;
+            font-size:11px;
+            font-weight:700;
+        }
+
+        .ip-approved{
+            background:#dcfce7;
+            color:#15803d;
+        }
+
+        .ip-pending{
+            background:#fef3c7;
+            color:#b45309;
+        }
+
+        .ip-rejected{
+            background:#fee2e2;
+            color:#b91c1c;
+        }
+
+        .ip-revoked{
+            background:#f3f4f6;
+            color:#4b5563;
+        }
+
+
+        /* =================================================
+           POLICY
+        ================================================= */
+
+        .policy-name{
+            font-size:14px;
+            font-weight:600;
+            color:#374151;
+        }
+
+        .no-policy{
+            color:#9ca3af;
+            font-size:13px;
+            font-style:italic;
+        }
+
+        .policy-id{
+            font-size:11px;
+            color:#9ca3af;
+            margin-top:3px;
+        }
+
+
+        /* =================================================
+           IP ACTIONS
+        ================================================= */
+
+        .ip-actions{
+            display:flex;
+            justify-content:flex-end;
+            align-items:center;
+            flex-wrap:wrap;
+            gap:7px;
+        }
+
+        .small-btn{
+            border:none;
+            border-radius:7px;
+            padding:8px 12px;
+            font-size:12px;
+            font-weight:600;
+            cursor:pointer;
+            transition:.2s;
+            white-space:nowrap;
+        }
+
+        .small-btn:hover{
+            transform:translateY(-1px);
+        }
+
+        .btn-policy{
+            background:#eff6ff;
+            color:#2563eb;
+        }
+
+        .btn-policy:hover{
+            background:#dbeafe;
+        }
+
+        .btn-remove-policy{
+            background:#fef2f2;
+            color:#dc2626;
+        }
+
+        .btn-remove-policy:hover{
+            background:#fee2e2;
+        }
+
+        .btn-revoke{
+            background:#f3f4f6;
+            color:#4b5563;
+        }
+
+        .btn-revoke:hover{
+            background:#e5e7eb;
+        }
+
+
+        /* =================================================
+           EMPTY IP STATE
+        ================================================= */
+
+        .empty-ip{
+            border:1px dashed #d1d5db;
+            border-radius:12px;
+            padding:35px 20px;
+            text-align:center;
+            background:#f8fafc;
+        }
+
+        .empty-ip-icon{
+            font-size:30px;
+            margin-bottom:10px;
+        }
+
+        .empty-ip h4{
+            color:#374151;
+            margin-bottom:5px;
+        }
+
+        .empty-ip p{
+            color:#9ca3af;
+            font-size:13px;
+        }
+
+
+        /* =================================================
+           LOADING
+        ================================================= */
+
+        .ip-loading{
+            text-align:center;
+            padding:30px;
+            color:#6b7280;
+            font-size:14px;
+        }
+
+
+        /* =================================================
+           ERROR
+        ================================================= */
+
+        .ip-error{
+            background:#fef2f2;
+            border:1px solid #fecaca;
+            color:#b91c1c;
+            padding:14px 16px;
+            border-radius:9px;
+            font-size:13px;
+            display:none;
+        }
+
+
+        /* =================================================
+           ACTIONS
+        ================================================= */
+
+        .actions{
+            display:flex;
+            align-items:center;
+            flex-wrap:wrap;
+            gap:15px;
+            margin-top:30px;
+            padding-top:5px;
+        }
+
+        .btn{
+            border:none;
+            padding:12px 22px;
+            border-radius:8px;
+            cursor:pointer;
+            font-weight:600;
+            font-size:14px;
+            transition:.2s;
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            min-height:44px;
+        }
+
+        .btn:hover{
+            transform:translateY(-1px);
+        }
+
+        .btn-disable{
+            background:#fee2e2;
+            color:#dc2626;
+        }
+
+        .btn-disable:hover{
+            background:#fecaca;
+        }
+
+        .btn-enable{
+            background:#dcfce7;
+            color:#15803d;
+        }
+
+        .btn-enable:hover{
+            background:#bbf7d0;
+        }
+
+        .btn-edit{
+            background:#2e6dd8;
+            color:white;
+        }
+
+        .btn-edit:hover{
+            background:#245bb7;
+        }
+
+        .actions form{
+            margin:0;
+        }
+
+
+        /* =================================================
+           MODAL
+        ================================================= */
+
+        .modal-overlay{
+            position:fixed;
+            inset:0;
+            background:rgba(15,23,42,.55);
+            display:none;
+            align-items:center;
+            justify-content:center;
+            padding:20px;
+            z-index:1000;
+        }
+
+        .modal-overlay.show{
+            display:flex;
+        }
+
+        .modal{
+            width:100%;
+            max-width:500px;
+            background:white;
+            border-radius:16px;
+            box-shadow:0 20px 60px rgba(0,0,0,.2);
+            overflow:hidden;
+            animation:modalIn .2s ease;
+        }
+
+        @keyframes modalIn{
+
+            from{
+                opacity:0;
+                transform:translateY(10px) scale(.98);
+            }
+
+            to{
+                opacity:1;
+                transform:translateY(0) scale(1);
+            }
+
+        }
+
+        .modal-header{
+            padding:20px 22px;
+            border-bottom:1px solid #edf0f4;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:15px;
+        }
+
+        .modal-header h3{
+            margin:0;
+            font-size:18px;
+            color:#172033;
+        }
+
+        .modal-close{
+            border:none;
+            background:#f3f4f6;
+            width:32px;
+            height:32px;
+            border-radius:8px;
+            cursor:pointer;
+            font-size:18px;
+            color:#6b7280;
+        }
+
+        .modal-close:hover{
+            background:#e5e7eb;
+        }
+
+        .modal-body{
+            padding:22px;
+        }
+
+        .modal-ip{
+            background:#f8fafc;
+            border:1px solid #edf0f4;
+            border-radius:9px;
+            padding:12px 14px;
+            margin-bottom:18px;
+        }
+
+        .modal-ip-label{
+            color:#9ca3af;
+            font-size:11px;
+            text-transform:uppercase;
+            margin-bottom:4px;
+        }
+
+        .modal-ip-value{
+            color:#172033;
+            font-size:15px;
+            font-weight:700;
+        }
+
+        .policy-loading{
+            text-align:center;
+            padding:20px;
+            color:#6b7280;
+            font-size:13px;
+        }
+
+        .policy-error{
+            display:none;
+            background:#fef2f2;
+            border:1px solid #fecaca;
+            color:#b91c1c;
+            padding:12px;
+            border-radius:8px;
+            font-size:13px;
+        }
+
+        .policy-options{
+            display:flex;
+            flex-direction:column;
+            gap:9px;
+            max-height:280px;
+            overflow-y:auto;
+        }
+
+        .policy-option{
+            border:1px solid #e5e7eb;
+            border-radius:9px;
+            padding:13px 14px;
+            cursor:pointer;
+            transition:.2s;
+        }
+
+        .policy-option:hover{
+            border-color:#93c5fd;
+            background:#eff6ff;
+        }
+
+        .policy-option.selected{
+            border-color:#3b82f6;
+            background:#eff6ff;
+        }
+
+        .policy-option input{
+            margin-right:9px;
+        }
+
+        .policy-option-name{
+            font-weight:600;
+            color:#374151;
+            font-size:14px;
+        }
+
+        .policy-option-description{
+            margin-top:4px;
+            margin-left:23px;
+            color:#9ca3af;
+            font-size:12px;
+            line-height:1.5;
+        }
+
+        .modal-footer{
+            padding:16px 22px;
+            border-top:1px solid #edf0f4;
+            display:flex;
+            justify-content:flex-end;
+            gap:10px;
+        }
+
+        .modal-btn{
+            border:none;
+            padding:10px 16px;
+            border-radius:8px;
+            cursor:pointer;
+            font-size:13px;
+            font-weight:600;
+        }
+
+        .modal-cancel{
+            background:#f3f4f6;
+            color:#374151;
+        }
+
+        .modal-cancel:hover{
+            background:#e5e7eb;
+        }
+
+        .modal-save{
+            background:#2e6dd8;
+            color:white;
+        }
+
+        .modal-save:hover{
+            background:#245bb7;
+        }
+
+        .modal-save:disabled{
+            opacity:.55;
+            cursor:not-allowed;
+        }
+
+
+        /* =================================================
+           TOAST
+        ================================================= */
+
+        .toast{
+            position:fixed;
+            right:25px;
+            bottom:25px;
+            background:#172033;
+            color:white;
+            padding:13px 18px;
+            border-radius:9px;
+            font-size:13px;
+            box-shadow:0 8px 25px rgba(0,0,0,.2);
+            transform:translateY(20px);
+            opacity:0;
+            pointer-events:none;
+            transition:.25s;
+            z-index:2000;
+            max-width:350px;
+        }
+
+        .toast.show{
+            opacity:1;
+            transform:translateY(0);
+        }
+
+        .toast.success{
+            background:#166534;
+        }
+
+        .toast.error{
+            background:#991b1b;
+        }
+
+
+        /* =================================================
+           RESPONSIVE
+        ================================================= */
+
+        @media(max-width:1000px){
+
+            .ip-card-main{
+                grid-template-columns:1fr 1fr;
+            }
+
+            .ip-actions{
+                justify-content:flex-start;
+            }
+
+        }
+
+
+        @media(max-width:850px){
+
+            .sidebar{
+                width:75px;
+            }
+
+            .logo{
+                justify-content:center;
+                padding:0;
+            }
+
+            .logo-text{
+                display:none;
+            }
+
+            .nav{
+                padding:20px 8px;
+            }
+
+            .nav a{
+                justify-content:center;
+                padding:13px 10px;
+            }
+
+            .nav a span:last-child{
+                display:none;
+            }
+
+            .logout{
+                padding:10px;
+            }
+
+            .logout button{
+                font-size:0;
+                padding:12px 5px;
+            }
+
+            .logout button::after{
+                content:"↪";
+                font-size:18px;
+            }
+
+            .main{
+                margin-left:75px;
+                width:calc(100% - 75px);
+                padding:20px;
+            }
+
+            .top{
+                align-items:flex-start;
+            }
+
+            .top h1{
+                font-size:24px;
+            }
+
+            .profile-header{
+                flex-direction:column;
+                text-align:center;
+                padding:30px 20px;
+            }
+
+            .profile-info h2{
+                font-size:25px;
+            }
+
+            .details{
+                padding:25px 20px;
+            }
+
+            .grid{
+                grid-template-columns:1fr;
+            }
+
+            .actions{
+                flex-direction:column;
+                align-items:stretch;
+            }
+
+            .actions form,
+            .btn,
+            .btn-edit{
+                width:100%;
+            }
+
+            .ip-card-main{
+                grid-template-columns:1fr;
+                gap:13px;
+            }
+
+            .ip-actions{
+                justify-content:flex-start;
+            }
+
+        }
+
+
+        @media(max-width:550px){
+
+            .main{
+                padding:15px;
+            }
+
+            .top{
+                flex-direction:column;
+                align-items:stretch;
+                gap:15px;
+            }
+
+            .back-btn{
+                text-align:center;
+            }
+
+            .profile-header{
+                padding:25px 15px;
+            }
+
+            .avatar{
+                width:85px;
+                height:85px;
+                font-size:30px;
+            }
+
+            .details{
+                padding:20px 15px;
+            }
+
+            .grid{
+                gap:14px;
+            }
+
+            .item{
+                padding:15px;
+            }
+
+            .description-box{
+                padding:15px;
+            }
+
+            .ip-section-header{
+                flex-direction:column;
+            }
+
+            .modal-overlay{
+                padding:12px;
+            }
+
+            .modal-footer{
+                flex-direction:column-reverse;
+            }
+
+            .modal-btn{
+                width:100%;
+            }
+
+            .toast{
+                left:15px;
+                right:15px;
+                bottom:15px;
+                max-width:none;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<div class="app">
+
+
+    <!-- =================================================
+         SIDEBAR
+    ================================================= -->
+
+    <aside class="sidebar">
+
+        <div class="logo">
+
+            <div class="logo-icon">
+                TL
+            </div>
+
+            <div class="logo-text">
+                TeamLogger
+            </div>
+
+        </div>
+
+
+        <nav class="nav">
+
+            <a href="/admin/dashboard">
+                <span>🏠</span>
+                <span>Dashboard</span>
+            </a>
+
+            <a href="/admin/employees"
+               class="active">
+                <span>👥</span>
+                <span>Employees</span>
+            </a>
+
+            <a href="/admin/tracking">
+                <span>📊</span>
+                <span>Today's Activity</span>
+            </a>
+
+            <a href="/admin/projects">
+                <span>📁</span>
+                <span>Projects</span>
+            </a>
+
+            <a href="/admin/overtime">
+                <span>⏰</span>
+                <span>Overtime</span>
+            </a>
+
+            <a href="/admin/reports">
+                <span>📄</span>
+                <span>Reports</span>
+            </a>
+
+            <a href="/admin/screenshots">
+                <span>🖼</span>
+                <span>Screenshots</span>
+            </a>
+
+            <a href="/admin/settings">
+                <span>⚙</span>
+                <span>Settings</span>
+            </a>
+
+        </nav>
+
+
+        <div class="logout">
+
+            <form th:action="@{/logout}"
+                  method="post">
+
+                <button type="submit">
+                    Logout
+                </button>
+
+            </form>
+
+        </div>
+
+    </aside>
+
+
+    <!-- =================================================
+         MAIN
+    ================================================= -->
+
+    <main class="main">
+
+
+        <div class="top">
+
+            <div>
+
+                <h1>
+                    Employee Details
+                </h1>
+
+                <p>
+                    Complete employee information and access controls
+                </p>
+
+            </div>
+
+
+            <a href="/admin/employees"
+               class="back-btn">
+
+                ← Back
+
+            </a>
+
+        </div>
+
+
+        <!-- =================================================
+             PROFILE CARD
+        ================================================= -->
+
+        <div class="profile-card">
+
+
+            <div class="profile-header">
+
+                <div class="avatar">
+
+                    <img th:if="${employee.profilePhoto != null
+                                 and !#strings.isEmpty(employee.profilePhoto)}"
+                         th:src="@{/uploads/profile/{filename}(filename=${employee.profilePhoto})}"
+                         th:alt="${employee.name + ' profile photo'}">
+
+                    <span th:unless="${employee.profilePhoto != null
+                                      and !#strings.isEmpty(employee.profilePhoto)}"
+                          th:text="${employee.name != null
+                                    and !#strings.isEmpty(employee.name)
+                                    ? #strings.substring(employee.name,0,1).toUpperCase()
+                                    : 'A'}">
+
+                        A
+
+                    </span>
+
+                </div>
+
+
+                <div class="profile-info">
+
+                    <h2 th:text="${employee.name}">
+                        Employee Name
+                    </h2>
+
+                    <p th:text="${employee.designation != null
+                                 ? employee.designation
+                                 : 'No Designation'}">
+
+                        Developer
+
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 DETAILS
+            ================================================= -->
+
+            <div class="details">
+
+
+                <!-- ABOUT -->
+
+                <div class="about-section">
+
+                    <h3>
+                        About Employee
+                    </h3>
+
+                    <div class="description-box"
+                         th:if="${employee.description != null
+                                 and !#strings.isEmpty(employee.description)}"
+                         th:text="${employee.description}">
+
+                        Employee description
+
+                    </div>
+
+                    <div class="description-box empty-description"
+                         th:unless="${employee.description != null
+                                     and !#strings.isEmpty(employee.description)}">
+
+                        No description has been added by this employee.
+
+                    </div>
+
+                </div>
+
+
+                <!-- EMPLOYEE INFORMATION -->
+
+                <h3>
+                    Employee Information
+                </h3>
+
+
+                <div class="grid">
+
+
+                    <div class="item">
+
+                        <span>
+                            Employee ID
+                        </span>
+
+                        <strong th:text="${employee.id}">
+                            1
+                        </strong>
+
+                    </div>
+
+
+                    <div class="item">
+
+                        <span>
+                            Login ID
+                        </span>
+
+                        <strong th:text="${employee.employeeLoginId != null
+                                          ? employee.employeeLoginId
+                                          : '-'}">
+
+                            EMP001
+
+                        </strong>
+
+                    </div>
+
+
+                    <div class="item">
+
+                        <span>
+                            Email
+                        </span>
+
+                        <strong th:text="${employee.email}">
+                            email@example.com
+                        </strong>
+
+                    </div>
+
+
+                    <div class="item">
+
+                        <span>
+                            Role
+                        </span>
+
+                        <strong th:text="${employee.role}">
+                            EMPLOYEE
+                        </strong>
+
+                    </div>
+
+
+                    <div class="item">
+
+                        <span>
+                            Designation
+                        </span>
+
+                        <strong th:text="${employee.designation != null
+                                          ? employee.designation
+                                          : '-'}">
+
+                            Developer
+
+                        </strong>
+
+                    </div>
+
+
+                    <div class="item">
+
+                        <span>
+                            Domain
+                        </span>
+
+                        <strong th:text="${employee.domain != null
+                                          ? employee.domain
+                                          : '-'}">
+
+                            Development
+
+                        </strong>
+
+                    </div>
+
+
+                    <div class="item">
+
+                        <span>
+                            Application
+                        </span>
+
+                        <strong th:text="${employee.applicationName != null
+                                          ? employee.applicationName
+                                          : '-'}">
+
+                            TeamLogger
+
+                        </strong>
+
+                    </div>
+
+
+                    <div class="item">
+
+                        <span>
+                            Team ID
+                        </span>
+
+                        <strong th:text="${employee.teamId != null
+                                          ? employee.teamId
+                                          : '-'}">
+
+                            1
+
+                        </strong>
+
+                    </div>
+
+
+                    <div class="item">
+
+                        <span>
+                            Senior ID
+                        </span>
+
+                        <strong th:text="${employee.seniorId != null
+                                          ? employee.seniorId
+                                          : '-'}">
+
+                            5
+
+                        </strong>
+
+                    </div>
+
+
+                    <div class="item">
+
+                        <span>
+                            Status
+                        </span>
+
+                        <strong>
+
+                            <span class="status"
+                                  th:classappend="${employee.status == 'ACTIVE'}
+                                                  ? ' active-status'
+                                                  : ' inactive-status'"
+                                  th:text="${employee.status}">
+
+                                ACTIVE
+
+                            </span>
+
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                     IP ACCESS
+                ================================================= -->
+
+                <section class="ip-section">
+
+
+                    <div class="ip-section-header">
+
+                        <div>
+
+                            <h3>
+                                Trusted IP & Usage Policy
+                            </h3>
+
+                            <p class="ip-section-description">
+                                Configure the IP addresses this employee is
+                                authorized to use and assign a usage policy
+                                for applications and websites accessed from
+                                each trusted IP.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="ip-admin-notice">
+
+                        <div class="ip-admin-notice-icon">
+                            🔐
+                        </div>
+
+                        <div>
+
+                            <strong>
+                                Administrator controlled
+                            </strong>
+
+                            IP addresses are configured and approved by the
+                            administrator. Employees cannot add or change
+                            their trusted IP addresses.
+
+                        </div>
+
+                    </div>
+
+
+                    <div id="ipError"
+                         class="ip-error">
+
+                        Unable to load employee IP access information.
+
+                    </div>
+
+
+                    <div id="ipLoading"
+                         class="ip-loading">
+
+                        Loading trusted IPs...
+
+                    </div>
+
+
+                    <div id="ipList"
+                         class="ip-list"
+                         style="display:none;">
+
+                    </div>
+
+
+                </section>
+
+
+                <!-- =================================================
+                     ACTIONS
+                ================================================= -->
+
+                <div class="actions">
+
+
+                    <a th:href="@{'/admin/employees/edit/' + ${employee.id}}"
+                       class="btn btn-edit">
+
+                        Edit Employee
+
+                    </a>
+
+
+                    <form th:if="${employee.status == 'ACTIVE'}"
+                          th:action="@{'/admin/employees/' + ${employee.id} + '/disable'}"
+                          method="post">
+
+                        <button type="submit"
+                                class="btn btn-disable"
+                                onclick="return confirm('Disable this employee?')">
+
+                            Disable
+
+                        </button>
+
+                    </form>
+
+
+                    <form th:if="${employee.status != 'ACTIVE'}"
+                          th:action="@{'/admin/employees/' + ${employee.id} + '/enable'}"
+                          method="post">
+
+                        <button type="submit"
+                                class="btn btn-enable">
+
+                            Enable
+
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+</div>
+
+
+<!-- =========================================================
+     POLICY MODAL
+========================================================= -->
+
+<div id="policyModal"
+     class="modal-overlay">
+
+    <div class="modal">
+
+
+        <div class="modal-header">
+
+            <h3 id="policyModalTitle">
+                Assign Usage Policy
+            </h3>
+
+            <button type="button"
+                    class="modal-close"
+                    onclick="closePolicyModal()">
+
+                ×
+
+            </button>
+
+        </div>
+
+
+        <div class="modal-body">
+
+
+            <div class="modal-ip">
+
+                <div class="modal-ip-label">
+                    Trusted IP Address
+                </div>
+
+                <div id="modalIpAddress"
+                     class="modal-ip-value">
+
+                    -
+
+                </div>
+
+            </div>
+
+
+            <div id="policyLoading"
+                 class="policy-loading">
+
+                Loading available policies...
+
+            </div>
+
+
+            <div id="policyError"
+                 class="policy-error">
+
+            </div>
+
+
+            <div id="policyOptions"
+                 class="policy-options"
+                 style="display:none;">
+
+            </div>
+
+        </div>
+
+
+        <div class="modal-footer">
+
+            <button type="button"
+                    class="modal-btn modal-cancel"
+                    onclick="closePolicyModal()">
+
+                Cancel
+
+            </button>
+
+
+            <button type="button"
+                    id="savePolicyButton"
+                    class="modal-btn modal-save"
+                    onclick="savePolicy()"
+                    disabled>
+
+                Assign Policy
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     TOAST
+========================================================= -->
+
+<div id="toast"
+     class="toast">
+
+</div>
+
+
+<script th:inline="javascript">
+
+    /* =========================================================
+       EMPLOYEE ID
+    ========================================================= */
+
+    const employeeId = /*[[${employee.id}]]*/ 0;
+
+
+    /* =========================================================
+       API BASE
+    ========================================================= */
+
+    const ipApiBase =
+        "/admin/employees/" + employeeId + "/ip-access";
+
+
+    /* =========================================================
+       STATE
+    ========================================================= */
+
+    let currentIpAccessId = null;
+
+    let selectedPolicyId = null;
+
+
+    /* =========================================================
+       LOAD IP ACCESS
+    ========================================================= */
+
+    document.addEventListener("DOMContentLoaded", function(){
+
+        loadIpAccess();
+
+    });
+
+
+    async function loadIpAccess(){
+
+        const loading =
+            document.getElementById("ipLoading");
+
+        const list =
+            document.getElementById("ipList");
+
+        const error =
+            document.getElementById("ipError");
+
+        loading.style.display = "block";
+        list.style.display = "none";
+        error.style.display = "none";
+
+        try{
+
+            const response =
+                await fetch(ipApiBase, {
+                    method:"GET",
+                    headers:{
+                        "Accept":"application/json"
+                    }
+                });
+
+            if(!response.ok){
+
+                throw new Error(
+                    "Failed to load IP access."
+                );
+
+            }
+
+            const ipAccessList =
+                await response.json();
+
+            renderIpAccess(ipAccessList);
+
+        }catch(e){
+
+            console.error(e);
+
+            loading.style.display = "none";
+            error.style.display = "block";
+
+            error.textContent =
+                "Unable to load employee IP access information.";
+
+        }
+
+    }
+
+
+    /* =========================================================
+       RENDER IP ACCESS
+    ========================================================= */
+
+    function renderIpAccess(ipAccessList){
+
+        const loading =
+            document.getElementById("ipLoading");
+
+        const list =
+            document.getElementById("ipList");
+
+        loading.style.display = "none";
+        list.style.display = "flex";
+
+        list.innerHTML = "";
+
+
+        if(!ipAccessList ||
+           ipAccessList.length === 0){
+
+            list.innerHTML = `
+
+                <div class="empty-ip">
+
+                    <div class="empty-ip-icon">
+                        🌐
+                    </div>
+
+                    <h4>
+                        No trusted IP addresses configured
+                    </h4>
+
+                    <p>
+                        Configure an employee IP address from the
+                        administrator controls.
+                    </p>
+
+                </div>
+
+            `;
+
+            return;
+
+        }
+
+
+        ipAccessList.forEach(function(ipAccess){
+
+            list.appendChild(
+                createIpCard(ipAccess)
+            );
+
+        });
+
+    }
+
+
+    /* =========================================================
+       CREATE IP CARD
+    ========================================================= */
+
+    function createIpCard(ip){
+
+        const card =
+            document.createElement("div");
+
+        card.className = "ip-card";
+
+
+        const status =
+            normalizeStatus(ip.status);
+
+        const approved =
+            status === "APPROVED";
+
+        const policyId =
+            ip.policyId;
+
+
+        let policyHtml;
+
+
+        if(policyId){
+
+            policyHtml = `
+
+                <div class="policy-name">
+                    Usage Policy Assigned
+                </div>
+
+                <div class="policy-id">
+                    Policy ID: ${escapeHtml(policyId)}
+                </div>
+
+            `;
+
+        }else{
+
+            policyHtml = `
+
+                <div class="no-policy">
+                    No policy assigned
+                </div>
+
+            `;
+
+        }
+
+
+        let actionsHtml = "";
+
+
+        /*
+         * ADMIN-CONFIGURED IP
+         *
+         * Newly configured IPs are already APPROVED by the
+         * backend. Therefore there is no Approve/Reject flow
+         * in this UI.
+         */
+
+        if(approved){
+
+            if(policyId){
+
+                actionsHtml += `
+
+                    <button type="button"
+                            class="small-btn btn-policy"
+                            onclick="openPolicyModal(
+                                ${ip.id},
+                                '${escapeJs(ip.ipAddress)}'
+                            )">
+
+                        Change Policy
+
+                    </button>
+
+
+                    <button type="button"
+                            class="small-btn btn-remove-policy"
+                            onclick="removePolicy(
+                                ${ip.id},
+                                '${escapeJs(ip.ipAddress)}'
+                            )">
+
+                        Remove Policy
+
+                    </button>
+
+                `;
+
+            }else{
+
+                actionsHtml += `
+
+                    <button type="button"
+                            class="small-btn btn-policy"
+                            onclick="openPolicyModal(
+                                ${ip.id},
+                                '${escapeJs(ip.ipAddress)}'
+                            )">
+
+                        Assign Policy
+
+                    </button>
+
+                `;
+
+            }
+
+
+            actionsHtml += `
+
+                <button type="button"
+                        class="small-btn btn-revoke"
+                        onclick="revokeIp(
+                            ${ip.id},
+                            '${escapeJs(ip.ipAddress)}'
+                        )">
+
+                    Revoke IP
+
+                </button>
+
+            `;
+
+        }
+
+
+        /*
+         * Legacy PENDING / REJECTED records
+         *
+         * No employee-facing request action is exposed here.
+         * The current admin-controlled flow creates APPROVED IPs.
+         */
+
+        if(status === "PENDING"){
+
+            actionsHtml += `
+
+                <span class="no-policy">
+                    Pending legacy IP record
+                </span>
+
+            `;
+
+        }
+
+
+        if(status === "REJECTED"){
+
+            actionsHtml += `
+
+                <span class="no-policy">
+                    IP access rejected
+                </span>
+
+            `;
+
+        }
+
+
+        if(status === "REVOKED"){
+
+            actionsHtml += `
+
+                <span class="no-policy">
+                    IP access revoked
+                </span>
+
+            `;
+
+        }
+
+
+        card.innerHTML = `
+
+            <div class="ip-card-main">
+
+
+                <div>
+
+                    <div class="ip-label">
+                        Trusted IP Address
+                    </div>
+
+                    <div class="ip-address">
+                        ${escapeHtml(ip.ipAddress || "-")}
+                    </div>
+
+                </div>
+
+
+                <div>
+
+                    <div class="ip-label">
+                        Access Status
+                    </div>
+
+                    <span class="ip-status ${getStatusClass(status)}">
+
+                        ${escapeHtml(status || "-")}
+
+                    </span>
+
+                </div>
+
+
+                <div>
+
+                    <div class="ip-label">
+                        Usage Policy
+                    </div>
+
+                    ${policyHtml}
+
+                </div>
+
+
+                <div class="ip-actions">
+
+                    ${actionsHtml}
+
+                </div>
+
+            </div>
+
+        `;
+
+
+        return card;
+
+    }
+
+
+    /* =========================================================
+       OPEN POLICY MODAL
+    ========================================================= */
+
+    async function openPolicyModal(
+        ipAccessId,
+        ipAddress
+    ){
+
+        currentIpAccessId =
+            ipAccessId;
+
+        selectedPolicyId = null;
+
+
+        document.getElementById(
+            "modalIpAddress"
+        ).textContent =
+            ipAddress;
+
+
+        document.getElementById(
+            "policyModalTitle"
+        ).textContent =
+            "Assign Usage Policy";
+
+
+        document.getElementById(
+            "policyModal"
+        ).classList.add("show");
+
+
+        const loading =
+            document.getElementById(
+                "policyLoading"
+            );
+
+        const options =
+            document.getElementById(
+                "policyOptions"
+            );
+
+        const error =
+            document.getElementById(
+                "policyError"
+            );
+
+        const saveButton =
+            document.getElementById(
+                "savePolicyButton"
+            );
+
+
+        loading.style.display = "block";
+        options.style.display = "none";
+        error.style.display = "none";
+        saveButton.disabled = true;
+        saveButton.textContent = "Assign Policy";
+
+
+        try{
+
+            const response =
+                await fetch(
+                    ipApiBase +
+                    "/" +
+                    ipAccessId +
+                    "/policies",
+                    {
+                        method:"GET",
+                        headers:{
+                            "Accept":"application/json"
+                        }
+                    }
+                );
+
+
+            if(!response.ok){
+
+                throw new Error(
+                    "Unable to load policies."
+                );
+
+            }
+
+
+            const policies =
+                await response.json();
+
+
+            renderPolicyOptions(
+                policies
+            );
+
+
+        }catch(e){
+
+            console.error(e);
+
+            loading.style.display = "none";
+            error.style.display = "block";
+
+            error.textContent =
+                "Unable to load available access policies.";
+
+        }
+
+    }
+
+
+    /* =========================================================
+       RENDER POLICY OPTIONS
+    ========================================================= */
+
+    function renderPolicyOptions(
+        policies
+    ){
+
+        const loading =
+            document.getElementById(
+                "policyLoading"
+            );
+
+        const options =
+            document.getElementById(
+                "policyOptions"
+            );
+
+        const saveButton =
+            document.getElementById(
+                "savePolicyButton"
+            );
+
+
+        loading.style.display = "none";
+
+
+        if(!policies ||
+           policies.length === 0){
+
+            options.style.display = "block";
+
+            options.innerHTML = `
+
+                <div class="no-policy">
+
+                    No active access policies are available.
+
+                    Create an access policy first.
+
+                </div>
+
+            `;
+
+            return;
+
+        }
+
+
+        options.style.display = "flex";
+
+        options.innerHTML = "";
+
+
+        policies.forEach(function(policy){
+
+            const option =
+                document.createElement("label");
+
+            option.className =
+                "policy-option";
+
+
+            const description =
+                policy.description ||
+                "No description";
+
+
+            option.innerHTML = `
+
+                <div>
+
+                    <input type="radio"
+                           name="usagePolicy"
+                           value="${policy.id}">
+
+                    <span class="policy-option-name">
+
+                        ${escapeHtml(
+                            policy.name || "Unnamed Policy"
+                        )}
+
+                    </span>
+
+                </div>
+
+
+                <div class="policy-option-description">
+
+                    ${escapeHtml(description)}
+
+                </div>
+
+            `;
+
+
+            const radio =
+                option.querySelector(
+                    "input"
+                );
+
+
+            radio.addEventListener(
+                "change",
+                function(){
+
+                    selectedPolicyId =
+                        Number(this.value);
+
+                    saveButton.disabled =
+                        false;
+
+
+                    document
+                        .querySelectorAll(
+                            ".policy-option"
+                        )
+                        .forEach(function(item){
+
+                            item.classList.remove(
+                                "selected"
+                            );
+
+                        });
+
+
+                    option.classList.add(
+                        "selected"
+                    );
+
+                }
+            );
+
+
+            options.appendChild(option);
+
+        });
+
+    }
+
+
+    /* =========================================================
+       SAVE POLICY
+    ========================================================= */
+
+    async function savePolicy(){
+
+        if(!currentIpAccessId ||
+           !selectedPolicyId){
+
+            showToast(
+                "Please select a policy.",
+                "error"
+            );
+
+            return;
+
+        }
+
+
+        const saveButton =
+            document.getElementById(
+                "savePolicyButton"
+            );
+
+
+        saveButton.disabled = true;
+        saveButton.textContent =
+            "Saving...";
+
+
+        try{
+
+            const response =
+                await fetch(
+                    ipApiBase +
+                    "/" +
+                    currentIpAccessId +
+                    "/policy",
+                    {
+                        method:"POST",
+
+                        headers:{
+                            "Content-Type":
+                                "application/json",
+
+                            "Accept":
+                                "application/json"
+                        },
+
+                        body:JSON.stringify({
+                            policyId:
+                                selectedPolicyId
+                        })
+                    }
+                );
+
+
+            if(!response.ok){
+
+                const message =
+                    await extractErrorMessage(
+                        response
+                    );
+
+                throw new Error(
+                    message
+                );
+
+            }
+
+
+            closePolicyModal();
+
+            showToast(
+                "Usage policy assigned successfully.",
+                "success"
+            );
+
+
+            await loadIpAccess();
+
+
+        }catch(e){
+
+            console.error(e);
+
+            showToast(
+                e.message ||
+                "Failed to assign policy.",
+                "error"
+            );
+
+
+        }finally{
+
+            saveButton.disabled = false;
+            saveButton.textContent =
+                "Assign Policy";
+
+        }
+
+    }
+
+
+    /* =========================================================
+       REMOVE POLICY
+    ========================================================= */
+
+    async function removePolicy(
+        ipAccessId,
+        ipAddress
+    ){
+
+        const confirmed =
+            confirm(
+                "Remove the usage policy from " +
+                ipAddress +
+                "?\n\nThe IP will remain approved and trusted."
+            );
+
+
+        if(!confirmed){
+            return;
+        }
+
+
+        try{
+
+            const response =
+                await fetch(
+                    ipApiBase +
+                    "/" +
+                    ipAccessId +
+                    "/policy/remove",
+                    {
+                        method:"POST",
+                        headers:{
+                            "Accept":
+                                "application/json"
+                        }
+                    }
+                );
+
+
+            if(!response.ok){
+
+                const message =
+                    await extractErrorMessage(
+                        response
+                    );
+
+                throw new Error(
+                    message
+                );
+
+            }
+
+
+            showToast(
+                "Usage policy removed successfully.",
+                "success"
+            );
+
+
+            await loadIpAccess();
+
+
+        }catch(e){
+
+            console.error(e);
+
+            showToast(
+                e.message ||
+                "Failed to remove policy.",
+                "error"
+            );
+
+        }
+
+    }
+
+
+    /* =========================================================
+       REVOKE IP
+    ========================================================= */
+
+    async function revokeIp(
+        ipAccessId,
+        ipAddress
+    ){
+
+        const confirmed =
+            confirm(
+                "Revoke trusted IP address " +
+                ipAddress +
+                "?\n\nThe employee will no longer be allowed to use this IP."
+            );
+
+
+        if(!confirmed){
+            return;
+        }
+
+
+        try{
+
+            const response =
+                await fetch(
+                    ipApiBase +
+                    "/" +
+                    ipAccessId +
+                    "/revoke",
+                    {
+                        method:"POST",
+                        headers:{
+                            "Accept":
+                                "application/json"
+                        }
+                    }
+                );
+
+
+            if(!response.ok){
+
+                const message =
+                    await extractErrorMessage(
+                        response
+                    );
+
+                throw new Error(
+                    message
+                );
+
+            }
+
+
+            showToast(
+                "Trusted IP address revoked.",
+                "success"
+            );
+
+
+            await loadIpAccess();
+
+
+        }catch(e){
+
+            console.error(e);
+
+            showToast(
+                e.message ||
+                "Failed to revoke IP.",
+                "error"
+            );
+
+        }
+
+    }
+
+
+    /* =========================================================
+       CLOSE MODAL
+    ========================================================= */
+
+    function closePolicyModal(){
+
+        document
+            .getElementById(
+                "policyModal"
+            )
+            .classList.remove(
+                "show"
+            );
+
+        currentIpAccessId = null;
+        selectedPolicyId = null;
+
+    }
+
+
+    /* =========================================================
+       CLOSE MODAL ON OVERLAY CLICK
+    ========================================================= */
+
+    document
+        .getElementById("policyModal")
+        .addEventListener(
+            "click",
+            function(event){
+
+                if(
+                    event.target === this
+                ){
+
+                    closePolicyModal();
+
+                }
+
+            }
+        );
+
+
+    /* =========================================================
+       TOAST
+    ========================================================= */
+
+    let toastTimer = null;
+
+
+    function showToast(
+        message,
+        type
+    ){
+
+        const toast =
+            document.getElementById(
+                "toast"
+            );
+
+
+        toast.textContent =
+            message;
+
+
+        toast.className =
+            "toast show " +
+            (type || "");
+
+
+        clearTimeout(
+            toastTimer
+        );
+
+
+        toastTimer =
+            setTimeout(
+                function(){
+
+                    toast.classList.remove(
+                        "show"
+                    );
+
+                },
+                3000
+            );
+
+    }
+
+
+    /* =========================================================
+       STATUS HELPERS
+    ========================================================= */
+
+    function normalizeStatus(
+        status
+    ){
+
+        return String(
+            status || ""
+        )
+        .trim()
+        .toUpperCase();
+
+    }
+
+
+    function getStatusClass(
+        status
+    ){
+
+        switch(status){
+
+            case "APPROVED":
+                return "ip-approved";
+
+            case "PENDING":
+                return "ip-pending";
+
+            case "REJECTED":
+                return "ip-rejected";
+
+            case "REVOKED":
+                return "ip-revoked";
+
+            default:
+                return "ip-revoked";
+
+        }
+
+    }
+
+
+    /* =========================================================
+       HTML ESCAPE
+    ========================================================= */
+
+    function escapeHtml(
+        value
+    ){
+
+        return String(
+            value ?? ""
+        )
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+
+    }
+
+
+    /* =========================================================
+       JS STRING ESCAPE
+    ========================================================= */
+
+    function escapeJs(
+        value
+    ){
+
+        return String(
+            value ?? ""
+        )
+        .replaceAll("\\","\\\\")
+        .replaceAll("'","\\'")
+        .replaceAll("\n","\\n")
+        .replaceAll("\r","\\r");
+
+    }
+
+
+    /* =========================================================
+       ERROR MESSAGE
+    ========================================================= */
+
+    async function extractErrorMessage(
+        response
+    ){
+
+        try{
+
+            const contentType =
+                response.headers.get(
+                    "content-type"
+                ) || "";
+
+
+            if(
+                contentType.includes(
+                    "application/json"
+                )
+            ){
+
+                const data =
+                    await response.json();
+
+
+                return data.message ||
+                       data.error ||
+                       "Request failed.";
+
+            }
+
+
+            const text =
+                await response.text();
+
+
+            return text ||
+                   "Request failed.";
+
+
+        }catch(e){
+
+            return "Request failed.";
+
+        }
+
+    }
+
+</script>
+
+</body>
+
+</html>

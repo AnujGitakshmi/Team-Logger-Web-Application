@@ -1,0 +1,3340 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+  <title>Edit Employee | TeamLogger</title>
+
+  <style>
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: Arial, Helvetica, sans-serif;
+        background: #f5f7fb;
+        color: #1f2937;
+        min-height: 100vh;
+    }
+
+    a {
+        text-decoration: none;
+        color: inherit;
+    }
+
+    button,
+    input,
+    select {
+        font-family: inherit;
+    }
+
+
+    /* =====================================================
+       SIDEBAR
+    ===================================================== */
+
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+
+        width: 250px;
+
+        background: #111827;
+        color: #ffffff;
+
+        display: flex;
+        flex-direction: column;
+
+        z-index: 1000;
+
+        border-right: 1px solid #1f2937;
+    }
+
+    .logo-section {
+        height: 72px;
+
+        display: flex;
+        align-items: center;
+
+        padding: 0 20px;
+
+        border-bottom: 1px solid #1f2937;
+
+        flex-shrink: 0;
+    }
+
+    .logo {
+        display: flex;
+        align-items: center;
+        width: 100%;
+    }
+
+    .logo-icon {
+        width: 38px;
+        height: 38px;
+
+        border-radius: 10px;
+
+        background: #2563eb;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        font-size: 16px;
+        font-weight: 700;
+
+        margin-right: 11px;
+
+        flex-shrink: 0;
+    }
+
+    .logo-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #ffffff;
+    }
+
+    .logo-subtitle {
+        margin-top: 2px;
+
+        font-size: 9px;
+        font-weight: 700;
+
+        color: #6b7280;
+
+        letter-spacing: 1px;
+    }
+
+
+    /* =====================================================
+       NAV
+    ===================================================== */
+
+    .sidebar-nav {
+        padding: 22px 12px;
+
+        flex: 1;
+
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    .nav-section-title {
+        padding: 0 12px;
+        margin: 0 0 10px;
+
+        font-size: 10px;
+        font-weight: 700;
+
+        color: #6b7280;
+
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .nav-item {
+        height: 44px;
+
+        display: flex;
+        align-items: center;
+
+        gap: 12px;
+
+        padding: 0 13px;
+        margin-bottom: 4px;
+
+        border-radius: 8px;
+
+        color: #9ca3af;
+
+        font-size: 14px;
+        font-weight: 500;
+
+        transition: .2s ease;
+    }
+
+    .nav-item:hover {
+        background: #1f2937;
+        color: #ffffff;
+        transform: translateX(2px);
+    }
+
+    .nav-item.active {
+        background: #2563eb;
+        color: #ffffff;
+    }
+
+    .nav-icon {
+        width: 22px;
+
+        text-align: center;
+
+        font-size: 16px;
+
+        flex-shrink: 0;
+    }
+
+
+    /* =====================================================
+       ADMIN PROFILE
+    ===================================================== */
+
+    .admin-profile {
+        padding: 15px;
+
+        border-top: 1px solid #1f2937;
+
+        flex-shrink: 0;
+    }
+
+    .profile-box {
+        display: flex;
+        align-items: center;
+
+        padding: 10px;
+
+        border-radius: 9px;
+
+        background: #1a2332;
+    }
+
+    .admin-avatar {
+        width: 38px;
+        height: 38px;
+
+        border-radius: 50%;
+
+        background: #2563eb;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        color: #ffffff;
+
+        font-size: 14px;
+        font-weight: 700;
+
+        margin-right: 10px;
+
+        flex-shrink: 0;
+    }
+
+    .admin-info {
+        min-width: 0;
+        flex: 1;
+    }
+
+    .admin-name {
+        font-size: 13px;
+        font-weight: 600;
+
+        color: #ffffff;
+
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .admin-role {
+        margin-top: 3px;
+
+        display: flex;
+        align-items: center;
+
+        gap: 5px;
+
+        font-size: 11px;
+
+        color: #9ca3af;
+    }
+
+    .status-dot {
+        width: 7px;
+        height: 7px;
+
+        border-radius: 50%;
+
+        background: #22c55e;
+    }
+
+
+    /* =====================================================
+       MAIN
+    ===================================================== */
+
+    .main {
+        margin-left: 250px;
+
+        min-height: 100vh;
+
+        width: calc(100% - 250px);
+    }
+
+
+    /* =====================================================
+       TOPBAR
+    ===================================================== */
+
+    .topbar {
+        height: 72px;
+
+        background: #ffffff;
+
+        border-bottom: 1px solid #e5e7eb;
+
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        padding: 0 30px;
+
+        position: sticky;
+        top: 0;
+
+        z-index: 50;
+    }
+
+    .breadcrumb {
+        display: flex;
+        align-items: center;
+
+        gap: 8px;
+
+        font-size: 13px;
+
+        color: #6b7280;
+    }
+
+    .breadcrumb a:hover {
+        color: #2563eb;
+    }
+
+    .breadcrumb .current {
+        color: #111827;
+
+        font-weight: 600;
+    }
+
+    .topbar-profile {
+        display: flex;
+        align-items: center;
+
+        gap: 10px;
+    }
+
+    .topbar-avatar {
+        width: 38px;
+        height: 38px;
+
+        border-radius: 50%;
+
+        background: #2563eb;
+
+        color: #ffffff;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        font-size: 14px;
+        font-weight: 700;
+    }
+
+    .topbar-admin-info {
+        display: flex;
+        flex-direction: column;
+
+        gap: 2px;
+    }
+
+    .topbar-admin-name {
+        font-size: 13px;
+        font-weight: 700;
+
+        color: #111827;
+    }
+
+    .topbar-admin-role {
+        font-size: 11px;
+
+        color: #6b7280;
+    }
+
+
+    /* =====================================================
+       PAGE
+    ===================================================== */
+
+    .page {
+        padding: 30px;
+
+        max-width: 1250px;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+
+        gap: 20px;
+
+        margin-bottom: 25px;
+    }
+
+    .page-title {
+        font-size: 25px;
+        font-weight: 700;
+
+        color: #111827;
+
+        margin-bottom: 7px;
+    }
+
+    .page-description {
+        color: #6b7280;
+
+        font-size: 13px;
+
+        line-height: 1.5;
+    }
+
+    .back-button {
+        height: 40px;
+
+        padding: 0 15px;
+
+        border: 1px solid #d1d5db;
+
+        border-radius: 7px;
+
+        background: #ffffff;
+
+        color: #374151;
+
+        font-size: 13px;
+        font-weight: 600;
+
+        display: inline-flex;
+        align-items: center;
+
+        white-space: nowrap;
+    }
+
+    .back-button:hover {
+        background: #f9fafb;
+    }
+
+
+    /* =====================================================
+       INFO
+    ===================================================== */
+
+    .info-box {
+        margin-bottom: 20px;
+
+        padding: 14px 17px;
+
+        border-radius: 9px;
+
+        background: #eff6ff;
+
+        border: 1px solid #bfdbfe;
+
+        color: #1e40af;
+
+        font-size: 12px;
+
+        line-height: 1.6;
+    }
+
+    .info-box strong {
+        display: block;
+
+        margin-bottom: 3px;
+    }
+
+
+    /* =====================================================
+       ERROR
+    ===================================================== */
+
+    .error-box {
+        margin-bottom: 20px;
+
+        padding: 14px 17px;
+
+        border-radius: 9px;
+
+        background: #fef2f2;
+
+        border: 1px solid #fecaca;
+
+        color: #991b1b;
+
+        font-size: 12px;
+
+        line-height: 1.6;
+    }
+
+
+    /* =====================================================
+       FORM CARD
+    ===================================================== */
+
+    .form-card {
+        background: #ffffff;
+
+        border: 1px solid #e5e7eb;
+
+        border-radius: 10px;
+
+        overflow: hidden;
+
+        box-shadow:
+                0 2px 8px rgba(0, 0, 0, .03);
+    }
+
+    .section {
+        padding: 25px 28px;
+
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .section:last-child {
+        border-bottom: none;
+    }
+
+    .section-header {
+        margin-bottom: 20px;
+    }
+
+    .section-title {
+        font-size: 16px;
+        font-weight: 700;
+
+        color: #111827;
+
+        margin-bottom: 5px;
+    }
+
+    .section-description {
+        font-size: 12px;
+
+        color: #6b7280;
+    }
+
+
+    /* =====================================================
+       FORM
+    ===================================================== */
+
+    .form-grid {
+        display: grid;
+
+        grid-template-columns:
+                repeat(2, minmax(0, 1fr));
+
+        gap: 20px;
+    }
+
+    .form-group {
+        display: flex;
+
+        flex-direction: column;
+
+        gap: 7px;
+    }
+
+    .form-group.full {
+        grid-column: 1 / -1;
+    }
+
+    label {
+        font-size: 12px;
+
+        font-weight: 700;
+
+        color: #374151;
+    }
+
+    input,
+    select {
+        width: 100%;
+
+        height: 43px;
+
+        border: 1px solid #d1d5db;
+
+        border-radius: 7px;
+
+        padding: 0 12px;
+
+        background: #ffffff;
+
+        color: #111827;
+
+        font-size: 13px;
+
+        outline: none;
+
+        transition: .2s ease;
+    }
+
+    input:focus,
+    select:focus {
+        border-color: #2563eb;
+
+        box-shadow:
+                0 0 0 3px rgba(37, 99, 235, .10);
+    }
+
+    input[readonly] {
+        background: #f3f4f6;
+
+        color: #6b7280;
+
+        cursor: not-allowed;
+    }
+
+    select:disabled {
+        background: #f3f4f6;
+
+        color: #6b7280;
+
+        cursor: not-allowed;
+    }
+
+    .help-text {
+        font-size: 11px;
+
+        color: #6b7280;
+
+        line-height: 1.5;
+    }
+
+
+    /* =====================================================
+       CURRENT EMPLOYEE
+    ===================================================== */
+
+    .employee-id-box {
+        padding: 11px 13px;
+
+        border-radius: 7px;
+
+        background: #f9fafb;
+
+        border: 1px solid #e5e7eb;
+
+        color: #374151;
+
+        font-size: 12px;
+
+        line-height: 1.5;
+    }
+
+    .employee-id-box strong {
+        color: #111827;
+    }
+
+
+    /* =====================================================
+       HIERARCHY
+    ===================================================== */
+
+    .hierarchy-bar {
+        display: grid;
+
+        grid-template-columns:
+                repeat(4, 1fr);
+
+        gap: 8px;
+
+        margin-bottom: 22px;
+    }
+
+    .hierarchy-item {
+        text-align: center;
+
+        padding: 13px 8px;
+
+        border: 1px solid #e5e7eb;
+
+        border-radius: 8px;
+
+        background: #f9fafb;
+    }
+
+    .hierarchy-number {
+        width: 27px;
+        height: 27px;
+
+        margin: 0 auto 7px;
+
+        border-radius: 50%;
+
+        background: #e5e7eb;
+
+        color: #6b7280;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .hierarchy-name {
+        font-size: 11px;
+
+        font-weight: 700;
+
+        color: #4b5563;
+    }
+
+    .hierarchy-item.selected {
+        border-color: #2563eb;
+
+        background: #eff6ff;
+    }
+
+    .hierarchy-item.selected .hierarchy-number {
+        background: #2563eb;
+
+        color: #ffffff;
+    }
+
+    .hierarchy-item.selected .hierarchy-name {
+        color: #1d4ed8;
+    }
+
+
+    /* =====================================================
+       DESIGNATION
+    ===================================================== */
+
+    .designation-info {
+        padding: 9px 11px;
+
+        border-radius: 6px;
+
+        background: #f0fdf4;
+
+        border: 1px solid #bbf7d0;
+
+        color: #166534;
+
+        font-size: 11px;
+
+        line-height: 1.5;
+    }
+
+
+    /* =====================================================
+       MANAGER
+    ===================================================== */
+
+    .manager-box {
+        padding: 16px;
+
+        background: #f9fafb;
+
+        border: 1px solid #e5e7eb;
+
+        border-radius: 8px;
+    }
+
+    .manager-status {
+        margin-top: 10px;
+
+        padding: 9px 11px;
+
+        border-radius: 6px;
+
+        background: #f3f4f6;
+
+        color: #6b7280;
+
+        font-size: 11px;
+    }
+
+    .manager-status.success {
+        background: #ecfdf5;
+
+        color: #047857;
+
+        border: 1px solid #a7f3d0;
+    }
+
+    .manager-status.warning {
+        background: #fffbeb;
+
+        color: #92400e;
+
+        border: 1px solid #fde68a;
+    }
+
+    .manager-status.error {
+        background: #fef2f2;
+
+        color: #991b1b;
+
+        border: 1px solid #fecaca;
+    }
+
+
+    /* =====================================================
+       PASSWORD
+    ===================================================== */
+
+    .password-box {
+        padding: 18px;
+
+        border-radius: 9px;
+
+        background: #f9fafb;
+
+        border: 1px solid #e5e7eb;
+    }
+
+    .password-security-note {
+        margin-bottom: 18px;
+
+        padding: 11px 13px;
+
+        border-radius: 7px;
+
+        background: #eff6ff;
+
+        border: 1px solid #bfdbfe;
+
+        color: #1e40af;
+
+        font-size: 11px;
+
+        line-height: 1.6;
+    }
+
+    .password-security-note strong {
+        display: block;
+
+        margin-bottom: 3px;
+    }
+
+    .password-input-wrapper {
+        position: relative;
+    }
+
+    .password-input-wrapper input {
+        padding-right: 78px;
+    }
+
+    .password-toggle {
+        position: absolute;
+
+        right: 8px;
+        top: 50%;
+
+        transform: translateY(-50%);
+
+        height: 30px;
+
+        padding: 0 9px;
+
+        border: 1px solid #d1d5db;
+
+        border-radius: 5px;
+
+        background: #ffffff;
+
+        color: #4b5563;
+
+        font-size: 10px;
+
+        font-weight: 700;
+
+        cursor: pointer;
+    }
+
+    .password-toggle:hover {
+        background: #f3f4f6;
+    }
+
+    .password-strength {
+        margin-top: 8px;
+
+        display: none;
+    }
+
+    .password-strength.visible {
+        display: block;
+    }
+
+    .strength-bar {
+        height: 5px;
+
+        width: 100%;
+
+        background: #e5e7eb;
+
+        border-radius: 999px;
+
+        overflow: hidden;
+    }
+
+    .strength-fill {
+        height: 100%;
+
+        width: 0;
+
+        border-radius: 999px;
+
+        transition: width .2s ease;
+    }
+
+    .strength-text {
+        margin-top: 5px;
+
+        font-size: 10px;
+
+        color: #6b7280;
+    }
+
+    .password-match {
+        margin-top: 7px;
+
+        font-size: 11px;
+
+        min-height: 16px;
+    }
+
+    .password-match.success {
+        color: #047857;
+    }
+
+    .password-match.error {
+        color: #b91c1c;
+    }
+
+    .password-requirements {
+        margin-top: 12px;
+
+        display: grid;
+
+        grid-template-columns:
+                repeat(2, minmax(0, 1fr));
+
+        gap: 6px 12px;
+    }
+
+    .password-requirement {
+        font-size: 10px;
+
+        color: #6b7280;
+    }
+
+    .password-requirement.valid {
+        color: #047857;
+    }
+
+
+    /* =====================================================
+       FOOTER
+    ===================================================== */
+
+    .form-footer {
+        padding: 20px 28px;
+
+        background: #f9fafb;
+
+        display: flex;
+
+        justify-content: flex-end;
+
+        gap: 10px;
+    }
+
+    .button {
+        height: 42px;
+
+        padding: 0 18px;
+
+        border-radius: 7px;
+
+        font-size: 13px;
+
+        font-weight: 600;
+
+        cursor: pointer;
+
+        display: inline-flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        border: none;
+    }
+
+    .cancel-button {
+        background: #ffffff;
+
+        color: #374151;
+
+        border: 1px solid #d1d5db;
+    }
+
+    .cancel-button:hover {
+        background: #f9fafb;
+    }
+
+    .save-button {
+        background: #2563eb;
+
+        color: #ffffff;
+    }
+
+    .save-button:hover {
+        background: #1d4ed8;
+    }
+
+    .save-button:disabled {
+        background: #93c5fd;
+
+        cursor: not-allowed;
+    }
+
+
+    /* =====================================================
+       RESPONSIVE
+    ===================================================== */
+
+    @media (max-width: 900px) {
+
+        .sidebar {
+            width: 210px;
+        }
+
+        .main {
+            margin-left: 210px;
+
+            width: calc(100% - 210px);
+        }
+
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .form-group.full {
+            grid-column: auto;
+        }
+
+        .hierarchy-bar {
+            grid-template-columns:
+                    repeat(2, 1fr);
+        }
+
+        .password-requirements {
+            grid-template-columns: 1fr;
+        }
+    }
+
+
+    @media (max-width: 600px) {
+
+        .sidebar {
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: auto;
+
+            width: 100%;
+            height: 68px;
+
+            flex-direction: row;
+        }
+
+        .logo-section {
+            width: 68px;
+            height: 68px;
+
+            flex-shrink: 0;
+
+            justify-content: center;
+
+            padding: 0;
+        }
+
+        .logo-icon {
+            margin-right: 0;
+        }
+
+        .logo-text {
+            display: none;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+
+            height: 68px;
+
+            padding: 0 8px;
+
+            display: flex;
+            align-items: center;
+
+            gap: 5px;
+
+            overflow-x: auto;
+            overflow-y: hidden;
+        }
+
+        .nav-section-title {
+            display: none;
+        }
+
+        .nav-item {
+            width: 44px;
+            min-width: 44px;
+
+            height: 44px;
+
+            justify-content: center;
+
+            padding: 0;
+
+            margin: 0;
+        }
+
+        .nav-item span:not(.nav-icon) {
+            display: none;
+        }
+
+        .admin-profile {
+            width: 58px;
+            height: 68px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            padding: 0;
+
+            border-top: none;
+        }
+
+        .profile-box {
+            padding: 0;
+
+            background: transparent;
+        }
+
+        .admin-avatar {
+            margin-right: 0;
+        }
+
+        .admin-info {
+            display: none;
+        }
+
+        .main {
+            margin-left: 0;
+
+            width: 100%;
+
+            padding-top: 68px;
+        }
+
+        .topbar {
+            padding: 0 15px;
+        }
+
+        .topbar-profile {
+            display: none;
+        }
+
+        .page {
+            padding: 20px 15px;
+        }
+
+        .page-header {
+            flex-direction: column;
+
+            gap: 15px;
+        }
+
+        .hierarchy-bar {
+            grid-template-columns: 1fr;
+        }
+
+        .form-footer {
+            flex-direction: column-reverse;
+        }
+
+        .button {
+            width: 100%;
+        }
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+<aside class="sidebar">
+
+  <div class="logo-section">
+
+    <div class="logo">
+
+      <div class="logo-icon">
+        TL
+      </div>
+
+      <div class="logo-text">
+
+        <div class="logo-title"
+             th:text="${adminSettings != null and adminSettings.companyName != null
+                               ? adminSettings.companyName
+                               : 'TeamLogger'}">
+          TeamLogger
+        </div>
+
+        <div class="logo-subtitle">
+          ADMIN PANEL
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <nav class="sidebar-nav">
+
+    <div class="nav-section-title">
+      Main
+    </div>
+
+
+    <a th:href="@{/admin/dashboard}"
+       class="nav-item"
+       data-path="/admin/dashboard">
+
+      <span class="nav-icon">▦</span>
+      <span>Dashboard</span>
+
+    </a>
+
+
+    <a th:href="@{/admin/employees}"
+       class="nav-item"
+       data-path="/admin/employees">
+
+      <span class="nav-icon">👥</span>
+      <span>Employees</span>
+
+    </a>
+
+
+    <a th:href="@{/admin/tracking}"
+       class="nav-item"
+       data-path="/admin/tracking">
+
+      <span class="nav-icon">◉</span>
+      <span>Today's Activity</span>
+
+    </a>
+
+
+    <a th:href="@{/admin/projects}"
+       class="nav-item"
+       data-path="/admin/projects">
+
+      <span class="nav-icon">▣</span>
+      <span>Projects</span>
+
+    </a>
+
+
+    <div class="nav-section-title">
+      Management
+    </div>
+
+
+    <a th:href="@{/admin/overtime}"
+       class="nav-item"
+       data-path="/admin/overtime">
+
+      <span class="nav-icon">◷</span>
+      <span>Overtime</span>
+
+    </a>
+
+
+    <a th:href="@{/admin/reports}"
+       class="nav-item"
+       data-path="/admin/reports">
+
+      <span class="nav-icon">▤</span>
+      <span>Reports</span>
+
+    </a>
+
+
+    <a th:href="@{/admin/login-approvals}"
+       class="nav-item"
+       data-path="/admin/login-approvals">
+
+      <span class="nav-icon">✓</span>
+      <span>Login Approvals</span>
+
+    </a>
+
+
+    <a th:href="@{/admin/screen-recording}"
+       class="nav-item"
+       data-path="/admin/screen-recording">
+
+      <span class="nav-icon">▧</span>
+      <span>Screen Recording</span>
+
+    </a>
+
+
+    <a th:href="@{/admin/settings}"
+       class="nav-item"
+       data-path="/admin/settings">
+
+      <span class="nav-icon">⚙</span>
+      <span>Settings</span>
+
+    </a>
+
+  </nav>
+
+
+  <div class="admin-profile">
+
+    <div class="profile-box">
+
+      <div class="admin-avatar"
+           th:text="${admin != null and admin.name != null and !admin.name.isEmpty()
+                           ? #strings.substring(admin.name,0,1).toUpperCase()
+                           : 'A'}">
+        A
+      </div>
+
+
+      <div class="admin-info">
+
+        <div class="admin-name"
+             th:text="${admin != null and admin.name != null
+                               ? admin.name
+                               : 'Admin'}">
+          Admin
+        </div>
+
+
+        <div class="admin-role">
+
+          <span class="status-dot"></span>
+
+          <span>Administrator</span>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</aside>
+
+
+<main class="main">
+
+  <header class="topbar">
+
+    <div class="breadcrumb">
+
+      <span>Admin</span>
+
+      <span>/</span>
+
+      <a th:href="@{/admin/employees}">
+        Employees
+      </a>
+
+      <span>/</span>
+
+      <span class="current">
+        Edit Employee
+      </span>
+
+    </div>
+
+
+    <div class="topbar-profile">
+
+      <div class="topbar-avatar"
+           th:text="${admin != null and admin.name != null and !admin.name.isEmpty()
+                           ? #strings.substring(admin.name,0,1).toUpperCase()
+                           : 'A'}">
+        A
+      </div>
+
+
+      <div class="topbar-admin-info">
+
+        <div class="topbar-admin-name"
+             th:text="${admin != null and admin.name != null
+                               ? admin.name
+                               : 'Admin'}">
+          Admin
+        </div>
+
+
+        <div class="topbar-admin-role">
+          Administrator
+        </div>
+
+      </div>
+
+    </div>
+
+  </header>
+
+
+  <div class="page">
+
+    <div class="page-header">
+
+      <div>
+
+        <h1 class="page-title">
+          Edit Employee
+        </h1>
+
+        <p class="page-description">
+          Update the employee's organizational information and account security.
+        </p>
+
+      </div>
+
+
+      <a th:href="@{'/admin/employees/' + ${employee.id}}"
+         class="back-button">
+
+        ← Employee Details
+
+      </a>
+
+    </div>
+
+
+    <!-- =================================================
+         ERROR MESSAGE
+    ================================================= -->
+
+    <div class="error-box"
+         th:if="${errorMessage != null}"
+         th:text="${errorMessage}">
+
+      Unable to update employee.
+
+    </div>
+
+
+    <!-- =================================================
+         SECURITY NOTICE
+    ================================================= -->
+
+    <div class="info-box">
+
+      <strong>
+        Security Notice
+      </strong>
+
+      Employee ID, login ID and organization ownership
+      are controlled by the system. The login ID cannot
+      be changed from this page.
+
+    </div>
+
+
+    <!-- =================================================
+         EDIT FORM
+    ================================================= -->
+
+    <form th:action="@{/admin/employees/update}"
+          th:object="${employeeForm}"
+          method="post"
+          id="employeeEditForm">
+
+      <input type="hidden"
+             th:field="*{id}">
+
+
+      <div class="form-card">
+
+
+        <!-- =================================================
+             BASIC INFORMATION
+        ================================================= -->
+
+        <section class="section">
+
+          <div class="section-header">
+
+            <h2 class="section-title">
+              Basic Information
+            </h2>
+
+            <p class="section-description">
+              Update the employee's basic information.
+            </p>
+
+          </div>
+
+
+          <div class="form-grid">
+
+
+            <div class="form-group">
+
+              <label for="name">
+                Full Name
+              </label>
+
+              <input type="text"
+                     id="name"
+                     th:field="*{name}"
+                     autocomplete="name"
+                     required>
+
+            </div>
+
+
+            <div class="form-group">
+
+              <label for="email">
+                Email Address
+              </label>
+
+              <input type="email"
+                     id="email"
+                     th:field="*{email}"
+                     autocomplete="email"
+                     required>
+
+            </div>
+
+
+            <div class="form-group">
+
+              <label>
+                Employee ID
+              </label>
+
+              <div class="employee-id-box">
+
+                <strong th:text="${employee.id}">
+                  1
+                </strong>
+
+                <br>
+
+                System generated employee identifier.
+
+              </div>
+
+            </div>
+
+
+            <div class="form-group">
+
+              <label>
+                Login ID
+              </label>
+
+              <div class="employee-id-box">
+
+                <strong th:text="${employee.employeeLoginId}">
+                  DEV-SD-PL001-01
+                </strong>
+
+                <br>
+
+                System generated login identifier.
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </section>
+
+
+        <!-- =================================================
+             ORGANIZATION
+        ================================================= -->
+
+        <section class="section">
+
+          <div class="section-header">
+
+            <h2 class="section-title">
+              Organization
+            </h2>
+
+            <p class="section-description">
+              Update the employee's domain and team assignment.
+            </p>
+
+          </div>
+
+
+          <div class="form-grid">
+
+
+            <div class="form-group">
+
+              <label for="domain">
+                Domain
+              </label>
+
+              <select id="domain"
+                      th:field="*{domain}"
+                      required>
+
+                <option value="">
+                  Select Domain
+                </option>
+
+                <option value="DEVELOPMENT">
+                  Development
+                </option>
+
+                <option value="QA">
+                  Quality Assurance
+                </option>
+
+                <option value="HR">
+                  Human Resources
+                </option>
+
+                <option value="FINANCE">
+                  Finance
+                </option>
+
+                <option value="UI/UX">
+                  UI / UX
+                </option>
+
+              </select>
+
+            </div>
+
+
+            <div class="form-group">
+
+              <label for="teamId">
+                Team
+              </label>
+
+              <select id="teamId"
+                      th:field="*{teamId}"
+                      required>
+
+                <option value="">
+                  Select Team
+                </option>
+
+                <option th:each="team : ${teams}"
+                        th:value="${team.id}"
+                        th:text="${team.teamName}">
+                </option>
+
+              </select>
+
+              <span class="help-text">
+                Only teams belonging to this organization are available.
+              </span>
+
+            </div>
+
+          </div>
+
+        </section>
+
+
+        <!-- =================================================
+             HIERARCHY
+        ================================================= -->
+
+        <section class="section">
+
+          <div class="section-header">
+
+            <h2 class="section-title">
+              Employee Hierarchy
+            </h2>
+
+            <p class="section-description">
+              Change the employee's organizational level if required.
+            </p>
+
+          </div>
+
+
+          <div class="hierarchy-bar">
+
+            <div class="hierarchy-item"
+                 id="level-project-leader">
+
+              <div class="hierarchy-number">
+                1
+              </div>
+
+              <div class="hierarchy-name">
+                Project Leader
+              </div>
+
+            </div>
+
+
+            <div class="hierarchy-item"
+                 id="level-senior">
+
+              <div class="hierarchy-number">
+                2
+              </div>
+
+              <div class="hierarchy-name">
+                Senior
+              </div>
+
+            </div>
+
+
+            <div class="hierarchy-item"
+                 id="level-junior">
+
+              <div class="hierarchy-number">
+                3
+              </div>
+
+              <div class="hierarchy-name">
+                Junior
+              </div>
+
+            </div>
+
+
+            <div class="hierarchy-item"
+                 id="level-intern">
+
+              <div class="hierarchy-number">
+                4
+              </div>
+
+              <div class="hierarchy-name">
+                Intern
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <div class="form-grid">
+
+
+            <div class="form-group">
+
+              <label for="hierarchyLevel">
+                Hierarchy Level
+              </label>
+
+              <select id="hierarchyLevel"
+                      th:field="*{hierarchyLevel}"
+                      required>
+
+                <option value="">
+                  Select Level
+                </option>
+
+                <option value="PROJECT_LEADER">
+                  Project Leader
+                </option>
+
+                <option value="SENIOR">
+                  Senior
+                </option>
+
+                <option value="JUNIOR">
+                  Junior
+                </option>
+
+                <option value="INTERN">
+                  Intern
+                </option>
+
+              </select>
+
+            </div>
+
+
+            <div class="form-group">
+
+              <label for="designation">
+                Designation
+              </label>
+
+              <select id="designation"
+                      th:field="*{designation}"
+                      required>
+
+              </select>
+
+              <div class="designation-info">
+                Designation is automatically determined from domain and hierarchy.
+              </div>
+
+            </div>
+
+          </div>
+
+        </section>
+
+
+        <!-- =================================================
+             REPORTING STRUCTURE
+        ================================================= -->
+
+        <section class="section"
+                 id="reportingSection">
+
+          <div class="section-header">
+
+            <h2 class="section-title">
+              Reporting Structure
+            </h2>
+
+            <p class="section-description">
+              Select the employee's reporting manager.
+            </p>
+
+          </div>
+
+
+          <div class="manager-box">
+
+            <div class="form-group">
+
+              <label for="seniorId">
+                Reporting Manager
+              </label>
+
+              <select id="seniorId"
+                      th:field="*{seniorId}">
+
+                <option value="">
+                  Select Reporting Manager
+                </option>
+
+              </select>
+
+              <span class="help-text">
+                The manager must belong to the same organization,
+                domain and team and must be the correct parent level.
+              </span>
+
+              <div class="manager-status"
+                   id="managerStatus">
+
+                Loading reporting managers...
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </section>
+
+
+        <!-- =================================================
+             PASSWORD & SECURITY
+        ================================================= -->
+
+        <section class="section">
+
+          <div class="section-header">
+
+            <h2 class="section-title">
+              Password & Security
+            </h2>
+
+            <p class="section-description">
+              Change the employee's password when necessary.
+              Leave both fields blank to keep the current password.
+            </p>
+
+          </div>
+
+
+          <div class="password-box">
+
+            <div class="password-security-note">
+
+              <strong>
+                Password Security
+              </strong>
+
+              The password will be securely encoded before being stored.
+              The existing password cannot be viewed or recovered from this page.
+
+            </div>
+
+
+            <div class="form-grid">
+
+
+              <!-- =================================================
+                   NEW PASSWORD
+              ================================================= -->
+
+              <div class="form-group">
+
+                <label for="password">
+                  New Password
+                </label>
+
+                <div class="password-input-wrapper">
+
+                  <input type="password"
+                         id="password"
+                         th:field="*{password}"
+                         autocomplete="new-password"
+                         placeholder="Enter new password">
+
+                  <button type="button"
+                          class="password-toggle"
+                          data-target="password">
+
+                    SHOW
+
+                  </button>
+
+                </div>
+
+
+                <!-- PASSWORD STRENGTH -->
+
+                <div class="password-strength"
+                     id="passwordStrength">
+
+                  <div class="strength-bar">
+
+                    <div class="strength-fill"
+                         id="strengthFill">
+                    </div>
+
+                  </div>
+
+                  <div class="strength-text"
+                       id="strengthText">
+                    Password strength
+                  </div>
+
+                </div>
+
+
+                <!-- PASSWORD REQUIREMENTS -->
+
+                <div class="password-requirements">
+
+                  <div class="password-requirement"
+                       id="reqLength">
+                    • At least 8 characters
+                  </div>
+
+                  <div class="password-requirement"
+                       id="reqUpper">
+                    • One uppercase letter
+                  </div>
+
+                  <div class="password-requirement"
+                       id="reqLower">
+                    • One lowercase letter
+                  </div>
+
+                  <div class="password-requirement"
+                       id="reqNumber">
+                    • One number
+                  </div>
+
+                </div>
+
+              </div>
+
+
+              <!-- =================================================
+                   CONFIRM PASSWORD
+              ================================================= -->
+
+              <div class="form-group">
+
+                <label for="confirmPassword">
+                  Confirm New Password
+                </label>
+
+                <div class="password-input-wrapper">
+
+                  <input type="password"
+                         id="confirmPassword"
+                         autocomplete="new-password"
+                         placeholder="Re-enter new password">
+
+                  <button type="button"
+                          class="password-toggle"
+                          data-target="confirmPassword">
+
+                    SHOW
+
+                  </button>
+
+                </div>
+
+
+                <div class="password-match"
+                     id="passwordMatch">
+                </div>
+
+                <span class="help-text">
+                  Confirmation is required only when entering a new password.
+                </span>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </section>
+
+
+        <!-- =================================================
+             FOOTER
+        ================================================= -->
+
+        <div class="form-footer">
+
+          <a th:href="@{'/admin/employees/' + ${employee.id}}"
+             class="button cancel-button">
+
+            Cancel
+
+          </a>
+
+
+          <button type="submit"
+                  class="button save-button"
+                  id="saveButton">
+
+            Save Changes
+
+          </button>
+
+        </div>
+
+      </div>
+
+    </form>
+
+  </div>
+
+</main>
+
+
+<script th:inline="javascript">
+
+  document.addEventListener("DOMContentLoaded", function () {
+
+      const domain =
+          document.getElementById("domain");
+
+      const hierarchyLevel =
+          document.getElementById("hierarchyLevel");
+
+      const team =
+          document.getElementById("teamId");
+
+      const designation =
+          document.getElementById("designation");
+
+      const seniorId =
+          document.getElementById("seniorId");
+
+      const managerStatus =
+          document.getElementById("managerStatus");
+
+      const form =
+          document.getElementById("employeeEditForm");
+
+      const saveButton =
+          document.getElementById("saveButton");
+
+
+      /* =====================================================
+         PASSWORD ELEMENTS
+      ===================================================== */
+
+      const password =
+          document.getElementById("password");
+
+      const confirmPassword =
+          document.getElementById("confirmPassword");
+
+      const passwordMatch =
+          document.getElementById("passwordMatch");
+
+      const passwordStrength =
+          document.getElementById("passwordStrength");
+
+      const strengthFill =
+          document.getElementById("strengthFill");
+
+      const strengthText =
+          document.getElementById("strengthText");
+
+
+      /* =====================================================
+         CURRENT SENIOR
+      ===================================================== */
+
+      const currentSeniorId =
+          /*[[${employee.seniorId}]]*/ null;
+
+
+      /* =====================================================
+         DESIGNATION MAP
+      ===================================================== */
+
+      const designationMap = {
+
+          DEVELOPMENT: {
+              PROJECT_LEADER: "Project Leader",
+              SENIOR: "Senior Developer",
+              JUNIOR: "Junior Developer",
+              INTERN: "Developer Intern"
+          },
+
+          QA: {
+              PROJECT_LEADER: "QA Lead",
+              SENIOR: "Senior QA Engineer",
+              JUNIOR: "Junior QA Engineer",
+              INTERN: "QA Intern"
+          },
+
+          HR: {
+              PROJECT_LEADER: "HR Head",
+              SENIOR: "Senior HR",
+              JUNIOR: "Junior HR",
+              INTERN: "HR Intern"
+          },
+
+          FINANCE: {
+              PROJECT_LEADER: "Finance Lead",
+              SENIOR: "Senior Finance Executive",
+              JUNIOR: "Junior Finance Executive",
+              INTERN: "Finance Intern"
+          },
+
+          "UI/UX": {
+              PROJECT_LEADER: "UI/UX Lead",
+              SENIOR: "Senior UI/UX Designer",
+              JUNIOR: "Junior UI/UX Designer",
+              INTERN: "UI/UX Intern"
+          }
+
+      };
+
+
+      /* =====================================================
+         HIERARCHY VISUALS
+      ===================================================== */
+
+      const hierarchyItems = {
+
+          PROJECT_LEADER:
+              document.getElementById(
+                  "level-project-leader"
+              ),
+
+          SENIOR:
+              document.getElementById(
+                  "level-senior"
+              ),
+
+          JUNIOR:
+              document.getElementById(
+                  "level-junior"
+              ),
+
+          INTERN:
+              document.getElementById(
+                  "level-intern"
+              )
+
+      };
+
+
+      function updateHierarchyVisual(level) {
+
+          Object.values(hierarchyItems)
+              .forEach(function (item) {
+
+                  item.classList.remove(
+                      "selected"
+                  );
+
+              });
+
+
+          if (hierarchyItems[level]) {
+
+              hierarchyItems[level]
+                  .classList.add("selected");
+
+          }
+
+      }
+
+
+      /* =====================================================
+         DESIGNATION
+      ===================================================== */
+
+      function updateDesignation() {
+
+          const selectedDomain =
+              domain.value;
+
+          const selectedLevel =
+              hierarchyLevel.value;
+
+
+          const selectedDesignation =
+              designationMap[
+                  selectedDomain
+              ]?.[
+                  selectedLevel
+              ];
+
+
+          designation.innerHTML = "";
+
+
+          const option =
+              document.createElement("option");
+
+
+          if (selectedDesignation) {
+
+              option.value =
+                  selectedDesignation;
+
+              option.textContent =
+                  selectedDesignation;
+
+              option.selected = true;
+
+              designation.appendChild(
+                  option
+              );
+
+          } else {
+
+              option.value = "";
+
+              option.textContent =
+                  "Select domain and hierarchy first";
+
+              designation.appendChild(
+                  option
+              );
+
+          }
+
+      }
+
+
+      /* =====================================================
+         MANAGER STATUS
+      ===================================================== */
+
+      function clearManagers(
+          message,
+          type) {
+
+          seniorId.innerHTML =
+              '<option value="">Select Reporting Manager</option>';
+
+
+          managerStatus.textContent =
+              message;
+
+
+          managerStatus.classList.remove(
+              "success",
+              "warning",
+              "error"
+          );
+
+
+          if (type) {
+
+              managerStatus.classList.add(
+                  type
+              );
+
+          }
+
+      }
+
+
+      /* =====================================================
+         LOAD REPORTING MANAGERS
+      ===================================================== */
+
+      async function loadReportingManagers() {
+
+          const selectedDomain =
+              domain.value;
+
+          const selectedLevel =
+              hierarchyLevel.value;
+
+          const selectedTeam =
+              team.value;
+
+          const selectedDesignation =
+              designation.value;
+
+
+          if (
+              selectedLevel ===
+              "PROJECT_LEADER"
+          ) {
+
+              clearManagers(
+                  "Project Leaders do not require a reporting manager.",
+                  "success"
+              );
+
+              seniorId.required = false;
+
+              seniorId.disabled = true;
+
+              seniorId.value = "";
+
+              return;
+          }
+
+
+          seniorId.disabled = false;
+
+          seniorId.required = true;
+
+
+          if (!selectedDomain) {
+
+              clearManagers(
+                  "Select a domain first.",
+                  "warning"
+              );
+
+              return;
+          }
+
+
+          if (!selectedLevel) {
+
+              clearManagers(
+                  "Select a hierarchy level first.",
+                  "warning"
+              );
+
+              return;
+          }
+
+
+          if (!selectedTeam) {
+
+              clearManagers(
+                  "Select a team first.",
+                  "warning"
+              );
+
+              return;
+          }
+
+
+          if (!selectedDesignation) {
+
+              clearManagers(
+                  "Designation is not available yet.",
+                  "warning"
+              );
+
+              return;
+          }
+
+
+          clearManagers(
+              "Loading reporting managers..."
+          );
+
+
+          try {
+
+              const url =
+                  "/admin/employees/reporting-managers" +
+                  "?domain=" +
+                  encodeURIComponent(
+                      selectedDomain
+                  ) +
+                  "&designation=" +
+                  encodeURIComponent(
+                      selectedDesignation
+                  ) +
+                  "&teamId=" +
+                  encodeURIComponent(
+                      selectedTeam
+                  );
+
+
+              const response =
+                  await fetch(
+                      url,
+                      {
+                          method: "GET",
+
+                          headers: {
+                              "Accept":
+                                  "application/json"
+                          }
+                      }
+                  );
+
+
+              if (!response.ok) {
+
+                  throw new Error(
+                      "Unable to load reporting managers."
+                  );
+
+              }
+
+
+              const managers =
+                  await response.json();
+
+
+              seniorId.innerHTML =
+                  '<option value="">Select Reporting Manager</option>';
+
+
+              if (
+                  !managers ||
+                  managers.length === 0
+              ) {
+
+                  clearManagers(
+                      "No suitable reporting manager exists for this team.",
+                      "warning"
+                  );
+
+                  return;
+              }
+
+
+              managers.forEach(
+                  function (manager) {
+
+                      const option =
+                          document.createElement(
+                              "option"
+                          );
+
+
+                      option.value =
+                          manager.id;
+
+
+                      option.textContent =
+                          manager.name +
+                          " — " +
+                          manager.designation +
+                          " (" +
+                          manager.employeeLoginId +
+                          ")";
+
+
+                      if (
+                          currentSeniorId != null &&
+                          String(manager.id) ===
+                          String(currentSeniorId)
+                      ) {
+
+                          option.selected =
+                              true;
+
+                      }
+
+
+                      seniorId.appendChild(
+                          option
+                      );
+
+                  }
+              );
+
+
+              managerStatus.textContent =
+                  managers.length +
+                  " reporting manager(s) available.";
+
+
+              managerStatus.classList.remove(
+                  "warning",
+                  "error"
+              );
+
+
+              managerStatus.classList.add(
+                  "success"
+              );
+
+          }
+          catch (error) {
+
+              console.error(
+                  "Reporting manager error:",
+                  error
+              );
+
+
+              clearManagers(
+                  "Unable to load reporting managers. Please try again.",
+                  "error"
+              );
+
+          }
+
+      }
+
+
+      /* =====================================================
+         UPDATE FORM STATE
+      ===================================================== */
+
+      function updateFormState() {
+
+          const level =
+              hierarchyLevel.value;
+
+
+          updateHierarchyVisual(
+              level
+          );
+
+
+          updateDesignation();
+
+
+          team.required = true;
+
+
+          if (
+              level ===
+              "PROJECT_LEADER"
+          ) {
+
+              seniorId.required = false;
+
+              seniorId.disabled = true;
+
+              seniorId.value = "";
+
+
+              clearManagers(
+                  "Project Leaders do not require a reporting manager.",
+                  "success"
+              );
+
+          }
+          else {
+
+              seniorId.disabled = false;
+
+              seniorId.required = true;
+
+          }
+
+      }
+
+
+      /* =====================================================
+         PASSWORD STRENGTH
+      ===================================================== */
+
+      function updatePasswordStrength() {
+
+          const value =
+              password.value;
+
+
+          if (!value) {
+
+              passwordStrength.classList.remove(
+                  "visible"
+              );
+
+              strengthFill.style.width =
+                  "0%";
+
+              strengthText.textContent =
+                  "Password strength";
+
+              updatePasswordRequirements("");
+
+              return;
+          }
+
+
+          passwordStrength.classList.add(
+              "visible"
+          );
+
+
+          let score = 0;
+
+
+          const hasLength =
+              value.length >= 8;
+
+          const hasUpper =
+              /[A-Z]/.test(value);
+
+          const hasLower =
+              /[a-z]/.test(value);
+
+          const hasNumber =
+              /[0-9]/.test(value);
+
+          const hasSpecial =
+              /[^A-Za-z0-9]/.test(value);
+
+
+          if (hasLength) {
+              score++;
+          }
+
+          if (hasUpper) {
+              score++;
+          }
+
+          if (hasLower) {
+              score++;
+          }
+
+          if (hasNumber) {
+              score++;
+          }
+
+          if (hasSpecial) {
+              score++;
+          }
+
+
+          const percentage =
+              (score / 5) * 100;
+
+
+          strengthFill.style.width =
+              percentage + "%";
+
+
+          if (score <= 2) {
+
+              strengthText.textContent =
+                  "Weak password";
+
+          }
+          else if (score === 3) {
+
+              strengthText.textContent =
+                  "Fair password";
+
+          }
+          else if (score === 4) {
+
+              strengthText.textContent =
+                  "Good password";
+
+          }
+          else {
+
+              strengthText.textContent =
+                  "Strong password";
+          }
+
+
+          updatePasswordRequirements(
+              value
+          );
+      }
+
+
+      /* =====================================================
+         PASSWORD REQUIREMENTS
+      ===================================================== */
+
+      function updatePasswordRequirements(
+          value) {
+
+          const reqLength =
+              document.getElementById(
+                  "reqLength"
+              );
+
+          const reqUpper =
+              document.getElementById(
+                  "reqUpper"
+              );
+
+          const reqLower =
+              document.getElementById(
+                  "reqLower"
+              );
+
+          const reqNumber =
+              document.getElementById(
+                  "reqNumber"
+              );
+
+
+          reqLength.classList.toggle(
+              "valid",
+              value.length >= 8
+          );
+
+
+          reqUpper.classList.toggle(
+              "valid",
+              /[A-Z]/.test(value)
+          );
+
+
+          reqLower.classList.toggle(
+              "valid",
+              /[a-z]/.test(value)
+          );
+
+
+          reqNumber.classList.toggle(
+              "valid",
+              /[0-9]/.test(value)
+          );
+
+      }
+
+
+      /* =====================================================
+         PASSWORD MATCH
+      ===================================================== */
+
+      function validatePasswordMatch() {
+
+          const newPassword =
+              password.value;
+
+          const confirmation =
+              confirmPassword.value;
+
+
+          passwordMatch.textContent = "";
+
+          passwordMatch.classList.remove(
+              "success",
+              "error"
+          );
+
+
+          if (!newPassword &&
+              !confirmation) {
+
+              return true;
+          }
+
+
+          if (!newPassword &&
+              confirmation) {
+
+              passwordMatch.textContent =
+                  "Enter the new password first.";
+
+              passwordMatch.classList.add(
+                  "error"
+              );
+
+              return false;
+          }
+
+
+          if (newPassword &&
+              !confirmation) {
+
+              passwordMatch.textContent =
+                  "Please confirm the new password.";
+
+              passwordMatch.classList.add(
+                  "error"
+              );
+
+              return false;
+          }
+
+
+          if (
+              newPassword !==
+              confirmation
+          ) {
+
+              passwordMatch.textContent =
+                  "Passwords do not match.";
+
+              passwordMatch.classList.add(
+                  "error"
+              );
+
+              return false;
+          }
+
+
+          passwordMatch.textContent =
+              "Passwords match.";
+
+          passwordMatch.classList.add(
+              "success"
+          );
+
+          return true;
+      }
+
+
+      /* =====================================================
+         PASSWORD TOGGLE
+      ===================================================== */
+
+      document.querySelectorAll(
+          ".password-toggle"
+      ).forEach(function (button) {
+
+          button.addEventListener(
+              "click",
+              function () {
+
+                  const targetId =
+                      button.getAttribute(
+                          "data-target"
+                      );
+
+
+                  const target =
+                      document.getElementById(
+                          targetId
+                      );
+
+
+                  if (
+                      target.type ===
+                      "password"
+                  ) {
+
+                      target.type =
+                          "text";
+
+                      button.textContent =
+                          "HIDE";
+
+                  }
+                  else {
+
+                      target.type =
+                          "password";
+
+                      button.textContent =
+                          "SHOW";
+
+                  }
+
+              }
+          );
+
+      });
+
+
+      /* =====================================================
+         PASSWORD EVENTS
+      ===================================================== */
+
+      password.addEventListener(
+          "input",
+          function () {
+
+              updatePasswordStrength();
+
+              validatePasswordMatch();
+
+          }
+      );
+
+
+      confirmPassword.addEventListener(
+          "input",
+          function () {
+
+              validatePasswordMatch();
+
+          }
+      );
+
+
+      /* =====================================================
+         DOMAIN CHANGE
+      ===================================================== */
+
+      domain.addEventListener(
+          "change",
+          async function () {
+
+              updateFormState();
+
+
+              if (
+                  hierarchyLevel.value &&
+                  hierarchyLevel.value !==
+                  "PROJECT_LEADER"
+              ) {
+
+                  await loadReportingManagers();
+
+              }
+
+          }
+      );
+
+
+      /* =====================================================
+         HIERARCHY CHANGE
+      ===================================================== */
+
+      hierarchyLevel.addEventListener(
+          "change",
+          async function () {
+
+              updateFormState();
+
+
+              if (
+                  hierarchyLevel.value !==
+                  "PROJECT_LEADER"
+              ) {
+
+                  await loadReportingManagers();
+
+              }
+
+          }
+      );
+
+
+      /* =====================================================
+         TEAM CHANGE
+      ===================================================== */
+
+      team.addEventListener(
+          "change",
+          async function () {
+
+              if (
+                  hierarchyLevel.value !==
+                  "PROJECT_LEADER"
+              ) {
+
+                  await loadReportingManagers();
+
+              }
+
+          }
+      );
+
+
+      /* =====================================================
+         FORM SUBMIT
+      ===================================================== */
+
+      form.addEventListener(
+          "submit",
+          function (event) {
+
+              const level =
+                  hierarchyLevel.value;
+
+
+              if (!domain.value) {
+
+                  event.preventDefault();
+
+                  alert(
+                      "Please select a domain."
+                  );
+
+                  domain.focus();
+
+                  return;
+              }
+
+
+              if (!level) {
+
+                  event.preventDefault();
+
+                  alert(
+                      "Please select a hierarchy level."
+                  );
+
+                  hierarchyLevel.focus();
+
+                  return;
+              }
+
+
+              if (!designation.value) {
+
+                  event.preventDefault();
+
+                  alert(
+                      "Please select the domain and hierarchy level first."
+                  );
+
+                  return;
+              }
+
+
+              if (!team.value) {
+
+                  event.preventDefault();
+
+                  alert(
+                      "Please select a team."
+                  );
+
+                  team.focus();
+
+                  return;
+              }
+
+
+              if (
+                  level !==
+                  "PROJECT_LEADER"
+              ) {
+
+                  if (!seniorId.value) {
+
+                      event.preventDefault();
+
+                      alert(
+                          "Please select a reporting manager."
+                      );
+
+                      seniorId.focus();
+
+                      return;
+                  }
+
+              }
+
+
+              /*
+               * Password is optional.
+               *
+               * If either password field contains
+               * anything, both must be valid.
+               */
+
+              const newPassword =
+                  password.value;
+
+              const confirm =
+                  confirmPassword.value;
+
+
+              if (
+                  newPassword ||
+                  confirm
+              ) {
+
+                  if (
+                      !newPassword ||
+                      !confirm
+                  ) {
+
+                      event.preventDefault();
+
+                      alert(
+                          "Please enter and confirm the new password."
+                      );
+
+                      if (!newPassword) {
+                          password.focus();
+                      }
+                      else {
+                          confirmPassword.focus();
+                      }
+
+                      return;
+                  }
+
+
+                  if (
+                      newPassword !==
+                      confirm
+                  ) {
+
+                      event.preventDefault();
+
+                      alert(
+                          "New password and confirmation password do not match."
+                      );
+
+                      confirmPassword.focus();
+
+                      return;
+                  }
+
+
+                  /*
+                   * Minimum password validation.
+                   *
+                   * Backend still remains responsible
+                   * for final password handling.
+                   */
+
+                  if (newPassword.length < 8) {
+
+                      event.preventDefault();
+
+                      alert(
+                          "New password must contain at least 8 characters."
+                      );
+
+                      password.focus();
+
+                      return;
+                  }
+
+
+                  if (!/[A-Z]/.test(newPassword)) {
+
+                      event.preventDefault();
+
+                      alert(
+                          "New password must contain at least one uppercase letter."
+                      );
+
+                      password.focus();
+
+                      return;
+                  }
+
+
+                  if (!/[a-z]/.test(newPassword)) {
+
+                      event.preventDefault();
+
+                      alert(
+                          "New password must contain at least one lowercase letter."
+                      );
+
+                      password.focus();
+
+                      return;
+                  }
+
+
+                  if (!/[0-9]/.test(newPassword)) {
+
+                      event.preventDefault();
+
+                      alert(
+                          "New password must contain at least one number."
+                      );
+
+                      password.focus();
+
+                      return;
+                  }
+
+              }
+
+
+              saveButton.disabled =
+                  true;
+
+              saveButton.textContent =
+                  "Saving Changes...";
+
+          }
+      );
+
+
+      /* =====================================================
+         INITIAL PAGE SETUP
+      ===================================================== */
+
+      updateHierarchyVisual(
+          hierarchyLevel.value
+      );
+
+
+      updateDesignation();
+
+
+      team.required = true;
+
+
+      updatePasswordStrength();
+
+
+      if (
+          hierarchyLevel.value ===
+          "PROJECT_LEADER"
+      ) {
+
+          seniorId.required = false;
+
+          seniorId.disabled = true;
+
+          seniorId.value = "";
+
+
+          clearManagers(
+              "Project Leaders do not require a reporting manager.",
+              "success"
+          );
+
+      }
+      else {
+
+          seniorId.disabled = false;
+
+          seniorId.required = true;
+
+
+          loadReportingManagers();
+
+      }
+
+
+      /* =====================================================
+         ACTIVE SIDEBAR
+      ===================================================== */
+
+      const currentPath =
+          window.location.pathname
+              .replace(/\/+$/, "") ||
+          "/";
+
+
+      document.querySelectorAll(
+          ".nav-item"
+      ).forEach(function (item) {
+
+          const path =
+              item.getAttribute(
+                  "data-path"
+              );
+
+
+          if (!path) {
+              return;
+          }
+
+
+          const normalizedPath =
+              path.replace(
+                  /\/+$/,
+                  ""
+              );
+
+
+          const isDashboard =
+              normalizedPath ===
+              "/admin/dashboard";
+
+
+          const isActive =
+              isDashboard
+                  ? currentPath ===
+                      normalizedPath
+                  : (
+                      currentPath ===
+                          normalizedPath ||
+                      currentPath.startsWith(
+                          normalizedPath +
+                          "/"
+                      )
+                  );
+
+
+          item.classList.toggle(
+              "active",
+              isActive
+          );
+
+      });
+
+  });
+
+</script>
+
+</body>
+
+</html>
+

@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Organization Registration | TeamLogger</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #eef2ff, #f8fafc);
+            padding: 30px 0;
+        }
+
+        .signup-container {
+            width: 100%;
+            max-width: 650px;
+            padding: 20px;
+        }
+
+        .signup-card {
+            background: #ffffff;
+            border-radius: 18px;
+            padding: 35px;
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.10);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .logo h1 {
+            font-size: 30px;
+            color: #111827;
+        }
+
+        .logo span {
+            color: #4f46e5;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #6b7280;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+
+        .admin-badge {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 25px;
+        }
+
+        .admin-badge span {
+            padding: 8px 16px;
+            border-radius: 20px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1f2937;
+            margin: 25px 0 16px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0 16px;
+        }
+
+        .form-group {
+            margin-bottom: 19px;
+            min-width: 0;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .required {
+            color: #dc2626;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 13px 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            outline: none;
+            font-size: 14px;
+            background: #ffffff;
+            color: #374151;
+            transition: 0.2s;
+        }
+
+        .form-group textarea {
+            min-height: 95px;
+            resize: vertical;
+            line-height: 1.5;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.10);
+        }
+
+        .field-help {
+            display: block;
+            margin-top: 6px;
+            color: #6b7280;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .signup-btn {
+            width: 100%;
+            border: none;
+            padding: 14px;
+            border-radius: 10px;
+            background: #4f46e5;
+            color: white;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 8px;
+        }
+
+        .signup-btn:hover {
+            background: #4338ca;
+        }
+
+        .message {
+            padding: 12px 14px;
+            border-radius: 9px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .error-message {
+            background: #fef2f2;
+            color: #b91c1c;
+            border: 1px solid #fecaca;
+        }
+
+        .success-message {
+            background: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+        }
+
+        .info-box {
+            margin-top: 22px;
+            padding: 14px;
+            border-radius: 10px;
+            background: #f9fafb;
+            color: #6b7280;
+            font-size: 12px;
+            line-height: 1.7;
+            text-align: center;
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 22px;
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .login-link a {
+            color: #4f46e5;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 550px) {
+            .signup-card {
+                padding: 25px 20px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-group.full-width {
+                grid-column: auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="signup-container">
+    <div class="signup-card">
+
+        <!-- LOGO -->
+        <div class="logo">
+            <h1>Team<span>Logger</span></h1>
+        </div>
+
+        <div class="subtitle">
+            Create your organization and register its first branch
+            and Super Admin account.
+        </div>
+
+        <div class="admin-badge">
+            <span>Organization Registration</span>
+        </div>
+
+        <!-- ERROR MESSAGE -->
+        <div th:if="${error}"
+             class="message error-message"
+             th:text="${error}">
+        </div>
+
+        <!-- SUCCESS MESSAGE -->
+        <div th:if="${success}"
+             class="message success-message"
+             th:text="${success}">
+        </div>
+
+        <!-- ORGANIZATION REGISTRATION FORM -->
+        <form th:action="@{/organization/register}"
+              method="post"
+              id="organizationRegistrationForm">
+
+            <!-- CSRF TOKEN -->
+            <input type="hidden"
+                   th:if="${_csrf != null}"
+                   th:name="${_csrf.parameterName}"
+                   th:value="${_csrf.token}">
+
+            <!-- ORGANIZATION DETAILS -->
+            <div class="section-title">
+                Organization Details
+            </div>
+
+            <div class="form-grid">
+
+                <div class="form-group full-width">
+                    <label for="organizationName">
+                        Company / Organization Name
+                        <span class="required">*</span>
+                    </label>
+
+                    <input type="text"
+                           id="organizationName"
+                           name="organizationName"
+                           placeholder="Enter your company name"
+                           maxlength="150"
+                           autocomplete="organization"
+                           th:value="${organizationName}"
+                           required>
+
+                    <span class="field-help">
+                        This name will identify your organization
+                        throughout TeamLogger.
+                    </span>
+                </div>
+
+            </div>
+
+            <!-- FIRST BRANCH DETAILS -->
+            <div class="section-title">
+                Initial Branch Details
+            </div>
+
+            <div class="form-grid">
+
+                <div class="form-group full-width">
+                    <label for="branchName">
+                        Branch Name
+                        <span class="required">*</span>
+                    </label>
+
+                    <input type="text"
+                           id="branchName"
+                           name="branchName"
+                           placeholder="e.g. Head Office"
+                           maxlength="150"
+                           th:value="${branchName}"
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <label for="country">
+                        Country
+                        <span class="required">*</span>
+                    </label>
+
+                    <input type="text"
+                           id="country"
+                           name="country"
+                           placeholder="e.g. India"
+                           maxlength="100"
+                           th:value="${country}"
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <label for="state">
+                        State
+                        <span class="required">*</span>
+                    </label>
+
+                    <input type="text"
+                           id="state"
+                           name="state"
+                           placeholder="e.g. Gujarat"
+                           maxlength="100"
+                           th:value="${state}"
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <label for="city">
+                        City
+                        <span class="required">*</span>
+                    </label>
+
+                    <input type="text"
+                           id="city"
+                           name="city"
+                           placeholder="e.g. Ahmedabad"
+                           maxlength="100"
+                           th:value="${city}"
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <label for="postalCode">
+                        Postal Code
+                    </label>
+
+                    <input type="text"
+                           id="postalCode"
+                           name="postalCode"
+                           placeholder="e.g. 380001"
+                           maxlength="20"
+                           th:value="${postalCode}">
+                </div>
+
+                <div class="form-group full-width">
+                    <label for="address">
+                        Branch Address
+                        <span class="required">*</span>
+                    </label>
+
+                    <textarea id="address"
+                              name="address"
+                              placeholder="Enter the complete branch address"
+                              maxlength="500"
+                              th:text="${address}"
+                              required></textarea>
+                </div>
+
+            </div>
+
+            <!-- SUPER ADMIN DETAILS -->
+            <div class="section-title">
+                Super Admin Account Details
+            </div>
+
+            <div class="form-grid">
+
+                <div class="form-group full-width">
+                    <label for="adminName">
+                        Admin Full Name
+                        <span class="required">*</span>
+                    </label>
+
+                    <input type="text"
+                           id="adminName"
+                           name="adminName"
+                           placeholder="Enter your full name"
+                           maxlength="100"
+                           autocomplete="name"
+                           th:value="${adminName}"
+                           required>
+                </div>
+
+                <div class="form-group full-width">
+                    <label for="email">
+                        Email Address
+                        <span class="required">*</span>
+                    </label>
+
+                    <input type="email"
+                           id="email"
+                           name="email"
+                           placeholder="Enter your email address"
+                           maxlength="150"
+                           autocomplete="email"
+                           th:value="${email}"
+                           required>
+                </div>
+
+                <div class="form-group full-width">
+                    <label for="password">
+                        Password
+                        <span class="required">*</span>
+                    </label>
+
+                    <input type="password"
+                           id="password"
+                           name="password"
+                           placeholder="Create a password"
+                           autocomplete="new-password"
+                           minlength="8"
+                           required>
+
+                    <span class="field-help">
+                        Use at least 8 characters.
+                    </span>
+                </div>
+
+                <div class="form-group full-width">
+                    <label for="confirmPassword">
+                        Confirm Password
+                        <span class="required">*</span>
+                    </label>
+
+                    <input type="password"
+                           id="confirmPassword"
+                           name="confirmPassword"
+                           placeholder="Re-enter your password"
+                           autocomplete="new-password"
+                           minlength="8"
+                           required>
+                </div>
+
+            </div>
+
+            <!-- SUBMIT -->
+            <button type="submit" class="signup-btn">
+                Create Organization
+            </button>
+
+        </form>
+
+        <!-- REGISTRATION INFORMATION -->
+        <div class="info-box">
+
+            <strong>Registration Information</strong>
+            <br>
+
+            Your organization, initial branch, and Super Admin
+            account will be created together.
+
+            <br><br>
+
+            The Super Admin will receive organization-wide
+            administrative access.
+        </div>
+
+        <!-- LOGIN LINK -->
+        <div class="login-link">
+            Already have an account?
+            <a th:href="@{/login}">Login</a>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const form =
+            document.getElementById("organizationRegistrationForm");
+
+        const password =
+            document.getElementById("password");
+
+        const confirmPassword =
+            document.getElementById("confirmPassword");
+
+        form.addEventListener("submit", function (event) {
+
+            if (password.value !== confirmPassword.value) {
+
+                event.preventDefault();
+
+                confirmPassword.setCustomValidity(
+                    "Passwords do not match."
+                );
+
+                confirmPassword.reportValidity();
+
+            } else {
+
+                confirmPassword.setCustomValidity("");
+
+            }
+
+        });
+
+        confirmPassword.addEventListener("input", function () {
+            confirmPassword.setCustomValidity("");
+        });
+
+    });
+</script>
+
+</body>
+</html>

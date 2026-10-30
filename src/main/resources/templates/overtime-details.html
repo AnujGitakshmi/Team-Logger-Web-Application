@@ -1,0 +1,1965 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title th:text="${adminSettings.companyName + ' - Overtime Details'}">
+        TeamLogger - Overtime Details
+    </title>
+
+
+    <style>
+
+        /* =========================================================
+           RESET
+        ========================================================= */
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family:
+                Inter,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                Roboto,
+                Arial,
+                sans-serif;
+
+            background: #f5f7fb;
+            color: #111827;
+
+            min-height: 100vh;
+        }
+
+        button,
+        input,
+        select {
+            font-family: inherit;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+
+        /* =========================================================
+           SIDEBAR
+        ========================================================= */
+
+        .sidebar {
+            position: fixed;
+
+            top: 0;
+            left: 0;
+            bottom: 0;
+
+            width: 250px;
+
+            background: #111827;
+            color: #ffffff;
+
+            display: flex;
+            flex-direction: column;
+
+            z-index: 1000;
+
+            border-right: 1px solid #1f2937;
+        }
+
+
+        /* =========================================================
+           LOGO
+        ========================================================= */
+
+        .logo-section {
+            width: 100%;
+            height: 78px;
+
+            display: flex;
+            align-items: center;
+
+            padding: 0 20px;
+
+            border-bottom:
+                1px solid rgba(255,255,255,0.07);
+
+            flex-shrink: 0;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+
+            min-width: 0;
+        }
+
+        .logo-icon {
+            width: 38px;
+            height: 38px;
+
+            border-radius: 10px;
+
+            background: #2563eb;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            font-size: 16px;
+            font-weight: 800;
+
+            color: #ffffff;
+
+            flex-shrink: 0;
+
+            margin-right: 11px;
+        }
+
+        .logo-text {
+            min-width: 0;
+        }
+
+        .logo-title {
+            font-size: 16px;
+            font-weight: 700;
+
+            color: #ffffff;
+
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .logo-subtitle {
+            margin-top: 3px;
+
+            font-size: 9px;
+            font-weight: 700;
+
+            color: #6b7280;
+
+            letter-spacing: 1px;
+        }
+
+
+        /* =========================================================
+           SIDEBAR NAVIGATION
+        ========================================================= */
+
+        .sidebar-nav {
+            flex: 1;
+
+            padding: 20px 12px;
+
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .sidebar-nav::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .sidebar-nav::-webkit-scrollbar-thumb {
+            background: #374151;
+            border-radius: 10px;
+        }
+
+        .nav-section-title {
+            padding: 0 13px 9px;
+
+            color: #6b7280;
+
+            font-size: 10px;
+            font-weight: 700;
+
+            letter-spacing: 1px;
+
+            text-transform: uppercase;
+        }
+
+        .nav-section-title:not(:first-child) {
+            margin-top: 24px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+
+            width: 100%;
+            height: 44px;
+
+            padding: 0 13px;
+
+            margin-bottom: 5px;
+
+            border-radius: 8px;
+
+            color: #9ca3af;
+
+            background: transparent;
+
+            font-size: 14px;
+            font-weight: 500;
+
+            transition:
+                background .18s ease,
+                color .18s ease;
+
+            cursor: pointer;
+        }
+
+        .nav-item:hover {
+            background: #1f2937;
+            color: #ffffff;
+        }
+
+        .nav-item.active {
+            background: #2563eb;
+            color: #ffffff;
+        }
+
+        .nav-icon {
+            width: 25px;
+            min-width: 25px;
+
+            margin-right: 10px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            font-size: 17px;
+            line-height: 1;
+
+            text-align: center;
+        }
+
+        .nav-item span:not(.nav-icon) {
+            white-space: nowrap;
+        }
+
+
+        /* =========================================================
+           LOGIN APPROVAL BADGE
+        ========================================================= */
+
+        .approval-nav-item {
+            position: relative;
+        }
+
+        .sidebar-pending-badge {
+            margin-left: auto;
+
+            min-width: 19px;
+            height: 19px;
+
+            padding: 0 5px;
+
+            border-radius: 999px;
+
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            background: #ef4444;
+            color: #ffffff;
+
+            font-size: 9px;
+            font-weight: 800;
+
+            line-height: 1;
+        }
+
+
+        /* =========================================================
+           ADMIN PROFILE
+        ========================================================= */
+
+        .admin-profile {
+            width: 100%;
+
+            padding: 14px;
+
+            border-top:
+                1px solid rgba(255,255,255,0.07);
+
+            display: flex;
+            align-items: center;
+
+            gap: 10px;
+
+            flex-shrink: 0;
+        }
+
+        .admin-avatar {
+            width: 38px;
+            height: 38px;
+
+            min-width: 38px;
+
+            border-radius: 50%;
+
+            background: #2563eb;
+
+            color: #ffffff;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .admin-info {
+            min-width: 0;
+        }
+
+        .admin-name {
+            color: #ffffff;
+
+            font-size: 13px;
+            font-weight: 600;
+
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .admin-role {
+            color: #6b7280;
+
+            font-size: 11px;
+
+            margin-top: 3px;
+
+            white-space: nowrap;
+        }
+
+
+        /* =========================================================
+           MAIN
+        ========================================================= */
+
+        .main {
+            margin-left: 250px;
+
+            min-height: 100vh;
+
+            width: calc(100% - 250px);
+        }
+
+
+        /* =========================================================
+           TOPBAR
+        ========================================================= */
+
+        .topbar {
+            height: 78px;
+
+            background: #ffffff;
+
+            border-bottom: 1px solid #e5e7eb;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            padding: 0 30px;
+
+            position: sticky;
+            top: 0;
+
+            z-index: 900;
+        }
+
+        .topbar-left {
+            min-width: 0;
+        }
+
+        .topbar-title {
+            font-size: 20px;
+            font-weight: 700;
+
+            color: #111827;
+        }
+
+        .topbar-subtitle {
+            margin-top: 3px;
+
+            color: #9ca3af;
+
+            font-size: 11px;
+        }
+
+        .live-indicator {
+            display: inline-flex;
+            align-items: center;
+
+            gap: 7px;
+
+            padding: 8px 12px;
+
+            border: 1px solid #dbeafe;
+
+            border-radius: 999px;
+
+            background: #eff6ff;
+
+            color: #2563eb;
+
+            font-size: 11px;
+            font-weight: 600;
+
+            white-space: nowrap;
+        }
+
+        .live-dot {
+            width: 7px;
+            height: 7px;
+
+            border-radius: 50%;
+
+            background: #2563eb;
+        }
+
+
+        /* =========================================================
+           CONTENT
+        ========================================================= */
+
+        .content {
+            padding: 28px 30px 40px;
+        }
+
+
+        /* =========================================================
+           BACK BUTTON
+        ========================================================= */
+
+        .back-link {
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 7px;
+
+            margin-bottom: 18px;
+
+            color: #6b7280;
+
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .back-link:hover {
+            color: #2563eb;
+        }
+
+
+        /* =========================================================
+           EMPLOYEE HEADER
+        ========================================================= */
+
+        .employee-header {
+            background: #ffffff;
+
+            border: 1px solid #e5e7eb;
+
+            border-radius: 12px;
+
+            padding: 22px;
+
+            margin-bottom: 20px;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: space-between;
+
+            gap: 20px;
+
+            box-shadow:
+                0 1px 2px rgba(15,23,42,.03);
+        }
+
+        .employee-information {
+            display: flex;
+
+            align-items: center;
+
+            gap: 14px;
+
+            min-width: 0;
+        }
+
+        .employee-avatar {
+            width: 54px;
+            height: 54px;
+
+            min-width: 54px;
+
+            border-radius: 12px;
+
+            background: #eff6ff;
+
+            color: #2563eb;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            font-size: 18px;
+            font-weight: 800;
+        }
+
+        .employee-name {
+            color: #111827;
+
+            font-size: 19px;
+            font-weight: 700;
+
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .employee-designation {
+            margin-top: 4px;
+
+            color: #6b7280;
+
+            font-size: 12px;
+        }
+
+        .employee-login {
+            margin-top: 3px;
+
+            color: #9ca3af;
+
+            font-size: 10px;
+        }
+
+        .employee-status {
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 6px;
+
+            padding: 7px 11px;
+
+            border-radius: 999px;
+
+            background: #ecfdf5;
+
+            color: #059669;
+
+            font-size: 10px;
+            font-weight: 700;
+
+            text-transform: uppercase;
+        }
+
+        .employee-status-dot {
+            width: 6px;
+            height: 6px;
+
+            border-radius: 50%;
+
+            background: #10b981;
+        }
+
+
+        /* =========================================================
+           STATISTICS
+        ========================================================= */
+
+        .stats-grid {
+            display: grid;
+
+            grid-template-columns:
+                repeat(3, minmax(0, 1fr));
+
+            gap: 16px;
+
+            margin-bottom: 22px;
+        }
+
+        .stat-card {
+            background: #ffffff;
+
+            border: 1px solid #e5e7eb;
+
+            border-radius: 12px;
+
+            padding: 19px;
+
+            box-shadow:
+                0 1px 2px rgba(15,23,42,.03);
+
+            position: relative;
+
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: "";
+
+            position: absolute;
+
+            left: 0;
+            top: 0;
+
+            width: 3px;
+            height: 100%;
+
+            background: #2563eb;
+        }
+
+        .stat-top {
+            display: flex;
+
+            align-items: center;
+            justify-content: space-between;
+
+            margin-bottom: 12px;
+        }
+
+        .stat-title {
+            color: #6b7280;
+
+            font-size: 10px;
+            font-weight: 700;
+
+            letter-spacing: .7px;
+
+            text-transform: uppercase;
+        }
+
+        .stat-icon {
+            width: 32px;
+            height: 32px;
+
+            border-radius: 8px;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            background: #eff6ff;
+
+            color: #2563eb;
+
+            font-size: 16px;
+        }
+
+        .stat-value {
+            color: #111827;
+
+            font-size: 24px;
+            font-weight: 700;
+
+            line-height: 1.2;
+        }
+
+        .stat-description {
+            color: #9ca3af;
+
+            font-size: 10px;
+
+            margin-top: 5px;
+        }
+
+
+        /* =========================================================
+           HISTORY CARD
+        ========================================================= */
+
+        .history-card {
+            background: #ffffff;
+
+            border: 1px solid #e5e7eb;
+
+            border-radius: 12px;
+
+            overflow: hidden;
+
+            box-shadow:
+                0 1px 2px rgba(15,23,42,.03);
+        }
+
+        .history-header {
+            min-height: 76px;
+
+            padding: 17px 20px;
+
+            border-bottom: 1px solid #e5e7eb;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: space-between;
+
+            gap: 15px;
+        }
+
+        .history-title-area h2 {
+            font-size: 16px;
+
+            font-weight: 700;
+
+            color: #111827;
+
+            margin-bottom: 4px;
+        }
+
+        .history-title-area p {
+            font-size: 11px;
+
+            color: #9ca3af;
+        }
+
+
+        /* =========================================================
+           TABLE
+        ========================================================= */
+
+        .table-wrapper {
+            width: 100%;
+
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+
+            min-width: 700px;
+
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #f8fafc;
+        }
+
+        th {
+            padding: 13px 18px;
+
+            text-align: left;
+
+            border-bottom: 1px solid #e5e7eb;
+
+            color: #6b7280;
+
+            font-size: 9px;
+            font-weight: 700;
+
+            text-transform: uppercase;
+
+            letter-spacing: .7px;
+
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 14px 18px;
+
+            border-bottom: 1px solid #f1f5f9;
+
+            color: #374151;
+
+            font-size: 12px;
+
+            white-space: nowrap;
+        }
+
+        tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+
+        /* =========================================================
+           DATE
+        ========================================================= */
+
+        .date-value {
+            color: #111827;
+
+            font-weight: 650;
+        }
+
+
+        /* =========================================================
+           ACTIVE TIME
+        ========================================================= */
+
+        .active-time {
+            color: #374151;
+
+            font-weight: 600;
+        }
+
+
+        /* =========================================================
+           OVERTIME
+        ========================================================= */
+
+        .overtime-value {
+            display: inline-flex;
+
+            align-items: center;
+
+            padding: 5px 9px;
+
+            border-radius: 6px;
+
+            background: #eff6ff;
+
+            color: #2563eb;
+
+            font-size: 11px;
+
+            font-weight: 700;
+        }
+
+
+        /* =========================================================
+           OVERTIME STATUS
+        ========================================================= */
+
+        .status-badge {
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 6px;
+
+            padding: 5px 9px;
+
+            border-radius: 999px;
+
+            background: #ecfdf5;
+
+            color: #059669;
+
+            font-size: 9px;
+
+            font-weight: 700;
+
+            text-transform: uppercase;
+        }
+
+        .status-badge span {
+            width: 6px;
+            height: 6px;
+
+            border-radius: 50%;
+
+            background: #10b981;
+        }
+
+
+        /* =========================================================
+           EMPTY STATE
+        ========================================================= */
+
+        .empty-state {
+            padding: 65px 25px;
+
+            text-align: center;
+        }
+
+        .empty-icon {
+            width: 54px;
+            height: 54px;
+
+            margin: 0 auto 14px;
+
+            border-radius: 14px;
+
+            background: #f3f4f6;
+
+            color: #9ca3af;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            font-size: 22px;
+        }
+
+        .empty-state h3 {
+            color: #374151;
+
+            font-size: 15px;
+
+            margin-bottom: 5px;
+        }
+
+        .empty-state p {
+            color: #9ca3af;
+
+            font-size: 11px;
+
+            line-height: 1.6;
+        }
+
+
+        /* =========================================================
+           INFORMATION NOTE
+        ========================================================= */
+
+        .info-note {
+            margin-top: 16px;
+
+            padding: 13px 15px;
+
+            border: 1px solid #dbeafe;
+
+            border-radius: 8px;
+
+            background: #eff6ff;
+
+            color: #64748b;
+
+            font-size: 10px;
+
+            line-height: 1.6;
+        }
+
+        .info-note strong {
+            color: #2563eb;
+        }
+
+
+        /* =========================================================
+           RESPONSIVE
+        ========================================================= */
+
+        @media (max-width: 1000px) {
+
+            .stats-grid {
+                grid-template-columns:
+                    repeat(2, minmax(0, 1fr));
+            }
+
+        }
+
+
+        @media (max-width: 800px) {
+
+            .sidebar {
+                width: 210px;
+            }
+
+            .main {
+                margin-left: 210px;
+
+                width: calc(100% - 210px);
+            }
+
+            .content {
+                padding: 24px 20px 35px;
+            }
+
+            .topbar {
+                padding: 0 20px;
+            }
+
+        }
+
+
+        @media (max-width: 600px) {
+
+            .sidebar {
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: auto;
+
+                width: 100%;
+                height: 68px;
+
+                flex-direction: row;
+
+                overflow: hidden;
+            }
+
+            .logo-section {
+                width: 68px;
+                height: 68px;
+
+                flex-shrink: 0;
+
+                justify-content: center;
+
+                padding: 0;
+            }
+
+            .logo-text {
+                display: none;
+            }
+
+            .logo-icon {
+                margin-right: 0;
+            }
+
+            .sidebar-nav {
+                flex: 1;
+
+                height: 68px;
+
+                padding: 0 8px;
+
+                display: flex;
+
+                align-items: center;
+
+                gap: 5px;
+
+                overflow-x: auto;
+                overflow-y: hidden;
+            }
+
+            .nav-section-title {
+                display: none;
+            }
+
+            .nav-item {
+                height: 44px;
+
+                min-width: 44px;
+                width: 44px;
+
+                flex-shrink: 0;
+
+                justify-content: center;
+
+                padding: 0;
+
+                margin: 0;
+            }
+
+            .nav-item span:not(.nav-icon) {
+                display: none;
+            }
+
+            .nav-icon {
+                margin-right: 0;
+            }
+
+            .sidebar-pending-badge {
+                position: absolute;
+
+                top: 2px;
+                right: 2px;
+
+                min-width: 16px;
+                height: 16px;
+
+                padding: 0 4px;
+
+                font-size: 8px;
+            }
+
+            .admin-profile {
+                width: 58px;
+                height: 68px;
+
+                flex-shrink: 0;
+
+                justify-content: center;
+
+                padding: 0;
+
+                border-top: none;
+
+                border-left:
+                    1px solid rgba(255,255,255,.08);
+            }
+
+            .admin-info {
+                display: none;
+            }
+
+            .main {
+                margin-left: 0;
+
+                width: 100%;
+
+                padding-top: 68px;
+            }
+
+            .topbar {
+                height: 64px;
+
+                padding: 0 15px;
+            }
+
+            .topbar-title {
+                font-size: 17px;
+            }
+
+            .topbar-subtitle,
+            .live-indicator {
+                display: none;
+            }
+
+            .content {
+                padding: 20px 14px 30px;
+            }
+
+            .employee-header {
+                align-items: flex-start;
+
+                flex-direction: column;
+            }
+
+            .employee-status {
+                align-self: flex-start;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+
+                gap: 12px;
+            }
+
+            .history-header {
+                align-items: flex-start;
+
+                flex-direction: column;
+            }
+
+        }
+
+
+        @media (prefers-reduced-motion: reduce) {
+
+            *,
+            *::before,
+            *::after {
+                scroll-behavior: auto !important;
+
+                transition: none !important;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<!-- ============================================================
+     ADMIN SIDEBAR
+============================================================ -->
+
+<aside class="sidebar">
+
+
+    <!-- ========================================================
+         LOGO
+    ========================================================= -->
+
+    <div class="logo-section">
+
+        <div class="logo">
+
+            <div class="logo-icon">
+                TL
+            </div>
+
+            <div class="logo-text">
+
+                <div class="logo-title"
+                     th:text="${adminSettings.companyName}">
+                    TeamLogger
+                </div>
+
+                <div class="logo-subtitle">
+                    ADMIN PANEL
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ========================================================
+         NAVIGATION
+    ========================================================= -->
+
+    <nav class="sidebar-nav">
+
+
+        <div class="nav-section-title">
+            Main
+        </div>
+
+
+        <a th:href="@{/admin/dashboard}"
+           class="nav-item"
+           data-path="/admin/dashboard">
+
+            <span class="nav-icon">
+                ▦
+            </span>
+
+            <span>
+                Dashboard
+            </span>
+
+        </a>
+
+
+        <a th:href="@{/admin/employees}"
+           class="nav-item"
+           data-path="/admin/employees">
+
+            <span class="nav-icon">
+                👥
+            </span>
+
+            <span>
+                Employees
+            </span>
+
+        </a>
+
+
+        <a th:href="@{/admin/tracking}"
+           class="nav-item"
+           data-path="/admin/tracking">
+
+            <span class="nav-icon">
+                ◉
+            </span>
+
+            <span>
+                Today's Activity
+            </span>
+
+        </a>
+
+
+        <a th:href="@{/admin/projects}"
+           class="nav-item"
+           data-path="/admin/projects">
+
+            <span class="nav-icon">
+                ▣
+            </span>
+
+            <span>
+                Projects
+            </span>
+
+        </a>
+
+
+        <div class="nav-section-title">
+            Management
+        </div>
+
+
+        <a th:href="@{/admin/overtime}"
+           class="nav-item"
+           data-path="/admin/overtime">
+
+            <span class="nav-icon">
+                ◷
+            </span>
+
+            <span>
+                Overtime
+            </span>
+
+        </a>
+
+
+        <a th:href="@{/admin/reports}"
+           class="nav-item"
+           data-path="/admin/reports">
+
+            <span class="nav-icon">
+                ▤
+            </span>
+
+            <span>
+                Reports
+            </span>
+
+        </a>
+
+
+        <a th:href="@{/admin/login-approvals}"
+           class="nav-item approval-nav-item"
+           data-path="/admin/login-approvals">
+
+            <span class="nav-icon">
+                ✓
+            </span>
+
+            <span>
+                Login Approvals
+            </span>
+
+            <span class="sidebar-pending-badge"
+                  th:if="${pendingApprovalCount != null and pendingApprovalCount > 0}"
+                  th:text="${pendingApprovalCount}">
+                0
+            </span>
+
+        </a>
+
+
+        <a th:href="@{/admin/screen-recording}"
+           class="nav-item"
+           data-path="/admin/screen-recording">
+
+            <span class="nav-icon">
+                ▧
+            </span>
+
+            <span>
+                Screen Recording
+            </span>
+
+        </a>
+
+
+        <a th:href="@{/admin/settings}"
+           class="nav-item"
+           data-path="/admin/settings">
+
+            <span class="nav-icon">
+                ⚙
+            </span>
+
+            <span>
+                Settings
+            </span>
+
+        </a>
+
+    </nav>
+
+
+    <!-- ========================================================
+         ADMIN PROFILE
+    ========================================================= -->
+
+    <div class="admin-profile">
+
+        <div class="admin-avatar"
+             th:text="${admin != null and admin.name != null and !admin.name.isEmpty()
+                       ? #strings.substring(admin.name,0,1).toUpperCase()
+                       : 'A'}">
+            A
+        </div>
+
+        <div class="admin-info">
+
+            <div class="admin-name"
+                 th:text="${admin != null and admin.name != null
+                           ? admin.name
+                           : 'Admin'}">
+                Admin
+            </div>
+
+            <div class="admin-role">
+                Administrator
+            </div>
+
+        </div>
+
+    </div>
+
+</aside>
+
+
+
+<!-- ============================================================
+     MAIN
+============================================================ -->
+
+<main class="main">
+
+
+    <!-- ========================================================
+         TOPBAR
+    ========================================================= -->
+
+    <header class="topbar">
+
+        <div class="topbar-left">
+
+            <div class="topbar-title">
+                Overtime Details
+            </div>
+
+            <div class="topbar-subtitle">
+                Employee overtime monitoring
+            </div>
+
+        </div>
+
+
+        <div class="live-indicator">
+
+            <span class="live-dot"></span>
+
+            Overtime Monitoring
+
+        </div>
+
+    </header>
+
+
+
+    <!-- ========================================================
+         CONTENT
+    ========================================================= -->
+
+    <div class="content">
+
+
+        <!-- BACK -->
+
+        <a th:href="@{/admin/overtime}"
+           class="back-link">
+
+            ← Back to Overtime
+
+        </a>
+
+
+
+        <!-- ====================================================
+             EMPLOYEE INFORMATION
+        ==================================================== -->
+
+        <section class="employee-header">
+
+
+            <div class="employee-information">
+
+
+                <div class="employee-avatar"
+                     th:text="${employee != null
+                               and employee.name != null
+                               and !employee.name.isEmpty()
+                               ? #strings.substring(
+                                    employee.name,
+                                    0,
+                                    1
+                                 ).toUpperCase()
+                               : 'E'}">
+
+                    E
+
+                </div>
+
+
+                <div>
+
+                    <div class="employee-name"
+                         th:text="${employee != null
+                                   and employee.name != null
+                                   ? employee.name
+                                   : 'Employee'}">
+
+                        Employee
+
+                    </div>
+
+
+                    <div class="employee-designation"
+                         th:text="${employee != null
+                                   and employee.designation != null
+                                   ? employee.designation
+                                   : 'Employee'}">
+
+                        Employee
+
+                    </div>
+
+
+                    <div class="employee-login"
+                         th:text="${employee != null
+                                   and employee.employeeLoginId != null
+                                   ? employee.employeeLoginId
+                                   : '—'}">
+
+                        EMP-000
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="employee-status"
+                 th:if="${employee != null
+                         and employee.status != null
+                         and employee.status.equalsIgnoreCase('ACTIVE')}">
+
+                <span class="employee-status-dot"></span>
+
+                Active
+
+            </div>
+
+
+            <div class="employee-status"
+                 style="background:#f3f4f6;color:#6b7280;"
+                 th:if="${employee == null
+                         or employee.status == null
+                         or !employee.status.equalsIgnoreCase('ACTIVE')}">
+
+                <span class="employee-status-dot"
+                      style="background:#9ca3af;">
+                </span>
+
+                Inactive
+
+            </div>
+
+        </section>
+
+
+
+        <!-- ====================================================
+             STATISTICS
+        ==================================================== -->
+
+        <section class="stats-grid">
+
+
+            <!-- TODAY -->
+
+            <div class="stat-card">
+
+                <div class="stat-top">
+
+                    <div class="stat-title">
+                        Today's Overtime
+                    </div>
+
+                    <div class="stat-icon">
+                        ⏱
+                    </div>
+
+                </div>
+
+
+                <div class="stat-value"
+                     th:text="${todayOvertime != null
+                               ? (todayOvertime / 60)
+                                 + 'h '
+                                 + (todayOvertime % 60)
+                                 + 'm'
+                               : '0h 0m'}">
+
+                    0h 0m
+
+                </div>
+
+
+                <div class="stat-description">
+                    Overtime recorded today
+                </div>
+
+            </div>
+
+
+
+            <!-- WEEK -->
+
+            <div class="stat-card">
+
+                <div class="stat-top">
+
+                    <div class="stat-title">
+                        This Week
+                    </div>
+
+                    <div class="stat-icon">
+                        ◷
+                    </div>
+
+                </div>
+
+
+                <div class="stat-value"
+                     th:text="${weekOvertime != null
+                               ? (weekOvertime / 60)
+                                 + 'h '
+                                 + (weekOvertime % 60)
+                                 + 'm'
+                               : '0h 0m'}">
+
+                    0h 0m
+
+                </div>
+
+
+                <div class="stat-description">
+                    Overtime recorded this week
+                </div>
+
+            </div>
+
+
+
+            <!-- MONTH -->
+
+            <div class="stat-card">
+
+                <div class="stat-top">
+
+                    <div class="stat-title">
+                        This Month
+                    </div>
+
+                    <div class="stat-icon">
+                        ◴
+                    </div>
+
+                </div>
+
+
+                <div class="stat-value"
+                     th:text="${monthOvertime != null
+                               ? (monthOvertime / 60)
+                                 + 'h '
+                                 + (monthOvertime % 60)
+                                 + 'm'
+                               : '0h 0m'}">
+
+                    0h 0m
+
+                </div>
+
+
+                <div class="stat-description">
+                    Overtime recorded this month
+                </div>
+
+            </div>
+
+
+        </section>
+
+
+
+        <!-- ====================================================
+             HISTORY
+        ==================================================== -->
+
+        <section class="history-card">
+
+
+            <div class="history-header">
+
+                <div class="history-title-area">
+
+                    <h2>
+                        Overtime History
+                    </h2>
+
+                    <p>
+                        Daily overtime records for this employee.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="table-wrapper">
+
+
+                <table>
+
+
+                    <thead>
+
+                    <tr>
+
+                        <th>
+                            Date
+                        </th>
+
+                        <th>
+                            Active Time
+                        </th>
+
+                        <th>
+                            Overtime
+                        </th>
+
+                        <th>
+                            Status
+                        </th>
+
+                    </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+
+                    <!-- RECORDS -->
+
+                    <tr th:each="record : ${overtimeHistory}">
+
+
+                        <td class="date-value"
+                            th:text="${record.date != null
+                                      ? #temporals.format(
+                                          record.date,
+                                          'dd MMM yyyy'
+                                        )
+                                      : '-'}">
+
+                            -
+
+                        </td>
+
+
+                        <td class="active-time"
+                            th:text="${(record.activeMinutes / 60)
+                                      + 'h '
+                                      + (record.activeMinutes % 60)
+                                      + 'm'}">
+
+                            0h 0m
+
+                        </td>
+
+
+                        <td>
+
+                            <span class="overtime-value"
+                                  th:text="${(record.overtimeMinutes / 60)
+                                            + 'h '
+                                            + (record.overtimeMinutes % 60)
+                                            + 'm'}">
+
+                                0h 0m
+
+                            </span>
+
+                        </td>
+
+
+                        <td>
+
+                            <span class="status-badge">
+
+                                <span></span>
+
+                                Overtime Recorded
+
+                            </span>
+
+                        </td>
+
+
+                    </tr>
+
+
+
+                    <!-- EMPTY -->
+
+                    <tr th:if="${overtimeHistory == null
+                                or #lists.isEmpty(overtimeHistory)}">
+
+                        <td colspan="4">
+
+                            <div class="empty-state">
+
+
+                                <div class="empty-icon">
+                                    ⏱
+                                </div>
+
+
+                                <h3>
+                                    No overtime recorded
+                                </h3>
+
+
+                                <p>
+                                    This employee has no recorded overtime
+                                    for the selected period.
+                                </p>
+
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+
+                    </tbody>
+
+
+                </table>
+
+            </div>
+
+
+        </section>
+
+
+
+        <!-- ====================================================
+             NOTE
+        ==================================================== -->
+
+        <div class="info-note">
+
+            <strong>Overtime calculation:</strong>
+
+            Overtime is calculated from recorded active working
+            time exceeding the regular 8-hour working allowance
+            for a day.
+
+        </div>
+
+
+    </div>
+
+</main>
+
+
+
+<!-- ============================================================
+     JAVASCRIPT
+============================================================ -->
+
+<script>
+
+
+    /* =========================================================
+       ACTIVE SIDEBAR
+    ========================================================= */
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        function () {
+
+            const currentPath =
+                window.location.pathname
+                    .replace(/\/+$/, "")
+                || "/";
+
+
+            const navItems =
+                document.querySelectorAll(
+                    ".nav-item"
+                );
+
+
+            navItems.forEach(function (item) {
+
+                const path =
+                    item.getAttribute(
+                        "data-path"
+                    );
+
+
+                if (!path) {
+                    return;
+                }
+
+
+                const normalizedPath =
+                    path.replace(
+                        /\/+$/,
+                        ""
+                    );
+
+
+                const isDashboard =
+                    normalizedPath ===
+                    "/admin/dashboard";
+
+
+                const isActive =
+                    isDashboard
+                        ? currentPath ===
+                          normalizedPath
+
+                        : (
+                            currentPath ===
+                            normalizedPath
+
+                            ||
+
+                            currentPath.startsWith(
+                                normalizedPath + "/"
+                            )
+                        );
+
+
+                if (isActive) {
+
+                    item.classList.add(
+                        "active"
+                    );
+
+                } else {
+
+                    item.classList.remove(
+                        "active"
+                    );
+
+                }
+
+            });
+
+        }
+    );
+
+</script>
+
+
+</body>
+
+</html>

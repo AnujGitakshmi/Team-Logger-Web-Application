@@ -1,0 +1,2402 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+  <title th:text="${adminSettings != null
+        and adminSettings.companyName != null
+        ? adminSettings.companyName + ' | Employee Tracking'
+        : 'TeamLogger | Employee Tracking'}">
+    Employee Tracking
+  </title>
+
+  <style>
+
+    /* =========================================================
+       GLOBAL RESET
+    ========================================================= */
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    html {
+        width: 100%;
+        overflow-x: hidden;
+        scroll-behavior: smooth;
+    }
+
+    body {
+        width: 100%;
+        min-height: 100vh;
+
+        background: #f5f7fb;
+        color: #111827;
+
+        font-family:
+                Inter,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                Roboto,
+                Arial,
+                sans-serif;
+
+        overflow-x: hidden;
+    }
+
+    a {
+        color: inherit;
+        text-decoration: none;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+        font: inherit;
+    }
+
+
+    /* =========================================================
+       LAYOUT
+    ========================================================= */
+
+    .layout {
+        width: 100%;
+        min-height: 100vh;
+    }
+
+
+    /* =========================================================
+       FIXED ADMIN SIDEBAR
+    ========================================================= */
+
+    .sidebar {
+        position: fixed;
+
+        top: 0;
+        left: 0;
+        bottom: 0;
+
+        width: 250px;
+        min-width: 250px;
+
+        background: #111827;
+        color: #ffffff;
+
+        display: flex;
+        flex-direction: column;
+
+        z-index: 1000;
+
+        box-shadow:
+                4px 0 18px rgba(15, 23, 42, 0.08);
+    }
+
+
+    /* =========================================================
+       LOGO
+    ========================================================= */
+
+    .logo-section {
+        height: 78px;
+
+        padding: 0 22px;
+
+        display: flex;
+        align-items: center;
+
+        border-bottom:
+                1px solid rgba(255,255,255,0.08);
+
+        flex-shrink: 0;
+    }
+
+    .logo {
+        min-width: 0;
+
+        display: flex;
+        align-items: center;
+
+        gap: 12px;
+    }
+
+    .logo-icon {
+        width: 38px;
+        height: 38px;
+
+        min-width: 38px;
+
+        border-radius: 9px;
+
+        background: #2563eb;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        color: #ffffff;
+
+        font-size: 17px;
+        font-weight: 700;
+
+        box-shadow:
+                0 4px 10px rgba(37,99,235,0.22);
+    }
+
+    .logo-text {
+        min-width: 0;
+
+        display: flex;
+        flex-direction: column;
+    }
+
+    .logo-title {
+        color: #ffffff;
+
+        font-size: 16px;
+        font-weight: 700;
+
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .logo-subtitle {
+        margin-top: 2px;
+
+        color: #9ca3af;
+
+        font-size: 10px;
+        font-weight: 500;
+
+        letter-spacing: 0.08em;
+    }
+
+
+    /* =========================================================
+       SIDEBAR NAVIGATION
+    ========================================================= */
+
+    .sidebar-nav {
+        flex: 1;
+
+        padding: 20px 14px;
+
+        overflow-y: auto;
+
+        scrollbar-width: thin;
+    }
+
+    .sidebar-nav::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    .sidebar-nav::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .sidebar-nav::-webkit-scrollbar-thumb {
+        background: #374151;
+        border-radius: 10px;
+    }
+
+    .nav-section-title {
+        padding: 0 10px;
+
+        margin: 8px 0 10px;
+
+        color: #6b7280;
+
+        font-size: 10px;
+        font-weight: 700;
+
+        letter-spacing: 0.08em;
+
+        text-transform: uppercase;
+    }
+
+    .nav-item {
+        height: 44px;
+
+        width: 100%;
+
+        display: flex;
+        align-items: center;
+
+        gap: 12px;
+
+        padding: 0 12px;
+
+        margin-bottom: 5px;
+
+        border-radius: 8px;
+
+        color: #9ca3af;
+
+        font-size: 13px;
+        font-weight: 500;
+
+        transition:
+                background 0.2s ease,
+                color 0.2s ease,
+                transform 0.15s ease;
+    }
+
+    .nav-item:hover {
+        background: #1f2937;
+
+        color: #ffffff;
+    }
+
+    .nav-item.active {
+        background: #2563eb;
+
+        color: #ffffff;
+
+        box-shadow:
+                0 4px 10px rgba(37,99,235,0.20);
+    }
+
+    .nav-item.active:hover {
+        background: #2563eb;
+    }
+
+    .nav-icon {
+        width: 22px;
+        min-width: 22px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        font-size: 16px;
+        line-height: 1;
+    }
+
+
+    /* =========================================================
+       ADMIN PROFILE
+    ========================================================= */
+
+    .admin-profile {
+        padding: 16px;
+
+        border-top:
+                1px solid rgba(255,255,255,0.08);
+
+        display: flex;
+        align-items: center;
+
+        gap: 11px;
+
+        flex-shrink: 0;
+    }
+
+    .admin-avatar {
+        width: 38px;
+        height: 38px;
+
+        min-width: 38px;
+
+        border-radius: 50%;
+
+        background: #2563eb;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        color: #ffffff;
+
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .admin-info {
+        min-width: 0;
+
+        display: flex;
+        flex-direction: column;
+    }
+
+    .admin-name {
+        color: #ffffff;
+
+        font-size: 13px;
+        font-weight: 600;
+
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .admin-role {
+        margin-top: 2px;
+
+        color: #9ca3af;
+
+        font-size: 10px;
+    }
+
+
+    /* =========================================================
+       LOGOUT
+    ========================================================= */
+
+    .logout-section {
+        padding: 0 14px 14px;
+
+        flex-shrink: 0;
+    }
+
+    .logout-form {
+        margin: 0;
+    }
+
+    .logout-button {
+        width: 100%;
+        height: 40px;
+
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 8px;
+
+        background: #1f2937;
+        color: #d1d5db;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        gap: 8px;
+
+        font-size: 12px;
+        font-weight: 500;
+
+        cursor: pointer;
+
+        transition:
+                background 0.2s ease,
+                color 0.2s ease,
+                border-color 0.2s ease;
+    }
+
+    .logout-button:hover {
+        background: #374151;
+
+        color: #ffffff;
+
+        border-color: #4b5563;
+    }
+
+    .logout-icon {
+        font-size: 16px;
+    }
+
+
+    /* =========================================================
+       MAIN CONTENT
+    ========================================================= */
+
+    .main {
+        margin-left: 250px;
+
+        width: calc(100% - 250px);
+
+        min-height: 100vh;
+
+        min-width: 0;
+    }
+
+
+    /* =========================================================
+       TOPBAR
+    ========================================================= */
+
+    .topbar {
+        min-height: 78px;
+
+        padding: 18px 30px;
+
+        background: #ffffff;
+
+        border-bottom:
+                1px solid #e5e7eb;
+
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        gap: 20px;
+    }
+
+    .page-heading {
+        min-width: 0;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+
+        gap: 6px;
+
+        margin-bottom: 7px;
+
+        color: #2563eb;
+
+        font-size: 11px;
+        font-weight: 600;
+
+        transition: color 0.2s ease;
+    }
+
+    .back-link:hover {
+        color: #1d4ed8;
+
+        text-decoration: underline;
+    }
+
+    .page-heading h1 {
+        color: #111827;
+
+        font-size: 21px;
+        font-weight: 700;
+
+        line-height: 1.25;
+    }
+
+    .page-heading p {
+        margin-top: 4px;
+
+        color: #6b7280;
+
+        font-size: 12px;
+
+        line-height: 1.5;
+    }
+
+
+    /* =========================================================
+       TOPBAR RIGHT
+    ========================================================= */
+
+    .topbar-right {
+        display: flex;
+        align-items: center;
+
+        gap: 16px;
+
+        flex-shrink: 0;
+    }
+
+    .live-status {
+        display: flex;
+        align-items: center;
+
+        gap: 7px;
+
+        color: #374151;
+
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .live-dot {
+        width: 8px;
+        height: 8px;
+
+        border-radius: 50%;
+
+        background: #22c55e;
+
+        box-shadow:
+                0 0 0 3px rgba(34,197,94,0.12);
+    }
+
+    .top-admin {
+        display: flex;
+        align-items: center;
+
+        gap: 10px;
+    }
+
+    .top-admin-info {
+        text-align: right;
+    }
+
+    .top-admin-name {
+        color: #111827;
+
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .top-admin-role {
+        margin-top: 2px;
+
+        color: #9ca3af;
+
+        font-size: 10px;
+    }
+
+    .top-admin-avatar {
+        width: 38px;
+        height: 38px;
+
+        border-radius: 50%;
+
+        background: #2563eb;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        color: #ffffff;
+
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+
+    /* =========================================================
+       PAGE CONTENT
+    ========================================================= */
+
+    .content {
+        padding: 28px 30px 40px;
+    }
+
+
+    /* =========================================================
+       EMPLOYEE SUMMARY CARD
+    ========================================================= */
+
+    .employee-card {
+        width: 100%;
+
+        padding: 20px 22px;
+
+        margin-bottom: 22px;
+
+        background: #ffffff;
+
+        border: 1px solid #e5e7eb;
+
+        border-radius: 10px;
+
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        gap: 20px;
+
+        box-shadow:
+                0 1px 2px rgba(0,0,0,0.02);
+    }
+
+    .employee-main {
+        min-width: 0;
+
+        display: flex;
+        align-items: center;
+
+        gap: 14px;
+    }
+
+    .employee-avatar {
+        width: 56px;
+        height: 56px;
+
+        min-width: 56px;
+
+        border-radius: 12px;
+
+        background: #eff6ff;
+        color: #2563eb;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        font-size: 21px;
+        font-weight: 700;
+    }
+
+    .employee-details {
+        min-width: 0;
+    }
+
+    .employee-name {
+        color: #111827;
+
+        font-size: 18px;
+        font-weight: 700;
+
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .employee-designation {
+        margin-top: 4px;
+
+        color: #6b7280;
+
+        font-size: 12px;
+    }
+
+    .employee-login {
+        margin-top: 4px;
+
+        color: #9ca3af;
+
+        font-family:
+                Consolas,
+                "Courier New",
+                monospace;
+
+        font-size: 11px;
+    }
+
+
+    /* =========================================================
+       SCREENSHOT COUNT
+    ========================================================= */
+
+    .screenshot-count {
+        min-width: 100px;
+
+        text-align: right;
+
+        flex-shrink: 0;
+    }
+
+    .count-number {
+        color: #111827;
+
+        font-size: 27px;
+        font-weight: 700;
+
+        line-height: 1;
+    }
+
+    .count-label {
+        margin-top: 5px;
+
+        color: #9ca3af;
+
+        font-size: 10px;
+        font-weight: 600;
+
+        letter-spacing: 0.05em;
+
+        text-transform: uppercase;
+    }
+
+
+    /* =========================================================
+       TOOLBAR
+    ========================================================= */
+
+    .toolbar {
+        width: 100%;
+
+        padding: 17px 20px;
+
+        margin-bottom: 20px;
+
+        background: #ffffff;
+
+        border: 1px solid #e5e7eb;
+
+        border-radius: 10px;
+
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        gap: 15px;
+
+        box-shadow:
+                0 1px 2px rgba(0,0,0,0.02);
+    }
+
+    .toolbar-title {
+        min-width: 0;
+    }
+
+    .toolbar-title h2 {
+        color: #111827;
+
+        font-size: 15px;
+        font-weight: 700;
+    }
+
+    .toolbar-title p {
+        margin-top: 4px;
+
+        color: #9ca3af;
+
+        font-size: 11px;
+    }
+
+    .toolbar-actions {
+        display: flex;
+        align-items: center;
+
+        gap: 8px;
+
+        flex-shrink: 0;
+    }
+
+    .filter-btn {
+        height: 36px;
+
+        padding: 0 14px;
+
+        border: 1px solid #d1d5db;
+        border-radius: 7px;
+
+        background: #ffffff;
+        color: #374151;
+
+        font-size: 11px;
+        font-weight: 600;
+
+        cursor: pointer;
+
+        transition:
+                background 0.2s ease,
+                border-color 0.2s ease,
+                color 0.2s ease,
+                transform 0.15s ease;
+    }
+
+    .filter-btn:hover {
+        background: #f3f4f6;
+
+        border-color: #9ca3af;
+    }
+
+    .filter-btn:active {
+        transform: translateY(1px);
+    }
+
+    .filter-btn.active {
+        background: #2563eb;
+
+        border-color: #2563eb;
+
+        color: #ffffff;
+
+        box-shadow:
+                0 3px 8px rgba(37,99,235,0.16);
+    }
+
+    .filter-btn.active:hover {
+        background: #1d4ed8;
+
+        border-color: #1d4ed8;
+    }
+
+
+    /* =========================================================
+       SCREENSHOT GRID
+    ========================================================= */
+
+    .screenshot-grid {
+        width: 100%;
+
+        display: grid;
+
+        grid-template-columns:
+                repeat(3, minmax(0, 1fr));
+
+        gap: 18px;
+    }
+
+
+    /* =========================================================
+       SCREENSHOT CARD
+    ========================================================= */
+
+    .screenshot-card {
+        min-width: 0;
+
+        background: #ffffff;
+
+        border: 1px solid #e5e7eb;
+
+        border-radius: 10px;
+
+        overflow: hidden;
+
+        box-shadow:
+                0 1px 2px rgba(0,0,0,0.02);
+
+        transition:
+                transform 0.2s ease,
+                box-shadow 0.2s ease,
+                border-color 0.2s ease;
+    }
+
+    .screenshot-card:hover {
+        transform: translateY(-3px);
+
+        border-color: #dbe3ef;
+
+        box-shadow:
+                0 8px 20px rgba(15,23,42,0.08);
+    }
+
+
+    /* =========================================================
+       SCREENSHOT IMAGE
+    ========================================================= */
+
+    .screenshot-image-wrapper {
+        position: relative;
+
+        width: 100%;
+        height: 210px;
+
+        overflow: hidden;
+
+        background: #111827;
+
+        cursor: pointer;
+    }
+
+    .screenshot-image {
+        width: 100%;
+        height: 100%;
+
+        display: block;
+
+        object-fit: cover;
+
+        transition:
+                transform 0.3s ease;
+    }
+
+    .screenshot-image-wrapper:hover
+    .screenshot-image {
+        transform: scale(1.04);
+    }
+
+
+    /* =========================================================
+       IMAGE OVERLAY
+    ========================================================= */
+
+    .image-overlay {
+        position: absolute;
+
+        inset: 0;
+
+        background: rgba(0,0,0,0);
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        transition:
+                background 0.2s ease;
+    }
+
+    .screenshot-image-wrapper:hover
+    .image-overlay {
+        background: rgba(0,0,0,0.35);
+    }
+
+    .view-icon {
+        width: 45px;
+        height: 45px;
+
+        border-radius: 50%;
+
+        background: #ffffff;
+        color: #2563eb;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        font-size: 19px;
+
+        opacity: 0;
+
+        transform: scale(0.8);
+
+        transition:
+                opacity 0.2s ease,
+                transform 0.2s ease;
+    }
+
+    .screenshot-image-wrapper:hover
+    .view-icon {
+        opacity: 1;
+
+        transform: scale(1);
+    }
+
+
+    /* =========================================================
+       SCREENSHOT INFORMATION
+    ========================================================= */
+
+    .screenshot-info {
+        padding: 14px 16px;
+    }
+
+    .screenshot-file {
+        margin-bottom: 6px;
+
+        color: #374151;
+
+        font-size: 12px;
+        font-weight: 600;
+
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .screenshot-time {
+        color: #9ca3af;
+
+        font-size: 10px;
+    }
+
+
+    /* =========================================================
+       EMPTY STATE
+    ========================================================= */
+
+    .empty {
+        width: 100%;
+
+        padding: 75px 20px;
+
+        background: #ffffff;
+
+        border: 1px solid #e5e7eb;
+
+        border-radius: 10px;
+
+        text-align: center;
+
+        box-shadow:
+                0 1px 2px rgba(0,0,0,0.02);
+    }
+
+    .empty-icon {
+        width: 65px;
+        height: 65px;
+
+        margin: 0 auto 16px;
+
+        border-radius: 50%;
+
+        background: #f3f4f6;
+        color: #9ca3af;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        font-size: 28px;
+    }
+
+    .empty-title {
+        margin-bottom: 7px;
+
+        color: #374151;
+
+        font-size: 17px;
+        font-weight: 600;
+    }
+
+    .empty-text {
+        color: #9ca3af;
+
+        font-size: 12px;
+
+        line-height: 1.6;
+    }
+
+    .empty-text strong {
+        color: #6b7280;
+
+        font-weight: 600;
+    }
+
+
+    /* =========================================================
+       FULLSCREEN MODAL
+    ========================================================= */
+
+    .modal {
+        position: fixed;
+
+        inset: 0;
+
+        z-index: 5000;
+
+        display: none;
+        align-items: center;
+        justify-content: center;
+
+        padding: 30px;
+
+        background: rgba(0,0,0,0.82);
+    }
+
+    .modal.show {
+        display: flex;
+    }
+
+    .modal-content {
+        position: relative;
+
+        width: 100%;
+        max-width: 1200px;
+
+        max-height: 90vh;
+
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .modal-image {
+        max-width: 100%;
+        max-height: 78vh;
+
+        object-fit: contain;
+
+        border-radius: 8px;
+
+        box-shadow:
+                0 10px 35px rgba(0,0,0,0.35);
+    }
+
+    .modal-caption {
+        max-width: 90%;
+
+        margin-top: 12px;
+
+        color: #ffffff;
+
+        font-size: 12px;
+
+        text-align: center;
+    }
+
+    .modal-close {
+        position: absolute;
+
+        top: -15px;
+        right: -15px;
+
+        width: 38px;
+        height: 38px;
+
+        border: none;
+        border-radius: 50%;
+
+        background: #ffffff;
+        color: #111827;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        font-size: 22px;
+
+        cursor: pointer;
+
+        z-index: 10;
+
+        transition:
+                background 0.2s ease,
+                transform 0.15s ease;
+    }
+
+    .modal-close:hover {
+        background: #f3f4f6;
+
+        transform: scale(1.04);
+    }
+
+
+    /* =========================================================
+       RESPONSIVE - 1100
+    ========================================================= */
+
+    @media (max-width: 1100px) {
+
+        .screenshot-grid {
+            grid-template-columns:
+                    repeat(2, minmax(0, 1fr));
+        }
+
+    }
+
+
+    /* =========================================================
+       RESPONSIVE - 900
+    ========================================================= */
+
+    @media (max-width: 900px) {
+
+        .sidebar {
+            width: 220px;
+            min-width: 220px;
+        }
+
+        .main {
+            margin-left: 220px;
+
+            width: calc(100% - 220px);
+        }
+
+        .content {
+            padding: 24px 20px 35px;
+        }
+
+        .topbar {
+            padding: 18px 20px;
+        }
+
+    }
+
+
+    /* =========================================================
+       RESPONSIVE - 750
+    ========================================================= */
+
+    @media (max-width: 750px) {
+
+        .sidebar {
+            width: 70px;
+            min-width: 70px;
+        }
+
+        .main {
+            margin-left: 70px;
+
+            width: calc(100% - 70px);
+        }
+
+        .logo-section {
+            justify-content: center;
+
+            padding: 0;
+        }
+
+        .logo {
+            justify-content: center;
+        }
+
+        .logo-text {
+            display: none;
+        }
+
+        .sidebar-nav {
+            padding: 15px 8px;
+        }
+
+        .nav-section-title {
+            display: none;
+        }
+
+        .nav-item {
+            justify-content: center;
+
+            padding: 0;
+
+            gap: 0;
+        }
+
+        .nav-item span:not(.nav-icon) {
+            display: none;
+        }
+
+        .nav-icon {
+            width: 22px;
+        }
+
+        .admin-profile {
+            justify-content: center;
+
+            padding: 13px 5px;
+        }
+
+        .admin-info {
+            display: none;
+        }
+
+        .logout-section {
+            padding: 0 8px 10px;
+        }
+
+        .logout-button {
+            font-size: 0;
+
+            gap: 0;
+        }
+
+        .logout-icon {
+            font-size: 16px;
+        }
+
+        .live-status {
+            display: none;
+        }
+
+        .top-admin-info {
+            display: none;
+        }
+
+        .topbar-right {
+            gap: 8px;
+        }
+
+        .screenshot-grid {
+            grid-template-columns: 1fr;
+        }
+
+    }
+
+
+    /* =========================================================
+       RESPONSIVE - 600 MOBILE
+    ========================================================= */
+
+    @media (max-width: 600px) {
+
+        .sidebar {
+            position: fixed;
+
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: auto;
+
+            width: 100%;
+            min-width: 0;
+
+            height: 68px;
+
+            padding: 0 10px;
+
+            flex-direction: row;
+            align-items: center;
+
+            overflow: hidden;
+        }
+
+        .logo-section {
+            width: auto;
+            height: 68px;
+
+            padding: 0 8px;
+
+            border-bottom: none;
+
+            flex-shrink: 0;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+
+            min-width: 36px;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+
+            height: 68px;
+
+            padding: 0;
+
+            display: flex;
+            align-items: center;
+
+            overflow-x: auto;
+            overflow-y: hidden;
+
+            scrollbar-width: none;
+        }
+
+        .sidebar-nav::-webkit-scrollbar {
+            display: none;
+        }
+
+        .nav-section-title {
+            display: none;
+        }
+
+        .nav-item {
+            width: auto;
+            min-width: max-content;
+
+            height: 40px;
+
+            flex-shrink: 0;
+
+            padding: 0 11px;
+
+            margin: 0 3px;
+
+            gap: 7px;
+
+            border-radius: 7px;
+
+            font-size: 11px;
+        }
+
+        .nav-item span:not(.nav-icon) {
+            display: inline;
+        }
+
+        .nav-icon {
+            width: auto;
+            min-width: auto;
+
+            font-size: 14px;
+        }
+
+        .admin-profile,
+        .logout-section {
+            display: none;
+        }
+
+        .main {
+            margin-left: 0;
+
+            width: 100%;
+
+            padding-top: 68px;
+        }
+
+        .topbar {
+            min-height: 70px;
+
+            padding: 15px;
+
+            align-items: center;
+        }
+
+        .back-link {
+            margin-bottom: 5px;
+        }
+
+        .page-heading h1 {
+            font-size: 18px;
+        }
+
+        .page-heading p {
+            display: none;
+        }
+
+        .top-admin {
+            display: none;
+        }
+
+        .content {
+            padding: 18px 14px 30px;
+        }
+
+        .employee-card {
+            flex-direction: column;
+
+            align-items: flex-start;
+
+            padding: 17px;
+        }
+
+        .screenshot-count {
+            width: 100%;
+
+            text-align: left;
+        }
+
+        .toolbar {
+            flex-direction: column;
+
+            align-items: flex-start;
+
+            padding: 16px;
+        }
+
+        .toolbar-actions {
+            width: 100%;
+        }
+
+        .filter-btn {
+            flex: 1;
+        }
+
+        .screenshot-image-wrapper {
+            height: 220px;
+        }
+
+        .modal {
+            padding: 15px;
+        }
+
+        .modal-close {
+            top: -8px;
+            right: -8px;
+        }
+
+    }
+
+
+    /* =========================================================
+       RESPONSIVE - 400
+    ========================================================= */
+
+    @media (max-width: 400px) {
+
+        .nav-item {
+            padding: 0 9px;
+
+            font-size: 10px;
+        }
+
+        .nav-icon {
+            display: none;
+        }
+
+        .content {
+            padding: 14px 10px 25px;
+        }
+
+        .employee-main {
+            width: 100%;
+        }
+
+        .employee-avatar {
+            width: 50px;
+            height: 50px;
+
+            min-width: 50px;
+
+            font-size: 18px;
+        }
+
+        .employee-name {
+            font-size: 16px;
+        }
+
+        .toolbar-title h2 {
+            font-size: 14px;
+        }
+
+        .screenshot-image-wrapper {
+            height: 200px;
+        }
+
+    }
+
+
+    /* =========================================================
+       REDUCED MOTION
+    ========================================================= */
+
+    @media (prefers-reduced-motion: reduce) {
+
+        *,
+        *::before,
+        *::after {
+            transition: none !important;
+
+            animation: none !important;
+
+            scroll-behavior: auto !important;
+        }
+
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+<div class="layout">
+
+
+  <!-- =========================================================
+       ADMIN SIDEBAR
+  ========================================================= -->
+
+  <aside class="sidebar">
+
+
+    <!-- LOGO -->
+
+    <div class="logo-section">
+
+      <div class="logo">
+
+        <div class="logo-icon">
+          TL
+        </div>
+
+        <div class="logo-text">
+
+          <div class="logo-title"
+               th:text="${adminSettings != null
+                             and adminSettings.companyName!= null
+                             ? adminSettings.companyName
+                             : 'TeamLogger'}">
+            TeamLogger
+          </div>
+
+          <div class="logo-subtitle">
+            ADMIN PANEL
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- NAVIGATION -->
+
+    <nav class="sidebar-nav">
+
+
+      <div class="nav-section-title">
+        Main
+      </div>
+
+
+      <!-- DASHBOARD -->
+
+      <a th:href="@{/admin/dashboard}"
+         class="nav-item"
+         data-path="/admin/dashboard">
+
+        <span class="nav-icon">▦</span>
+
+        <span>Dashboard</span>
+
+      </a>
+
+
+      <!-- EMPLOYEES -->
+
+      <a th:href="@{/admin/employees}"
+         class="nav-item"
+         data-path="/admin/employees">
+
+        <span class="nav-icon">👥</span>
+
+        <span>Employees</span>
+
+      </a>
+
+
+      <!-- TODAY'S ACTIVITY -->
+
+      <a th:href="@{/admin/tracking}"
+         class="nav-item"
+         data-path="/admin/tracking">
+
+        <span class="nav-icon">◉</span>
+
+        <span>Today's Activity</span>
+
+      </a>
+
+
+      <!-- PROJECTS -->
+
+      <a th:href="@{/admin/projects}"
+         class="nav-item"
+         data-path="/admin/projects">
+
+        <span class="nav-icon">▣</span>
+
+        <span>Projects</span>
+
+      </a>
+
+
+      <div class="nav-section-title">
+        Management
+      </div>
+
+
+      <!-- OVERTIME -->
+
+      <a th:href="@{/admin/overtime}"
+         class="nav-item"
+         data-path="/admin/overtime">
+
+        <span class="nav-icon">◷</span>
+
+        <span>Overtime</span>
+
+      </a>
+
+
+      <!-- REPORTS -->
+
+      <a th:href="@{/admin/reports}"
+         class="nav-item"
+         data-path="/admin/reports">
+
+        <span class="nav-icon">▤</span>
+
+        <span>Reports</span>
+
+      </a>
+
+
+      <!-- LOGIN APPROVALS -->
+
+      <a th:href="@{/admin/login-approvals}"
+         class="nav-item"
+         data-path="/admin/login-approvals">
+
+        <span class="nav-icon">✓</span>
+
+        <span>Login Approvals</span>
+
+      </a>
+
+
+      <!-- SCREEN RECORDING -->
+
+      <a th:href="@{/admin/screen-recording}"
+         class="nav-item"
+         data-path="/admin/screen-recording">
+
+        <span class="nav-icon">▧</span>
+
+        <span>Screen Recording</span>
+
+      </a>
+
+
+      <!-- SETTINGS -->
+
+      <a th:href="@{/admin/settings}"
+         class="nav-item"
+         data-path="/admin/settings">
+
+        <span class="nav-icon">⚙</span>
+
+        <span>Settings</span>
+
+      </a>
+
+    </nav>
+
+
+    <!-- ADMIN PROFILE -->
+
+    <div class="admin-profile">
+
+      <div class="admin-avatar"
+           th:text="${admin != null
+                     and admin.name != null
+                     and !admin.name.isEmpty()
+                     ? #strings.substring(admin.name,0,1).toUpperCase()
+                     : 'A'}">
+        A
+      </div>
+
+      <div class="admin-info">
+
+        <div class="admin-name"
+             th:text="${admin != null
+                         and admin.name != null
+                         ? admin.name
+                         : 'Admin'}">
+          Admin
+        </div>
+
+        <div class="admin-role">
+          Administrator
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- LOGOUT -->
+
+    <div class="logout-section">
+
+      <form th:action="@{/logout}"
+            method="post"
+            class="logout-form">
+
+        <button type="submit"
+                class="logout-button">
+
+                    <span class="logout-icon">
+                        ⇥
+                    </span>
+
+          <span>
+                        Logout
+                    </span>
+
+        </button>
+
+      </form>
+
+    </div>
+
+  </aside>
+
+
+  <!-- =========================================================
+       MAIN
+  ========================================================= -->
+
+  <main class="main">
+
+
+    <!-- =====================================================
+         TOPBAR
+    ===================================================== -->
+
+    <header class="topbar">
+
+
+      <div class="page-heading">
+
+        <a th:href="@{/admin/dashboard}"
+           class="back-link">
+
+          ← Back to Dashboard
+
+        </a>
+
+        <h1>
+          Employee Tracking
+        </h1>
+
+        <p>
+          View screenshots captured from this employee.
+        </p>
+
+      </div>
+
+
+      <div class="topbar-right">
+
+
+        <!-- SYSTEM STATUS -->
+
+        <div class="live-status">
+
+          <span class="live-dot"></span>
+
+          System Online
+
+        </div>
+
+
+        <!-- ADMIN -->
+
+        <div class="top-admin">
+
+          <div class="top-admin-info">
+
+            <div class="top-admin-name"
+                 th:text="${admin != null
+                                 and admin.name != null
+                                 ? admin.name
+                                 : 'Admin'}">
+              Admin
+            </div>
+
+            <div class="top-admin-role">
+              Administrator
+            </div>
+
+          </div>
+
+          <div class="top-admin-avatar"
+               th:text="${admin != null
+                             and admin.name != null
+                             and !admin.name.isEmpty()
+                             ? #strings.substring(admin.name,0,1).toUpperCase()
+                             : 'A'}">
+            A
+          </div>
+
+        </div>
+
+      </div>
+
+    </header>
+
+
+    <!-- =====================================================
+         CONTENT
+    ===================================================== -->
+
+    <section class="content">
+
+
+      <!-- =================================================
+           EMPLOYEE INFORMATION
+      ================================================= -->
+
+      <section class="employee-card">
+
+
+        <div class="employee-main">
+
+
+          <div class="employee-avatar"
+               th:text="${employee != null
+                             and employee.name != null
+                             and !employee.name.isEmpty()
+                             ? #strings.substring(employee.name,0,1).toUpperCase()
+                             : 'E'}">
+            E
+          </div>
+
+
+          <div class="employee-details">
+
+            <div class="employee-name"
+                 th:text="${employee != null
+                                 and employee.name != null
+                                 ? employee.name
+                                 : 'Employee'}">
+              Employee Name
+            </div>
+
+            <div class="employee-designation"
+                 th:text="${employee != null
+                                 and employee.designation != null
+                                 ? employee.designation
+                                 : 'Employee'}">
+              Developer
+            </div>
+
+            <div class="employee-login"
+                 th:text="${employee != null
+                                 and employee.employeeLoginId != null
+                                 ? employee.employeeLoginId
+                                 : 'Employee'}">
+              EMP001
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- SCREENSHOT COUNT -->
+
+        <div class="screenshot-count">
+
+          <div class="count-number"
+               th:text="${screenshots != null
+                             ? #lists.size(screenshots)
+                             : 0}">
+            0
+          </div>
+
+          <div class="count-label">
+            Screenshots
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- =================================================
+           TOOLBAR
+      ================================================= -->
+
+      <section class="toolbar">
+
+
+        <div class="toolbar-title">
+
+          <h2>
+            Screenshot Gallery
+          </h2>
+
+          <p>
+            Screenshots are displayed from newest to oldest.
+          </p>
+
+        </div>
+
+
+        <div class="toolbar-actions">
+
+          <button type="button"
+                  class="filter-btn active"
+                  onclick="showAll()">
+
+            All
+
+          </button>
+
+          <button type="button"
+                  class="filter-btn"
+                  onclick="showToday()">
+
+            Today
+
+          </button>
+
+        </div>
+
+      </section>
+
+
+      <!-- =================================================
+           SCREENSHOT GRID
+      ================================================= -->
+
+      <div id="screenshotGrid"
+           class="screenshot-grid"
+           th:if="${screenshots != null
+                     and !#lists.isEmpty(screenshots)}">
+
+
+        <div class="screenshot-card"
+             th:each="screenshot : ${screenshots}"
+             th:attr="data-date=${#temporals.format(
+                         screenshot.capturedAt,
+                         'yyyy-MM-dd'
+                     )}">
+
+
+          <!-- IMAGE -->
+
+          <div class="screenshot-image-wrapper"
+               th:onclick="'openScreenshot('
+                             + ${screenshot.id}
+                             + ')'">
+
+
+            <img class="screenshot-image"
+                 th:id="'screenshot-' + ${screenshot.id}"
+                 th:src="@{/admin/tracking/image/{id}(id=${screenshot.id})}"
+                 th:alt="${screenshot.fileName}"
+                 loading="lazy">
+
+
+            <div class="image-overlay">
+
+              <div class="view-icon">
+                ⛶
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <!-- INFORMATION -->
+
+          <div class="screenshot-info">
+
+            <div class="screenshot-file"
+                 th:text="${screenshot.fileName}">
+              screenshot.png
+            </div>
+
+            <div class="screenshot-time"
+                 th:text="${#temporals.format(
+                                 screenshot.capturedAt,
+                                 'dd MMM yyyy, hh:mm:ss a'
+                             )}">
+              15 Sep 2026, 10:30:00 AM
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- =================================================
+           EMPTY STATE
+      ================================================= -->
+
+      <div class="empty"
+           th:if="${screenshots == null
+                     or #lists.isEmpty(screenshots)}">
+
+
+        <div class="empty-icon">
+          ▧
+        </div>
+
+        <div class="empty-title">
+          No Screenshots Available
+        </div>
+
+        <div class="empty-text">
+
+          No screenshots have been captured for
+
+          <strong th:text="${employee != null
+                        and employee.name != null
+                        ? employee.name
+                        : 'this employee'}">
+            this employee
+          </strong>
+
+          yet.
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+</div>
+
+
+<!-- =========================================================
+     FULLSCREEN SCREENSHOT MODAL
+========================================================= -->
+
+<div id="screenshotModal"
+     class="modal"
+     onclick="closeScreenshot(event)">
+
+
+  <div class="modal-content">
+
+
+    <button type="button"
+            class="modal-close"
+            onclick="closeModal()">
+
+      ×
+
+    </button>
+
+
+    <img id="modalImage"
+         class="modal-image"
+         src=""
+         alt="Employee Screenshot">
+
+
+    <div id="modalCaption"
+         class="modal-caption">
+    </div>
+
+
+  </div>
+
+</div>
+
+
+<script>
+
+  /* =========================================================
+     SIDEBAR ACTIVE MENU
+  ========================================================= */
+
+  document.addEventListener("DOMContentLoaded", function () {
+
+      const currentPath =
+          window.location.pathname
+              .replace(/\/+$/, "") || "/";
+
+      const navItems =
+          document.querySelectorAll(".nav-item");
+
+      navItems.forEach(function (item) {
+
+          const path =
+              item.getAttribute("data-path");
+
+          if (!path) {
+              return;
+          }
+
+          const normalizedPath =
+              path.replace(/\/+$/, "");
+
+          const isDashboard =
+              normalizedPath === "/admin/dashboard";
+
+          const isActive =
+              isDashboard
+                  ? currentPath === normalizedPath
+                  : (
+                      currentPath === normalizedPath ||
+                      currentPath.startsWith(
+                          normalizedPath + "/"
+                      )
+                  );
+
+          if (isActive) {
+              item.classList.add("active");
+          } else {
+              item.classList.remove("active");
+          }
+
+      });
+
+  });
+
+
+  /* =========================================================
+     OPEN SCREENSHOT
+  ========================================================= */
+
+  function openScreenshot(id) {
+
+      const image =
+          document.getElementById(
+              "screenshot-" + id
+          );
+
+      if (!image) {
+          return;
+      }
+
+      const modal =
+          document.getElementById(
+              "screenshotModal"
+          );
+
+      const modalImage =
+          document.getElementById(
+              "modalImage"
+          );
+
+      const modalCaption =
+          document.getElementById(
+              "modalCaption"
+          );
+
+      modalImage.src =
+          image.src;
+
+      modalImage.alt =
+          image.alt;
+
+      modalCaption.textContent =
+          image.alt;
+
+      modal.classList.add("show");
+
+      document.body.style.overflow =
+          "hidden";
+
+  }
+
+
+  /* =========================================================
+     CLOSE MODAL
+  ========================================================= */
+
+  function closeModal() {
+
+      const modal =
+          document.getElementById(
+              "screenshotModal"
+          );
+
+      const modalImage =
+          document.getElementById(
+              "modalImage"
+          );
+
+      modal.classList.remove("show");
+
+      modalImage.src = "";
+
+      document.body.style.overflow = "";
+
+  }
+
+
+  /* =========================================================
+     CLOSE ON BACKGROUND CLICK
+  ========================================================= */
+
+  function closeScreenshot(event) {
+
+      if (
+          event.target.id ===
+          "screenshotModal"
+      ) {
+
+          closeModal();
+
+      }
+
+  }
+
+
+  /* =========================================================
+     ESCAPE KEY
+  ========================================================= */
+
+  document.addEventListener(
+      "keydown",
+      function (event) {
+
+          if (event.key === "Escape") {
+
+              closeModal();
+
+          }
+
+      }
+  );
+
+
+  /* =========================================================
+     SHOW ALL
+  ========================================================= */
+
+  function showAll() {
+
+      const cards =
+          document.querySelectorAll(
+              ".screenshot-card"
+          );
+
+      cards.forEach(function (card) {
+
+          card.style.display = "";
+
+      });
+
+      setActiveFilter(0);
+
+  }
+
+
+  /* =========================================================
+     SHOW TODAY
+  ========================================================= */
+
+  function showToday() {
+
+      const cards =
+          document.querySelectorAll(
+              ".screenshot-card"
+          );
+
+      const now =
+          new Date();
+
+      const year =
+          now.getFullYear();
+
+      const month =
+          String(
+              now.getMonth() + 1
+          ).padStart(2, "0");
+
+      const day =
+          String(
+              now.getDate()
+          ).padStart(2, "0");
+
+      const today =
+          year + "-" +
+          month + "-" +
+          day;
+
+      cards.forEach(function (card) {
+
+          const date =
+              card.getAttribute(
+                  "data-date"
+              );
+
+          if (date === today) {
+
+              card.style.display = "";
+
+          } else {
+
+              card.style.display = "none";
+
+          }
+
+      });
+
+      setActiveFilter(1);
+
+  }
+
+
+  /* =========================================================
+     ACTIVE FILTER
+  ========================================================= */
+
+  function setActiveFilter(index) {
+
+      const buttons =
+          document.querySelectorAll(
+              ".filter-btn"
+          );
+
+      buttons.forEach(
+          function (button, i) {
+
+              if (i === index) {
+
+                  button.classList.add(
+                      "active"
+                  );
+
+              } else {
+
+                  button.classList.remove(
+                      "active"
+                  );
+
+              }
+
+          }
+      );
+
+  }
+
+</script>
+
+
+</body>
+
+</html>

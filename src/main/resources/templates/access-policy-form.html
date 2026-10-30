@@ -1,0 +1,1394 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+  <title th:text="${accessPolicy.id != null
+        ? 'Edit Access Policy - TeamLogger'
+        : 'Create Access Policy - TeamLogger'}">
+    Access Policy - TeamLogger
+  </title>
+
+  <style>
+
+    /* =====================================================
+       RESET
+    ===================================================== */
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family:
+            Inter,
+            -apple-system,
+            BlinkMacSystemFont,
+            "Segoe UI",
+            Roboto,
+            Arial,
+            sans-serif;
+
+        background: #f6f8fb;
+        color: #172033;
+        min-height: 100vh;
+    }
+
+    a {
+        text-decoration: none;
+        color: inherit;
+    }
+
+    button,
+    input,
+    textarea {
+        font-family: inherit;
+    }
+
+
+    /* =====================================================
+       LAYOUT
+    ===================================================== */
+
+    .app-layout {
+        display: flex;
+        min-height: 100vh;
+    }
+
+
+    /* =====================================================
+       SIDEBAR
+    ===================================================== */
+
+    .sidebar {
+        width: 250px;
+        min-width: 250px;
+        background: #111827;
+        color: #ffffff;
+
+        display: flex;
+        flex-direction: column;
+
+        padding: 22px 14px;
+
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+
+        z-index: 100;
+    }
+
+    .brand {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+
+        padding: 4px 10px 28px;
+    }
+
+    .brand-logo {
+        width: 40px;
+        height: 40px;
+
+        border-radius: 12px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        background: linear-gradient(
+            135deg,
+            #2563eb,
+            #4f46e5
+        );
+
+        font-size: 17px;
+        font-weight: 800;
+    }
+
+    .brand-text {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .brand-name {
+        font-size: 17px;
+        font-weight: 750;
+        letter-spacing: -0.2px;
+    }
+
+    .brand-subtitle {
+        margin-top: 2px;
+        color: #94a3b8;
+        font-size: 10px;
+    }
+
+
+    /* =====================================================
+       NAVIGATION
+    ===================================================== */
+
+    .nav-section {
+        margin-top: 4px;
+    }
+
+    .nav-title {
+        color: #64748b;
+
+        font-size: 10px;
+        font-weight: 700;
+
+        text-transform: uppercase;
+        letter-spacing: 1px;
+
+        padding: 0 12px;
+        margin-bottom: 8px;
+    }
+
+    .nav-link {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+
+        padding: 11px 12px;
+
+        border-radius: 9px;
+
+        color: #cbd5e1;
+
+        font-size: 13px;
+        font-weight: 500;
+
+        margin-bottom: 3px;
+
+        transition:
+            background 0.2s ease,
+            color 0.2s ease;
+    }
+
+    .nav-link:hover {
+        background: #1e293b;
+        color: #ffffff;
+    }
+
+    .nav-link.active {
+        background: #2563eb;
+        color: #ffffff;
+    }
+
+    .nav-icon {
+        width: 22px;
+        text-align: center;
+        font-size: 15px;
+    }
+
+
+    /* =====================================================
+       SIDEBAR FOOTER
+    ===================================================== */
+
+    .sidebar-footer {
+        margin-top: auto;
+
+        border-top: 1px solid #1e293b;
+
+        padding: 16px 8px 2px;
+    }
+
+    .admin-mini {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .admin-avatar {
+        width: 36px;
+        height: 36px;
+
+        border-radius: 10px;
+
+        background: #1e40af;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        color: #ffffff;
+
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .admin-info {
+        min-width: 0;
+    }
+
+    .admin-name {
+        color: #f8fafc;
+
+        font-size: 12px;
+        font-weight: 650;
+
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+
+        max-width: 150px;
+    }
+
+    .admin-role {
+        color: #64748b;
+        font-size: 10px;
+        margin-top: 2px;
+    }
+
+
+    /* =====================================================
+       MAIN
+    ===================================================== */
+
+    .main-content {
+        margin-left: 250px;
+
+        width: calc(100% - 250px);
+
+        min-height: 100vh;
+
+        padding: 30px;
+    }
+
+
+    /* =====================================================
+       TOP BAR
+    ===================================================== */
+
+    .top-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        gap: 20px;
+
+        margin-bottom: 26px;
+    }
+
+    .page-heading {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .back-button {
+        width: 38px;
+        height: 38px;
+
+        border-radius: 10px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+
+        color: #475569;
+
+        font-size: 18px;
+
+        transition: 0.2s ease;
+    }
+
+    .back-button:hover {
+        background: #f1f5f9;
+        color: #1e293b;
+    }
+
+    .page-title {
+        font-size: 25px;
+        font-weight: 750;
+
+        color: #0f172a;
+
+        letter-spacing: -0.5px;
+    }
+
+    .page-subtitle {
+        color: #64748b;
+
+        font-size: 13px;
+
+        margin-top: 4px;
+    }
+
+
+    /* =====================================================
+       FORM CONTAINER
+    ===================================================== */
+
+    .content-grid {
+        display: grid;
+
+        grid-template-columns:
+            minmax(0, 1fr)
+            310px;
+
+        gap: 22px;
+
+        max-width: 1150px;
+    }
+
+
+    /* =====================================================
+       CARD
+    ===================================================== */
+
+    .card {
+        background: #ffffff;
+
+        border: 1px solid #e5eaf0;
+
+        border-radius: 16px;
+
+        box-shadow:
+            0 3px 12px rgba(15, 23, 42, 0.04);
+
+        overflow: hidden;
+    }
+
+    .card-header {
+        padding: 21px 24px;
+
+        border-bottom: 1px solid #edf1f5;
+    }
+
+    .card-title {
+        font-size: 15px;
+        font-weight: 700;
+
+        color: #172033;
+    }
+
+    .card-description {
+        margin-top: 5px;
+
+        color: #64748b;
+
+        font-size: 12px;
+        line-height: 1.55;
+    }
+
+    .card-body {
+        padding: 24px;
+    }
+
+
+    /* =====================================================
+       FORM
+    ===================================================== */
+
+    .form-group {
+        margin-bottom: 22px;
+    }
+
+    .form-group:last-child {
+        margin-bottom: 0;
+    }
+
+    .form-label {
+        display: block;
+
+        font-size: 13px;
+        font-weight: 650;
+
+        color: #334155;
+
+        margin-bottom: 8px;
+    }
+
+    .required {
+        color: #dc2626;
+        margin-left: 2px;
+    }
+
+    .form-input,
+    .form-textarea {
+        width: 100%;
+
+        border: 1px solid #d8dee8;
+
+        background: #ffffff;
+
+        border-radius: 10px;
+
+        padding: 12px 13px;
+
+        color: #172033;
+
+        font-size: 13px;
+
+        outline: none;
+
+        transition:
+            border-color 0.2s ease,
+            box-shadow 0.2s ease;
+    }
+
+    .form-input {
+        height: 44px;
+    }
+
+    .form-textarea {
+        min-height: 125px;
+
+        resize: vertical;
+
+        line-height: 1.55;
+    }
+
+    .form-input::placeholder,
+    .form-textarea::placeholder {
+        color: #a0a9b7;
+    }
+
+    .form-input:focus,
+    .form-textarea:focus {
+        border-color: #2563eb;
+
+        box-shadow:
+            0 0 0 3px rgba(37, 99, 235, 0.10);
+    }
+
+    .field-help {
+        color: #94a3b8;
+
+        font-size: 11px;
+
+        margin-top: 7px;
+
+        line-height: 1.5;
+    }
+
+
+    /* =====================================================
+       CHARACTER INDICATOR
+    ===================================================== */
+
+    .input-footer {
+        display: flex;
+        justify-content: space-between;
+
+        gap: 10px;
+
+        margin-top: 7px;
+    }
+
+    .character-limit {
+        color: #94a3b8;
+        font-size: 10px;
+    }
+
+
+    /* =====================================================
+       ACTIONS
+    ===================================================== */
+
+    .form-actions {
+        display: flex;
+
+        align-items: center;
+        justify-content: flex-end;
+
+        gap: 10px;
+
+        padding: 18px 24px;
+
+        border-top: 1px solid #edf1f5;
+
+        background: #fafbfd;
+    }
+
+    .btn {
+        min-height: 40px;
+
+        padding: 0 17px;
+
+        border-radius: 9px;
+
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        gap: 7px;
+
+        font-size: 12px;
+        font-weight: 650;
+
+        cursor: pointer;
+
+        transition: 0.2s ease;
+    }
+
+    .btn-secondary {
+        background: #ffffff;
+
+        color: #475569;
+
+        border: 1px solid #d9e0e8;
+    }
+
+    .btn-secondary:hover {
+        background: #f1f5f9;
+    }
+
+    .btn-primary {
+        background: #2563eb;
+
+        color: #ffffff;
+
+        border: 1px solid #2563eb;
+
+        box-shadow:
+            0 4px 10px rgba(37, 99, 235, 0.18);
+    }
+
+    .btn-primary:hover {
+        background: #1d4ed8;
+        border-color: #1d4ed8;
+    }
+
+
+    /* =====================================================
+       SIDE INFORMATION
+    ===================================================== */
+
+    .info-card {
+        background: #ffffff;
+
+        border: 1px solid #e5eaf0;
+
+        border-radius: 16px;
+
+        padding: 22px;
+
+        height: fit-content;
+    }
+
+    .info-icon {
+        width: 44px;
+        height: 44px;
+
+        border-radius: 12px;
+
+        background: #eff6ff;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        font-size: 20px;
+
+        margin-bottom: 15px;
+    }
+
+    .info-title {
+        color: #172033;
+
+        font-size: 14px;
+        font-weight: 700;
+
+        margin-bottom: 8px;
+    }
+
+    .info-text {
+        color: #64748b;
+
+        font-size: 12px;
+        line-height: 1.65;
+    }
+
+
+    /* =====================================================
+       HOW IT WORKS
+    ===================================================== */
+
+    .steps {
+        margin-top: 22px;
+    }
+
+    .step {
+        display: flex;
+
+        align-items: flex-start;
+
+        gap: 11px;
+
+        margin-bottom: 16px;
+    }
+
+    .step:last-child {
+        margin-bottom: 0;
+    }
+
+    .step-number {
+        width: 25px;
+        min-width: 25px;
+        height: 25px;
+
+        border-radius: 8px;
+
+        background: #f1f5f9;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        color: #475569;
+
+        font-size: 10px;
+        font-weight: 700;
+    }
+
+    .step-content strong {
+        display: block;
+
+        color: #334155;
+
+        font-size: 11px;
+
+        margin-bottom: 3px;
+    }
+
+    .step-content span {
+        color: #94a3b8;
+
+        font-size: 10px;
+
+        line-height: 1.45;
+    }
+
+
+    /* =====================================================
+       POLICY STATUS
+    ===================================================== */
+
+    .status-preview {
+        display: flex;
+        align-items: center;
+
+        gap: 8px;
+
+        margin-top: 20px;
+
+        padding: 12px;
+
+        border-radius: 10px;
+
+        background: #f0fdf4;
+
+        border: 1px solid #dcfce7;
+    }
+
+    .status-dot {
+        width: 8px;
+        height: 8px;
+
+        border-radius: 50%;
+
+        background: #22c55e;
+    }
+
+    .status-preview span {
+        color: #166534;
+
+        font-size: 11px;
+        font-weight: 600;
+    }
+
+
+    /* =====================================================
+       ERROR / SUCCESS
+    ===================================================== */
+
+    .alert {
+        max-width: 1150px;
+
+        padding: 12px 15px;
+
+        border-radius: 10px;
+
+        margin-bottom: 18px;
+
+        font-size: 12px;
+
+        display: flex;
+        align-items: center;
+
+        gap: 9px;
+    }
+
+    .alert-success {
+        background: #f0fdf4;
+
+        border: 1px solid #bbf7d0;
+
+        color: #166534;
+    }
+
+    .alert-error {
+        background: #fef2f2;
+
+        border: 1px solid #fecaca;
+
+        color: #991b1b;
+    }
+
+
+    /* =====================================================
+       MOBILE SIDEBAR
+    ===================================================== */
+
+    .mobile-header {
+        display: none;
+    }
+
+
+    /* =====================================================
+       RESPONSIVE
+    ===================================================== */
+
+    @media (max-width: 950px) {
+
+        .content-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .info-card {
+            order: -1;
+        }
+    }
+
+
+    @media (max-width: 750px) {
+
+        .sidebar {
+            width: 215px;
+            min-width: 215px;
+        }
+
+        .main-content {
+            margin-left: 215px;
+            width: calc(100% - 215px);
+            padding: 22px;
+        }
+
+        .content-grid {
+            max-width: none;
+        }
+    }
+
+
+    @media (max-width: 600px) {
+
+        .sidebar {
+            display: none;
+        }
+
+        .main-content {
+            margin-left: 0;
+            width: 100%;
+
+            padding: 16px;
+        }
+
+        .top-bar {
+            margin-bottom: 20px;
+        }
+
+        .page-title {
+            font-size: 21px;
+        }
+
+        .page-subtitle {
+            font-size: 11px;
+        }
+
+        .card-body {
+            padding: 18px;
+        }
+
+        .card-header {
+            padding: 18px;
+        }
+
+        .form-actions {
+            padding: 15px 18px;
+
+            display: grid;
+
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .form-actions .btn {
+            width: 100%;
+        }
+
+        .info-card {
+            padding: 18px;
+        }
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+<div class="app-layout">
+
+
+  <!-- =====================================================
+       SIDEBAR
+  ====================================================== -->
+
+  <aside class="sidebar">
+
+    <div class="brand">
+
+      <div class="brand-logo">
+        TL
+      </div>
+
+      <div class="brand-text">
+
+        <div class="brand-name">
+          TeamLogger
+        </div>
+
+        <div class="brand-subtitle">
+          ADMIN PANEL
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="nav-section">
+
+      <div class="nav-title">
+        Management
+      </div>
+
+
+      <a href="/admin/dashboard"
+         class="nav-link">
+
+        <span class="nav-icon">▦</span>
+
+        <span>Dashboard</span>
+
+      </a>
+
+
+      <a href="/admin/employees"
+         class="nav-link">
+
+        <span class="nav-icon">👥</span>
+
+        <span>Employees</span>
+
+      </a>
+
+
+      <a href="/admin/projects"
+         class="nav-link">
+
+        <span class="nav-icon">📁</span>
+
+        <span>Projects</span>
+
+      </a>
+
+
+      <a href="/admin/access-policies"
+         class="nav-link active">
+
+        <span class="nav-icon">🔐</span>
+
+        <span>Access Policies</span>
+
+      </a>
+
+
+      <a href="/admin/tracking"
+         class="nav-link">
+
+        <span class="nav-icon">📊</span>
+
+        <span>Today's Activity</span>
+
+      </a>
+
+
+      <a href="/admin/overtime"
+         class="nav-link">
+
+        <span class="nav-icon">⏱</span>
+
+        <span>Overtime</span>
+
+      </a>
+
+
+      <a href="/admin/reports"
+         class="nav-link">
+
+        <span class="nav-icon">📈</span>
+
+        <span>Reports</span>
+
+      </a>
+
+    </div>
+
+
+    <div class="nav-section">
+
+      <div class="nav-title">
+        Configuration
+      </div>
+
+
+      <a href="/admin/settings"
+         class="nav-link">
+
+        <span class="nav-icon">⚙</span>
+
+        <span>Settings</span>
+
+      </a>
+
+    </div>
+
+
+    <div class="sidebar-footer">
+
+      <div class="admin-mini">
+
+        <div class="admin-avatar"
+             th:text="${admin != null
+                         and admin.name != null
+                         and !#strings.isEmpty(admin.name)
+                         ? #strings.substring(admin.name,0,1).toUpperCase()
+                         : 'A'}">
+          A
+        </div>
+
+        <div class="admin-info">
+
+          <div class="admin-name"
+               th:text="${admin != null
+                             and admin.name != null
+                             ? admin.name
+                             : 'Administrator'}">
+            Administrator
+          </div>
+
+          <div class="admin-role">
+            Administrator
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </aside>
+
+
+  <!-- =====================================================
+       MAIN CONTENT
+  ====================================================== -->
+
+  <main class="main-content">
+
+
+    <!-- =================================================
+         HEADER
+    ================================================== -->
+
+    <div class="top-bar">
+
+      <div class="page-heading">
+
+        <a th:href="@{/admin/access-policies}"
+           class="back-button"
+           title="Back to Access Policies">
+
+          ←
+
+        </a>
+
+        <div>
+
+          <h1 class="page-title"
+              th:text="${accessPolicy.id != null
+                            ? 'Edit Access Policy'
+                            : 'Create Access Policy'}">
+
+            Create Access Policy
+
+          </h1>
+
+          <p class="page-subtitle">
+
+            Define a policy that controls which
+            applications and websites employees can use.
+
+          </p>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- =================================================
+         ERROR MESSAGE
+    ================================================== -->
+
+    <div th:if="${errorMessage != null}"
+         class="alert alert-error">
+
+      <span>⚠</span>
+
+      <span th:text="${errorMessage}">
+                Something went wrong.
+            </span>
+
+    </div>
+
+
+    <!-- =================================================
+         CONTENT GRID
+    ================================================== -->
+
+    <div class="content-grid">
+
+
+      <!-- =============================================
+           FORM CARD
+      ============================================== -->
+
+      <section class="card">
+
+        <div class="card-header">
+
+          <div class="card-title">
+
+            Policy Information
+
+          </div>
+
+          <div class="card-description">
+
+            Give this policy a clear name so your
+            team can easily identify its purpose.
+
+          </div>
+
+        </div>
+
+
+        <form
+                th:action="${accessPolicy.id != null
+                        ? '/admin/access-policies/edit/' + accessPolicy.id
+                        : '/admin/access-policies/create'}"
+                method="post">
+
+
+          <div class="card-body">
+
+
+            <!-- =================================
+                 POLICY NAME
+            ================================== -->
+
+            <div class="form-group">
+
+              <label
+                      for="name"
+                      class="form-label">
+
+                Policy Name
+
+                <span class="required">
+                                    *
+                                </span>
+
+              </label>
+
+
+              <input
+                      type="text"
+                      id="name"
+                      name="name"
+                      class="form-input"
+                      maxlength="100"
+                      required
+                      autocomplete="off"
+                      th:value="${accessPolicy.name}"
+                      placeholder="e.g. Development Team">
+
+              <div class="input-footer">
+
+                <div class="field-help">
+
+                  Use a short and meaningful
+                  name such as
+                  <strong>Development Team</strong>,
+                  <strong>Intern Policy</strong>,
+                  or
+                  <strong>Restricted Access</strong>.
+
+                </div>
+
+                <div class="character-limit">
+                  Max 100
+                </div>
+
+              </div>
+
+            </div>
+
+
+            <!-- =================================
+                 DESCRIPTION
+            ================================== -->
+
+            <div class="form-group">
+
+              <label
+                      for="description"
+                      class="form-label">
+
+                Description
+
+              </label>
+
+
+              <textarea
+                      id="description"
+                      name="description"
+                      class="form-textarea"
+                      maxlength="500"
+                      placeholder="Describe what this policy is intended for..."
+                      th:text="${accessPolicy.description}">
+                            </textarea>
+
+
+              <div class="field-help">
+
+                Optional. Explain who should use
+                this policy and what type of access
+                it provides.
+
+              </div>
+
+            </div>
+
+
+          </div>
+
+
+          <!-- =====================================
+               FORM ACTIONS
+          ====================================== -->
+
+          <div class="form-actions">
+
+            <a th:href="@{/admin/access-policies}"
+               class="btn btn-secondary">
+
+              Cancel
+
+            </a>
+
+
+            <button
+                    type="submit"
+                    class="btn btn-primary">
+
+                            <span
+                                    th:text="${accessPolicy.id != null
+                                    ? '✓ Update Policy'
+                                    : '+ Create Policy'}">
+
+                                + Create Policy
+
+                            </span>
+
+            </button>
+
+          </div>
+
+        </form>
+
+      </section>
+
+
+      <!-- =============================================
+           INFORMATION CARD
+      ============================================== -->
+
+      <aside class="info-card">
+
+        <div class="info-icon">
+          🔐
+        </div>
+
+
+        <div class="info-title">
+          How Access Policies Work
+        </div>
+
+
+        <div class="info-text">
+
+          An access policy is a reusable set of
+          permissions for your employees.
+
+          After creating the policy, you can configure
+          applications and websites that employees
+          assigned to this policy can access.
+
+        </div>
+
+
+        <div class="steps">
+
+
+          <div class="step">
+
+            <div class="step-number">
+              1
+            </div>
+
+            <div class="step-content">
+
+              <strong>
+                Create the policy
+              </strong>
+
+              <span>
+                                Give your policy a meaningful name
+                                and description.
+                            </span>
+
+            </div>
+
+          </div>
+
+
+          <div class="step">
+
+            <div class="step-number">
+              2
+            </div>
+
+            <div class="step-content">
+
+              <strong>
+                Configure applications
+              </strong>
+
+              <span>
+                                Choose which Windows applications
+                                employees can use.
+                            </span>
+
+            </div>
+
+          </div>
+
+
+          <div class="step">
+
+            <div class="step-number">
+              3
+            </div>
+
+            <div class="step-content">
+
+              <strong>
+                Configure websites
+              </strong>
+
+              <span>
+                                Control access to websites and
+                                domains.
+                            </span>
+
+            </div>
+
+          </div>
+
+
+          <div class="step">
+
+            <div class="step-number">
+              4
+            </div>
+
+            <div class="step-content">
+
+              <strong>
+                Assign employees
+              </strong>
+
+              <span>
+                                Apply the policy to one or more
+                                employees.
+                            </span>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div class="status-preview">
+
+          <span class="status-dot"></span>
+
+          <span>
+                        New policies are active by default
+                    </span>
+
+        </div>
+
+      </aside>
+
+
+    </div>
+
+  </main>
+
+</div>
+
+</body>
+
+</html>

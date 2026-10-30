@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+  <title>Login Approval Required</title>
+
+
+  <style>
+
+    * {
+        box-sizing: border-box;
+    }
+
+
+    body {
+        margin: 0;
+        min-height: 100vh;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        font-family:
+            Inter,
+            -apple-system,
+            BlinkMacSystemFont,
+            "Segoe UI",
+            Arial,
+            sans-serif;
+
+        background:
+            linear-gradient(
+                135deg,
+                #f4f7fb,
+                #eef2ff
+            );
+
+        color: #172033;
+    }
+
+
+    .card {
+        width: 500px;
+        max-width: calc(100% - 40px);
+
+        padding: 42px;
+
+        background: rgba(255, 255, 255, 0.96);
+
+        border: 1px solid #e5e7eb;
+
+        border-radius: 24px;
+
+        box-shadow:
+            0 25px 70px rgba(15, 23, 42, 0.12);
+
+        text-align: center;
+    }
+
+
+    .icon {
+        width: 82px;
+        height: 82px;
+
+        margin: 0 auto 24px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        border-radius: 50%;
+
+        background: #fff7df;
+
+        font-size: 38px;
+
+        transition: all .3s ease;
+
+        animation: pulse 2s infinite;
+    }
+
+
+    @keyframes pulse {
+
+        0% {
+            transform: scale(1);
+        }
+
+        50% {
+            transform: scale(1.06);
+        }
+
+        100% {
+            transform: scale(1);
+        }
+
+    }
+
+
+    h1 {
+        margin: 0 0 12px;
+
+        font-size: 28px;
+
+        font-weight: 700;
+
+        color: #111827;
+    }
+
+
+    .hello {
+        font-size: 16px;
+
+        color: #475467;
+
+        margin-bottom: 10px;
+    }
+
+
+    .description {
+        color: #667085;
+
+        line-height: 1.7;
+
+        font-size: 15px;
+
+        margin: 0 auto;
+
+        max-width: 400px;
+    }
+
+
+    .status-box {
+        margin-top: 28px;
+
+        padding: 17px 20px;
+
+        border-radius: 14px;
+
+        background: #fff8e6;
+
+        border: 1px solid #f7d98a;
+
+        color: #946200;
+
+        font-size: 15px;
+
+        font-weight: 600;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        gap: 10px;
+
+        transition: all .3s ease;
+    }
+
+
+    .status-dot {
+        width: 9px;
+        height: 9px;
+
+        flex-shrink: 0;
+
+        border-radius: 50%;
+
+        background: #e6a700;
+
+        animation: blink 1.5s infinite;
+    }
+
+
+    @keyframes blink {
+
+        0%,
+        100% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: .35;
+        }
+
+    }
+
+
+    .waiting {
+        margin-top: 22px;
+
+        font-size: 13px;
+
+        color: #98a2b3;
+
+        transition: all .3s ease;
+    }
+
+
+    .spinner {
+        display: inline-block;
+
+        width: 15px;
+        height: 15px;
+
+        margin-right: 7px;
+
+        border: 2px solid #d0d5dd;
+
+        border-top-color: #667085;
+
+        border-radius: 50%;
+
+        animation: spin .8s linear infinite;
+
+        vertical-align: -2px;
+    }
+
+
+    @keyframes spin {
+
+        to {
+            transform: rotate(360deg);
+        }
+
+    }
+
+
+    .logout {
+        display: inline-block;
+
+        margin-top: 28px;
+
+        padding: 12px 25px;
+
+        border-radius: 10px;
+
+        background: #111827;
+
+        color: white;
+
+        text-decoration: none;
+
+        font-size: 14px;
+
+        font-weight: 600;
+
+        transition: .2s ease;
+    }
+
+
+    .logout:hover {
+        background: #1f2937;
+
+        transform: translateY(-1px);
+    }
+
+
+    .approved {
+        background: #ecfdf3;
+
+        border-color: #a7f3d0;
+
+        color: #067647;
+    }
+
+
+    .approved .status-dot {
+        background: #12b76a;
+
+        animation: none;
+    }
+
+
+    .rejected {
+        background: #fef3f2;
+
+        border-color: #fecdca;
+
+        color: #b42318;
+    }
+
+
+    .rejected .status-dot {
+        background: #f04438;
+
+        animation: none;
+    }
+
+
+    .expired {
+        background: #fff4ed;
+
+        border-color: #fdba74;
+
+        color: #c2410c;
+    }
+
+
+    .expired .status-dot {
+        background: #f97316;
+
+        animation: none;
+    }
+
+
+    .ip-pending {
+        background: #eff6ff;
+
+        border-color: #bfdbfe;
+
+        color: #1d4ed8;
+    }
+
+
+    .ip-pending .status-dot {
+        background: #3b82f6;
+
+        animation: blink 1.5s infinite;
+    }
+
+
+    .icon-approved {
+        background: #ecfdf3;
+
+        animation: none;
+    }
+
+
+    .icon-rejected {
+        background: #fef3f2;
+
+        animation: none;
+    }
+
+
+    .icon-expired {
+        background: #fff4ed;
+
+        animation: none;
+    }
+
+
+    .icon-ip-pending {
+        background: #eff6ff;
+
+        animation: none;
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+
+<div class="card">
+
+
+  <!-- =====================================================
+       STATUS ICON
+       ===================================================== -->
+
+  <div class="icon"
+       id="statusIcon">
+
+    ⏳
+
+  </div>
+
+
+  <!-- =====================================================
+       TITLE
+       ===================================================== -->
+
+  <h1 id="pageTitle">
+
+    Login Approval Required
+
+  </h1>
+
+
+  <!-- =====================================================
+       EMPLOYEE NAME
+       ===================================================== -->
+
+  <div class="hello">
+
+    Hello
+
+    <strong th:text="${employee.name}">
+      Employee
+    </strong>
+
+  </div>
+
+
+  <!-- =====================================================
+       DESCRIPTION
+       ===================================================== -->
+
+  <p class="description"
+     id="description">
+
+    Your login request was submitted because you are
+    attempting to log in after the permitted login time.
+
+  </p>
+
+
+  <!-- =====================================================
+       STATUS
+       ===================================================== -->
+
+  <div class="status-box"
+       id="statusBox">
+
+        <span class="status-dot"
+              id="statusDot">
+        </span>
+
+    <span id="statusText">
+
+            Status:
+
+            <span th:text="${request != null ? request.status : 'PENDING'}">
+                PENDING
+            </span>
+
+        </span>
+
+  </div>
+
+
+  <!-- =====================================================
+       WAITING MESSAGE
+       ===================================================== -->
+
+  <div class="waiting"
+       id="waitingMessage">
+
+    <span class="spinner"></span>
+
+    Waiting for administrator approval...
+
+  </div>
+
+
+  <!-- =====================================================
+       LOGOUT
+       ===================================================== -->
+
+  <a href="/logout"
+     class="logout">
+
+    Logout
+
+  </a>
+
+
+</div>
+
+
+<script th:inline="javascript">
+
+
+  /*
+   * =========================================================
+   * APPROVAL STATUS ENDPOINT
+   * =========================================================
+   *
+   * The approval token is NEVER placed in the URL.
+   *
+   * The browser sends the JSESSIONID cookie.
+   *
+   * The server reads LOGIN_APPROVAL_TOKEN
+   * from that session.
+   */
+
+  const approvalStatusUrl =
+      /*[[@{/employee/login-approval-status}]]*/
+      '/employee/login-approval-status';
+
+
+  /*
+   * =========================================================
+   * POLLING STATE
+   * =========================================================
+   */
+
+  let approvalPollingActive = true;
+
+  let approvalRequestRunning = false;
+
+  let approvalPollingTimer = null;
+
+
+  /*
+   * =========================================================
+   * STOP POLLING
+   * =========================================================
+   */
+
+  function stopPolling() {
+
+      approvalPollingActive = false;
+
+
+      if (approvalPollingTimer !== null) {
+
+          clearInterval(
+              approvalPollingTimer
+          );
+
+          approvalPollingTimer = null;
+      }
+
+
+      console.log(
+          "LOGIN APPROVAL POLLING STOPPED"
+      );
+
+  }
+
+
+  /*
+   * =========================================================
+   * APPROVED UI
+   * =========================================================
+   */
+
+  function showApprovedState() {
+
+      const statusBox =
+          document.getElementById("statusBox");
+
+      const statusIcon =
+          document.getElementById("statusIcon");
+
+      const statusText =
+          document.getElementById("statusText");
+
+      const waitingMessage =
+          document.getElementById("waitingMessage");
+
+      const pageTitle =
+          document.getElementById("pageTitle");
+
+      const description =
+          document.getElementById("description");
+
+
+      statusBox.classList.remove(
+          "rejected",
+          "expired",
+          "ip-pending"
+      );
+
+      statusBox.classList.add(
+          "approved"
+      );
+
+
+      statusIcon.classList.remove(
+          "icon-rejected",
+          "icon-expired",
+          "icon-ip-pending"
+      );
+
+      statusIcon.classList.add(
+          "icon-approved"
+      );
+
+      statusIcon.textContent = "✓";
+
+
+      pageTitle.textContent =
+          "Login Approved";
+
+
+      description.textContent =
+          "Your login request has been approved by the administrator.";
+
+
+      statusText.textContent =
+          "Status: APPROVED";
+
+
+      waitingMessage.innerHTML =
+          "Login approved. Signing you in automatically...";
+
+  }
+
+
+  /*
+   * =========================================================
+   * REJECTED UI
+   * =========================================================
+   */
+
+  function showRejectedState() {
+
+      const statusBox =
+          document.getElementById("statusBox");
+
+      const statusIcon =
+          document.getElementById("statusIcon");
+
+      const statusText =
+          document.getElementById("statusText");
+
+      const waitingMessage =
+          document.getElementById("waitingMessage");
+
+      const pageTitle =
+          document.getElementById("pageTitle");
+
+      const description =
+          document.getElementById("description");
+
+
+      statusBox.classList.remove(
+          "approved",
+          "expired",
+          "ip-pending"
+      );
+
+      statusBox.classList.add(
+          "rejected"
+      );
+
+
+      statusIcon.classList.remove(
+          "icon-approved",
+          "icon-expired",
+          "icon-ip-pending"
+      );
+
+      statusIcon.classList.add(
+          "icon-rejected"
+      );
+
+      statusIcon.textContent = "✕";
+
+
+      pageTitle.textContent =
+          "Login Rejected";
+
+
+      description.textContent =
+          "Your login request was rejected by the administrator.";
+
+
+      statusText.textContent =
+          "Status: REJECTED";
+
+
+      waitingMessage.textContent =
+          "Returning to the login page...";
+
+  }
+
+
+  /*
+   * =========================================================
+   * EXPIRED UI
+   * =========================================================
+   */
+
+  function showExpiredState() {
+
+      const statusBox =
+          document.getElementById("statusBox");
+
+      const statusIcon =
+          document.getElementById("statusIcon");
+
+      const statusText =
+          document.getElementById("statusText");
+
+      const waitingMessage =
+          document.getElementById("waitingMessage");
+
+      const pageTitle =
+          document.getElementById("pageTitle");
+
+      const description =
+          document.getElementById("description");
+
+
+      statusBox.classList.remove(
+          "approved",
+          "rejected",
+          "ip-pending"
+      );
+
+      statusBox.classList.add(
+          "expired"
+      );
+
+
+      statusIcon.classList.remove(
+          "icon-approved",
+          "icon-rejected",
+          "icon-ip-pending"
+      );
+
+      statusIcon.classList.add(
+          "icon-expired"
+      );
+
+      statusIcon.textContent = "⌛";
+
+
+      pageTitle.textContent =
+          "Approval Session Expired";
+
+
+      description.textContent =
+          "The login approval session has expired. Please log in again.";
+
+
+      statusText.textContent =
+          "Status: EXPIRED";
+
+
+      waitingMessage.textContent =
+          "Returning to the login page...";
+
+  }
+
+
+  /*
+   * =========================================================
+   * IP NOT APPROVED UI
+   * =========================================================
+   */
+
+  function showIpNotApprovedState() {
+
+      const statusBox =
+          document.getElementById("statusBox");
+
+      const statusIcon =
+          document.getElementById("statusIcon");
+
+      const statusText =
+          document.getElementById("statusText");
+
+      const waitingMessage =
+          document.getElementById("waitingMessage");
+
+      const pageTitle =
+          document.getElementById("pageTitle");
+
+      const description =
+          document.getElementById("description");
+
+
+      statusBox.classList.remove(
+          "approved",
+          "rejected",
+          "expired"
+      );
+
+      statusBox.classList.add(
+          "ip-pending"
+      );
+
+
+      statusIcon.classList.remove(
+          "icon-approved",
+          "icon-rejected",
+          "icon-expired"
+      );
+
+      statusIcon.classList.add(
+          "icon-ip-pending"
+      );
+
+      statusIcon.textContent = "🔐";
+
+
+      pageTitle.textContent =
+          "IP Approval Required";
+
+
+      description.textContent =
+          "Your current network is no longer approved for this employee account.";
+
+
+      statusText.textContent =
+          "Status: IP APPROVAL REQUIRED";
+
+
+      waitingMessage.textContent =
+          "Redirecting to IP approval...";
+
+  }
+
+
+  /*
+   * =========================================================
+   * CHECK APPROVAL STATUS
+   * =========================================================
+   */
+
+  async function checkApprovalStatus() {
+
+
+      if (!approvalPollingActive) {
+          return;
+      }
+
+
+      /*
+       * Prevent overlapping requests.
+       */
+
+      if (approvalRequestRunning) {
+
+          console.log(
+              "Approval request already running."
+          );
+
+          return;
+      }
+
+
+      approvalRequestRunning = true;
+
+
+      console.log(
+          "=========================================="
+      );
+
+      console.log(
+          "CHECKING LOGIN APPROVAL STATUS"
+      );
+
+      console.log(
+          "TIME =",
+          new Date().toLocaleTimeString()
+      );
+
+      console.log(
+          "URL =",
+          approvalStatusUrl
+      );
+
+      console.log(
+          "=========================================="
+      );
+
+
+      try {
+
+
+          const requestUrl =
+              approvalStatusUrl +
+              "?t=" +
+              Date.now();
+
+
+          const response =
+              await fetch(
+                  requestUrl,
+                  {
+                      method: "GET",
+
+                      credentials: "same-origin",
+
+                      cache: "no-store",
+
+                      headers: {
+                          "Cache-Control": "no-cache",
+                          "Pragma": "no-cache"
+                      }
+                  }
+              );
+
+
+          console.log(
+              "APPROVAL HTTP STATUS =",
+              response.status
+          );
+
+
+          /*
+           * =================================================
+           * UNAUTHORIZED / FORBIDDEN
+           * =================================================
+           */
+
+          if (response.status === 401 ||
+              response.status === 403) {
+
+              console.error(
+                  "Approval polling unauthorized:",
+                  response.status
+              );
+
+
+              stopPolling();
+
+
+              window.location.replace(
+                  "/login?error=approval"
+              );
+
+
+              return;
+          }
+
+
+          /*
+           * =================================================
+           * OTHER HTTP ERRORS
+           * =================================================
+           */
+
+          if (!response.ok) {
+
+              console.warn(
+                  "Approval endpoint returned HTTP",
+                  response.status
+              );
+
+
+              /*
+               * Temporary server/network errors should not
+               * terminate the approval process.
+               */
+
+              return;
+          }
+
+
+          /*
+           * =================================================
+           * READ RESPONSE
+           * =================================================
+           */
+
+          const status =
+              (await response.text())
+                  .trim()
+                  .toUpperCase();
+
+
+          console.log(
+              "LOGIN APPROVAL STATUS =",
+              status
+          );
+
+
+          /*
+           * =================================================
+           * APPROVED
+           * =================================================
+           */
+
+          if (status === "APPROVED") {
+
+              stopPolling();
+
+
+              console.log(
+                  "=========================================="
+              );
+
+              console.log(
+                  "LOGIN APPROVAL APPROVED"
+              );
+
+              console.log(
+                  "EMPLOYEE LOGIN APPROVED"
+              );
+
+              console.log(
+                  "REDIRECTING TO /employee/dashboard"
+              );
+
+              console.log(
+                  "=========================================="
+              );
+
+
+              showApprovedState();
+
+
+              /*
+               * IMPORTANT:
+               *
+               * The server has already restored the
+               * Spring Security Authentication.
+               *
+               * Therefore the browser only needs to
+               * navigate to the employee dashboard.
+               */
+
+              setTimeout(
+                  function () {
+
+                      window.location.replace(
+                          "/employee/dashboard"
+                      );
+
+                  },
+                  500
+              );
+
+
+              return;
+          }
+
+
+          /*
+           * =================================================
+           * REJECTED
+           * =================================================
+           */
+
+          if (status === "REJECTED") {
+
+              stopPolling();
+
+
+              console.log(
+                  "LOGIN APPROVAL REJECTED"
+              );
+
+
+              showRejectedState();
+
+
+              setTimeout(
+                  function () {
+
+                      window.location.replace(
+                          "/login?error=login-rejected"
+                      );
+
+                  },
+                  1200
+              );
+
+
+              return;
+          }
+
+
+          /*
+           * =================================================
+           * EXPIRED
+           * =================================================
+           */
+
+          if (status === "EXPIRED") {
+
+              stopPolling();
+
+
+              console.log(
+                  "LOGIN APPROVAL EXPIRED"
+              );
+
+
+              showExpiredState();
+
+
+              setTimeout(
+                  function () {
+
+                      window.location.replace(
+                          "/login?error=approval-expired"
+                      );
+
+                  },
+                  1500
+              );
+
+
+              return;
+          }
+
+
+          /*
+           * =================================================
+           * IP NOT APPROVED
+           * =================================================
+           */
+
+          if (status === "IP_NOT_APPROVED") {
+
+              stopPolling();
+
+
+              console.warn(
+                  "CURRENT IP IS NO LONGER APPROVED"
+              );
+
+
+              showIpNotApprovedState();
+
+
+              setTimeout(
+                  function () {
+
+                      window.location.replace(
+                          "/employee/ip-approval-pending"
+                      );
+
+                  },
+                  1200
+              );
+
+
+              return;
+          }
+
+
+          /*
+           * =================================================
+           * PENDING
+           * =================================================
+           */
+
+          if (status === "PENDING") {
+
+              console.log(
+                  "LOGIN APPROVAL STILL PENDING"
+              );
+
+
+              /*
+               * Keep waiting.
+               *
+               * setInterval() will call this function
+               * again after 3 seconds.
+               */
+
+              return;
+          }
+
+
+          /*
+           * =================================================
+           * NONE
+           * =================================================
+           */
+
+          if (status === "NONE") {
+
+              console.warn(
+                  "LOGIN APPROVAL REQUEST NO LONGER EXISTS"
+              );
+
+
+              stopPolling();
+
+
+              window.location.replace(
+                  "/login?error=approval"
+              );
+
+
+              return;
+          }
+
+
+          /*
+           * =================================================
+           * UNKNOWN STATUS
+           * =================================================
+           */
+
+          console.warn(
+              "UNKNOWN APPROVAL STATUS:",
+              status
+          );
+
+
+      }
+      catch (error) {
+
+          /*
+           * Network errors should not terminate the
+           * approval process.
+           */
+
+          console.error(
+              "LOGIN APPROVAL POLLING ERROR:",
+              error
+          );
+
+      }
+      finally {
+
+          approvalRequestRunning = false;
+
+      }
+
+  }
+
+
+  /*
+   * =========================================================
+   * START POLLING
+   * =========================================================
+   */
+
+  function startPolling() {
+
+
+      if (!approvalPollingActive) {
+          return;
+      }
+
+
+      if (approvalPollingTimer !== null) {
+          return;
+      }
+
+
+      console.log(
+          "=========================================="
+      );
+
+      console.log(
+          "LOGIN APPROVAL POLLING STARTED"
+      );
+
+      console.log(
+          "POLL INTERVAL = 3000 ms"
+      );
+
+      console.log(
+          "=========================================="
+      );
+
+
+      /*
+       * Check immediately.
+       */
+
+      checkApprovalStatus();
+
+
+      /*
+       * Continue checking every 3 seconds.
+       */
+
+      approvalPollingTimer =
+          setInterval(
+              function () {
+
+                  checkApprovalStatus();
+
+              },
+              3000
+          );
+
+  }
+
+
+  /*
+   * =========================================================
+   * PAGE LOAD
+   * =========================================================
+   */
+
+  if (document.readyState === "loading") {
+
+      document.addEventListener(
+          "DOMContentLoaded",
+          function () {
+
+              console.log(
+                  "DOM READY"
+              );
+
+              startPolling();
+
+          }
+      );
+
+  } else {
+
+      startPolling();
+
+  }
+
+
+</script>
+
+
+</body>
+
+</html>

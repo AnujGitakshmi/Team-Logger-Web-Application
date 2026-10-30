@@ -1,0 +1,557 @@
+
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Super Admin Dashboard - TeamLogger</title>
+
+  <style>
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #f4f6f9;
+        color: #202938;
+    }
+
+    .header {
+        background: #172554;
+        color: white;
+        padding: 20px 32px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+
+    .header h1 {
+        margin: 0;
+        font-size: 23px;
+    }
+
+    .header p {
+        margin: 6px 0 0;
+        color: #cbd5e1;
+    }
+
+    .container {
+        max-width: 1350px;
+        margin: 35px auto;
+        padding: 0 20px 35px;
+    }
+
+    .welcome {
+        margin-bottom: 28px;
+    }
+
+    .welcome h2 {
+        margin-bottom: 8px;
+    }
+
+    .welcome p {
+        color: #64748b;
+        line-height: 1.6;
+    }
+
+    .section-title {
+        margin: 32px 0 16px;
+        font-size: 21px;
+    }
+
+    .cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        gap: 20px;
+    }
+
+    .card {
+        background: white;
+        padding: 23px;
+        border-radius: 12px;
+        box-shadow: 0 3px 12px rgba(15, 23, 42, 0.07);
+        min-width: 0;
+    }
+
+    .card h3 {
+        margin: 0 0 12px;
+        font-size: 16px;
+        color: #475569;
+    }
+
+    .metric {
+        font-size: 32px;
+        font-weight: bold;
+        color: #172554;
+        margin: 8px 0;
+    }
+
+    .card p {
+        color: #64748b;
+        line-height: 1.6;
+        font-size: 14px;
+    }
+
+    .btn {
+        display: inline-block;
+        padding: 11px 15px;
+        background: #2563eb;
+        color: white;
+        text-decoration: none;
+        border-radius: 7px;
+        font-size: 14px;
+        margin-top: 8px;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn:hover {
+        background: #1d4ed8;
+    }
+
+    .btn-secondary {
+        background: #475569;
+    }
+
+    .btn-secondary:hover {
+        background: #334155;
+    }
+
+    .logout-form {
+        margin: 0;
+    }
+
+    .logout-btn {
+        border: 1px solid #cbd5e1;
+        border-radius: 7px;
+        padding: 10px 16px;
+        background: transparent;
+        color: white;
+        cursor: pointer;
+    }
+
+    .logout-btn:hover {
+        background: #263a70;
+    }
+
+    .table-card {
+        background: white;
+        border-radius: 12px;
+        padding: 22px;
+        box-shadow: 0 3px 12px rgba(15, 23, 42, 0.07);
+        margin-top: 18px;
+    }
+
+    .table-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 16px;
+    }
+
+    .table-header h3 {
+        margin: 0;
+    }
+
+    .table-wrapper {
+        overflow-x: auto;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 650px;
+    }
+
+    th, td {
+        padding: 14px 12px;
+        border-bottom: 1px solid #e2e8f0;
+        text-align: left;
+        font-size: 14px;
+        white-space: normal;
+    }
+
+    th {
+        background: #f8fafc;
+        color: #475569;
+        font-weight: 600;
+    }
+
+    tbody tr:hover {
+        background: #f8fafc;
+    }
+
+    .status {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: bold;
+        white-space: nowrap;
+    }
+
+    .status-active {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .status-inactive {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .status-neutral {
+        background: #e2e8f0;
+        color: #334155;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 25px;
+        color: #64748b;
+    }
+
+    .muted {
+        color: #64748b;
+        font-size: 13px;
+        line-height: 1.6;
+    }
+
+    .organization-info {
+        margin-top: 22px;
+        padding: 20px 23px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 3px 12px rgba(15, 23, 42, 0.07);
+    }
+
+    .organization-info p {
+        margin: 8px 0;
+        color: #475569;
+    }
+
+    @media (max-width: 600px) {
+        .header {
+            padding: 18px;
+        }
+
+        .container {
+            margin-top: 24px;
+            padding: 0 14px 25px;
+        }
+
+        .card {
+            padding: 19px;
+        }
+
+        .table-card {
+            padding: 15px;
+        }
+    }
+  </style>
+</head>
+
+<body>
+
+<header class="header">
+  <div>
+    <h1>TeamLogger | Super Admin</h1>
+    <p>Organization Administration Portal</p>
+  </div>
+
+  <form class="logout-form"
+        th:action="@{/logout}"
+        method="post">
+
+    <input type="hidden"
+           th:name="${_csrf.parameterName}"
+           th:value="${_csrf.token}">
+
+    <button class="logout-btn" type="submit">Logout</button>
+  </form>
+</header>
+
+<main class="container">
+
+  <!-- Welcome -->
+  <section class="welcome">
+    <h2>
+      Welcome,
+      <span th:text="${admin.name}">Super Admin</span>
+    </h2>
+
+    <p>
+      Monitor organization administrators, review their account
+      status, and inspect recent Admin login and logout activity.
+    </p>
+  </section>
+
+  <!-- Admin-only metrics -->
+  <h2 class="section-title">Administrator Overview</h2>
+
+  <section class="cards">
+
+    <article class="card">
+      <h3>Total Administrators</h3>
+      <div class="metric"
+           th:text="${totalAdminCount != null ? totalAdminCount : 0}">
+        0
+      </div>
+      <p>Organization and branch administrators, excluding you.</p>
+    </article>
+
+    <article class="card">
+      <h3>Active Administrators</h3>
+      <div class="metric"
+           th:text="${activeAdminCount != null ? activeAdminCount : 0}">
+        0
+      </div>
+      <p>Administrators whose account status is ACTIVE.</p>
+    </article>
+
+    <article class="card">
+      <h3>Organization Admins</h3>
+      <div class="metric"
+           th:text="${organizationAdminCount != null ? organizationAdminCount : 0}">
+        0
+      </div>
+      <p>Administrators assigned the ORG_ADMIN role.</p>
+    </article>
+
+    <article class="card">
+      <h3>Branch Admins</h3>
+      <div class="metric"
+           th:text="${branchAdminCount != null ? branchAdminCount : 0}">
+        0
+      </div>
+      <p>Administrators assigned the BRANCH_ADMIN role.</p>
+    </article>
+
+  </section>
+
+  <!-- Organization management -->
+  <h2 class="section-title">Organization Management</h2>
+
+  <section class="cards">
+
+    <article class="card">
+      <h3>Branch Admin Requests</h3>
+      <p>
+        Review registration requests from administrators
+        requesting permission to manage a branch.
+      </p>
+
+      <a class="btn"
+         th:href="@{/super-admin/signup-requests}">
+        Review Requests
+      </a>
+    </article>
+
+    <article class="card">
+      <h3>Organization Details</h3>
+      <p>
+        Organization associated with your Super Admin account.
+      </p>
+
+      <p>
+        Organization ID:
+        <strong th:text="${organizationId}">1</strong>
+      </p>
+    </article>
+
+    <article class="card">
+      <h3>Branch Management</h3>
+      <p>
+        Branch management actions can be connected here
+        when that functionality is implemented.
+      </p>
+      <p class="muted">
+        No branch-management action is currently connected.
+      </p>
+    </article>
+
+  </section>
+
+  <!-- Admin account monitoring -->
+  <h2 class="section-title">Administrator Monitoring</h2>
+
+  <section class="table-card">
+
+    <div class="table-header">
+      <div>
+        <h3>Organization Administrators</h3>
+        <p class="muted">
+          View organization and branch Admin account details.
+        </p>
+      </div>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Admin Type</th>
+          <th>Designation</th>
+          <th>Account Status</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr th:if="${adminAccounts == null or #lists.isEmpty(adminAccounts)}">
+          <td colspan="6" class="empty-state">
+            No organization administrators found.
+          </td>
+        </tr>
+
+        <tr th:each="account : ${adminAccounts}">
+          <td th:text="${account.id}">1</td>
+
+          <td th:text="${account.name != null
+                                    ? account.name : 'N/A'}">
+            Admin Name
+          </td>
+
+          <td th:text="${account.email != null
+                                    ? account.email : 'N/A'}">
+            admin@example.com
+          </td>
+
+          <td>
+                        <span th:if="${account.organizationRole != null
+                            and #strings.equalsIgnoreCase(account.organizationRole, 'ORG_ADMIN')}">
+                            Organization Admin
+                        </span>
+
+            <span th:if="${account.organizationRole != null
+                            and #strings.equalsIgnoreCase(account.organizationRole, 'BRANCH_ADMIN')}">
+                            Branch Admin
+                        </span>
+          </td>
+
+          <td th:text="${account.designation != null
+                                    ? account.designation : 'N/A'}">
+            Administrator
+          </td>
+
+          <td>
+                        <span class="status"
+                              th:classappend="${account.status != null
+                                  and #strings.equalsIgnoreCase(account.status, 'ACTIVE')}
+                                  ? ' status-active' : ' status-inactive'"
+                              th:text="${account.status != null
+                                  ? account.status : 'UNKNOWN'}">
+                            ACTIVE
+                        </span>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </section>
+
+  <!-- Recent Admin login/logout activity -->
+  <h2 class="section-title">Recent Admin Login Activity</h2>
+
+  <section class="table-card">
+
+    <div class="table-header">
+      <div>
+        <h3>Administrator Security Events</h3>
+        <p class="muted">
+          Recent login attempts and logout events for normal
+          administrators in your organization.
+        </p>
+      </div>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+        <tr>
+          <th>Admin Email</th>
+          <th>Event</th>
+          <th>Result</th>
+          <th>Event Time</th>
+          <th>IP Address</th>
+          <th>Device</th>
+          <th>Details</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr th:if="${recentAdminActivity == null
+                            or #lists.isEmpty(recentAdminActivity)}">
+          <td colspan="7" class="empty-state">
+            No Admin login activity found.
+          </td>
+        </tr>
+
+        <tr th:each="event : ${recentAdminActivity}">
+          <td th:text="${event.email != null
+                                    ? event.email : 'N/A'}">
+            admin@example.com
+          </td>
+
+          <td th:text="${event.eventType != null
+                                    ? event.eventType : 'UNKNOWN'}">
+            LOGIN
+          </td>
+
+          <td>
+                        <span class="status"
+                              th:classappend="${event.status != null
+                                  and #strings.equalsIgnoreCase(event.status, 'SUCCESS')}
+                                  ? ' status-active'
+                                  : (${event.status != null
+                                      and #strings.equalsIgnoreCase(event.status, 'FAILED')}
+                                      ? ' status-inactive' : ' status-neutral')"
+                              th:text="${event.status != null
+                                  ? event.status : 'UNKNOWN'}">
+                            SUCCESS
+                        </span>
+          </td>
+
+          <td th:text="${event.logoutTime != null
+                                    ? #temporals.format(event.logoutTime, 'dd MMM yyyy HH:mm:ss')
+                                    : (event.loginTime != null
+                                        ? #temporals.format(event.loginTime, 'dd MMM yyyy HH:mm:ss')
+                                        : 'N/A')}">
+            28 Oct 2026 10:30:00
+          </td>
+
+          <td th:text="${event.ipAddress != null
+                                    ? event.ipAddress : 'N/A'}">
+            192.168.1.10
+          </td>
+
+          <td th:text="${event.deviceInfo != null
+                                    ? event.deviceInfo : 'UNKNOWN'}">
+            DESKTOP
+          </td>
+
+          <td th:text="${event.failureReason != null
+                                    ? event.failureReason : '-'}">
+            -
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </section>
+
+</main>
+
+</body>
+</html>

@@ -1,0 +1,2042 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title th:text="${adminSettings.companyName + ' | Project Details'}">
+        Project Details
+    </title>
+
+    <style>
+
+        /* =========================================================
+           RESET
+        ========================================================= */
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            min-height: 100%;
+        }
+
+        body {
+            font-family: Inter, -apple-system, BlinkMacSystemFont,
+                         "Segoe UI", Roboto, Arial, sans-serif;
+            background: #f5f7fb;
+            color: #111827;
+            min-height: 100vh;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+
+        /* =========================================================
+           SIDEBAR
+        ========================================================= */
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+
+            width: 250px;
+
+            background: #111827;
+            color: #ffffff;
+
+            display: flex;
+            flex-direction: column;
+
+            z-index: 1000;
+
+            overflow: hidden;
+        }
+
+
+        /* =========================================================
+           SIDEBAR LOGO
+        ========================================================= */
+
+        .logo-section {
+            height: 78px;
+
+            display: flex;
+            align-items: center;
+
+            padding: 0 22px;
+
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+
+            flex-shrink: 0;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 38px;
+            height: 38px;
+
+            border-radius: 9px;
+
+            background: #2563eb;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            color: #ffffff;
+
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .logo-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .logo-subtitle {
+            font-size: 10px;
+            color: #9ca3af;
+            margin-top: 2px;
+            letter-spacing: .04em;
+        }
+
+
+        /* =========================================================
+           SIDEBAR NAVIGATION
+        ========================================================= */
+
+        .sidebar-nav {
+            flex: 1;
+
+            padding: 20px 14px;
+
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .sidebar-nav::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .sidebar-nav::-webkit-scrollbar-thumb {
+            background: #374151;
+            border-radius: 10px;
+        }
+
+        .nav-section-title {
+            padding: 0 10px;
+
+            margin: 8px 0 10px;
+
+            font-size: 10px;
+            font-weight: 700;
+
+            letter-spacing: .08em;
+
+            color: #6b7280;
+
+            text-transform: uppercase;
+        }
+
+        .nav-item {
+            height: 44px;
+
+            display: flex;
+            align-items: center;
+
+            gap: 12px;
+
+            padding: 0 12px;
+
+            margin-bottom: 5px;
+
+            border-radius: 8px;
+
+            color: #9ca3af;
+
+            font-size: 13px;
+            font-weight: 500;
+
+            transition:
+                background .2s ease,
+                color .2s ease,
+                transform .15s ease;
+        }
+
+        .nav-item:hover {
+            background: #1f2937;
+            color: #ffffff;
+        }
+
+        .nav-item.active {
+            background: #2563eb;
+            color: #ffffff;
+        }
+
+        .nav-icon {
+            width: 22px;
+            min-width: 22px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            font-size: 16px;
+        }
+
+
+        /* =========================================================
+           ADMIN PROFILE - SIDEBAR
+        ========================================================= */
+
+        .admin-profile {
+            padding: 16px;
+
+            border-top: 1px solid rgba(255,255,255,0.08);
+
+            display: flex;
+            align-items: center;
+
+            gap: 11px;
+
+            flex-shrink: 0;
+        }
+
+        .admin-avatar {
+            width: 38px;
+            height: 38px;
+
+            min-width: 38px;
+
+            border-radius: 50%;
+
+            background: #2563eb;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            color: #ffffff;
+
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .admin-info {
+            min-width: 0;
+
+            display: flex;
+            flex-direction: column;
+        }
+
+        .admin-name {
+            color: #ffffff;
+
+            font-size: 13px;
+            font-weight: 600;
+
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .admin-role {
+            color: #9ca3af;
+
+            font-size: 10px;
+
+            margin-top: 2px;
+        }
+
+
+        /* =========================================================
+           MAIN
+        ========================================================= */
+
+        .main {
+            margin-left: 250px;
+
+            min-height: 100vh;
+
+            width: calc(100% - 250px);
+        }
+
+
+        /* =========================================================
+           TOPBAR
+        ========================================================= */
+
+        .topbar {
+            height: 78px;
+
+            background: #ffffff;
+
+            border-bottom: 1px solid #e5e7eb;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            padding: 0 30px;
+
+            position: sticky;
+            top: 0;
+
+            z-index: 100;
+        }
+
+        .page-heading h1 {
+            font-size: 21px;
+            font-weight: 700;
+
+            color: #111827;
+        }
+
+        .page-heading p {
+            margin-top: 4px;
+
+            font-size: 12px;
+
+            color: #6b7280;
+        }
+
+        .topbar-admin {
+            display: flex;
+            align-items: center;
+
+            gap: 11px;
+        }
+
+        .topbar-admin-info {
+            text-align: right;
+        }
+
+        .topbar-admin-name {
+            font-size: 13px;
+            font-weight: 600;
+
+            color: #111827;
+        }
+
+        .topbar-admin-role {
+            font-size: 11px;
+
+            color: #6b7280;
+
+            margin-top: 2px;
+        }
+
+        .topbar-admin-avatar {
+            width: 40px;
+            height: 40px;
+
+            border-radius: 50%;
+
+            background: #2563eb;
+
+            color: #ffffff;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+
+        /* =========================================================
+           CONTENT
+        ========================================================= */
+
+        .content {
+            padding: 28px 30px 40px;
+
+            max-width: 1320px;
+        }
+
+
+        /* =========================================================
+           BREADCRUMB
+        ========================================================= */
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+
+            gap: 8px;
+
+            font-size: 13px;
+
+            color: #6b7280;
+
+            margin-bottom: 22px;
+        }
+
+        .breadcrumb a {
+            color: #2563eb;
+            font-weight: 600;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        .breadcrumb-separator {
+            color: #9ca3af;
+        }
+
+
+        /* =========================================================
+           PROJECT HEADER
+        ========================================================= */
+
+        .project-header {
+            background: #ffffff;
+
+            border: 1px solid #e5e7eb;
+
+            border-radius: 14px;
+
+            padding: 25px 28px;
+
+            margin-bottom: 22px;
+
+            box-shadow: 0 2px 8px rgba(15,23,42,.04);
+        }
+
+        .project-header-top {
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: flex-start;
+
+            gap: 20px;
+        }
+
+        .project-title {
+            font-size: 25px;
+
+            font-weight: 700;
+
+            color: #111827;
+
+            margin-bottom: 7px;
+        }
+
+        .project-description {
+            max-width: 750px;
+
+            color: #6b7280;
+
+            font-size: 13px;
+
+            line-height: 1.6;
+        }
+
+
+        /* =========================================================
+           STATUS
+        ========================================================= */
+
+        .status {
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 7px;
+
+            padding: 7px 12px;
+
+            border-radius: 20px;
+
+            font-size: 11px;
+
+            font-weight: 700;
+
+            white-space: nowrap;
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+
+            border-radius: 50%;
+
+            background: currentColor;
+        }
+
+        .status-assigned {
+            background: #eff6ff;
+            color: #2563eb;
+        }
+
+        .status-pending {
+            background: #fff7ed;
+            color: #ea580c;
+        }
+
+        .status-completed {
+            background: #ecfdf5;
+            color: #059669;
+        }
+
+
+        /* =========================================================
+           PROJECT META
+        ========================================================= */
+
+        .project-meta {
+            display: grid;
+
+            grid-template-columns: repeat(4, 1fr);
+
+            gap: 14px;
+
+            margin-top: 24px;
+
+            padding-top: 22px;
+
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .meta-item {
+            padding: 14px;
+
+            background: #f8fafc;
+
+            border-radius: 9px;
+        }
+
+        .meta-label {
+            color: #9ca3af;
+
+            font-size: 11px;
+
+            text-transform: uppercase;
+
+            font-weight: 700;
+
+            letter-spacing: .4px;
+
+            margin-bottom: 6px;
+        }
+
+        .meta-value {
+            color: #374151;
+
+            font-size: 13px;
+
+            font-weight: 600;
+        }
+
+
+        /* =========================================================
+           ACTIONS
+        ========================================================= */
+
+        .project-actions {
+            display: flex;
+
+            align-items: center;
+
+            gap: 10px;
+
+            margin-top: 22px;
+        }
+
+        .btn {
+            height: 40px;
+
+            padding: 0 16px;
+
+            border-radius: 8px;
+
+            display: inline-flex;
+
+            align-items: center;
+            justify-content: center;
+
+            font-size: 13px;
+
+            font-weight: 600;
+
+            cursor: pointer;
+
+            transition: .2s ease;
+        }
+
+        .back-btn {
+            background: #ffffff;
+
+            color: #374151;
+
+            border: 1px solid #d1d5db;
+        }
+
+        .back-btn:hover {
+            background: #f3f4f6;
+        }
+
+        .complete-btn {
+            background: #059669;
+
+            color: #ffffff;
+
+            border: 1px solid #059669;
+        }
+
+        .complete-btn:hover {
+            background: #047857;
+
+            transform: translateY(-1px);
+        }
+
+
+        /* =========================================================
+           COMPLETED NOTICE
+        ========================================================= */
+
+        .completed-notice {
+            margin-top: 18px;
+
+            padding: 13px 15px;
+
+            border-radius: 9px;
+
+            background: #ecfdf5;
+
+            border: 1px solid #a7f3d0;
+
+            color: #047857;
+
+            font-size: 12px;
+
+            line-height: 1.5;
+        }
+
+
+        /* =========================================================
+           DETAILS GRID
+        ========================================================= */
+
+        .details-grid {
+            display: grid;
+
+            grid-template-columns: 1fr 1.7fr;
+
+            gap: 22px;
+        }
+
+
+        /* =========================================================
+           CARD
+        ========================================================= */
+
+        .card {
+            background: #ffffff;
+
+            border: 1px solid #e5e7eb;
+
+            border-radius: 12px;
+
+            overflow: hidden;
+
+            box-shadow: 0 2px 7px rgba(15,23,42,.04);
+        }
+
+        .card-header {
+            padding: 18px 20px;
+
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .card-title {
+            color: #111827;
+
+            font-size: 16px;
+
+            font-weight: 700;
+        }
+
+        .card-subtitle {
+            color: #9ca3af;
+
+            font-size: 11px;
+
+            margin-top: 4px;
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+
+        /* =========================================================
+           LEADER
+        ========================================================= */
+
+        .leader-profile {
+            display: flex;
+
+            align-items: center;
+
+            gap: 13px;
+
+            padding: 14px;
+
+            background: #f8fafc;
+
+            border-radius: 10px;
+
+            margin-bottom: 18px;
+        }
+
+        .leader-avatar {
+            width: 48px;
+            height: 48px;
+
+            flex-shrink: 0;
+
+            border-radius: 50%;
+
+            background: #e0e7ff;
+
+            color: #3730a3;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            font-weight: 700;
+
+            font-size: 17px;
+        }
+
+        .leader-name {
+            color: #111827;
+
+            font-size: 15px;
+
+            font-weight: 700;
+        }
+
+        .leader-designation {
+            color: #6b7280;
+
+            font-size: 12px;
+
+            margin-top: 3px;
+        }
+
+        .leader-id {
+            color: #9ca3af;
+
+            font-size: 11px;
+
+            margin-top: 3px;
+        }
+
+
+        /* =========================================================
+           INFO ROWS
+        ========================================================= */
+
+        .info-list {
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 14px;
+        }
+
+        .info-row {
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: flex-start;
+
+            gap: 15px;
+
+            padding-bottom: 13px;
+
+            border-bottom: 1px solid #f0f2f5;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+
+            padding-bottom: 0;
+        }
+
+        .info-label {
+            color: #9ca3af;
+
+            font-size: 12px;
+        }
+
+        .info-value {
+            color: #374151;
+
+            font-size: 12px;
+
+            font-weight: 600;
+
+            text-align: right;
+
+            word-break: break-word;
+        }
+
+
+        /* =========================================================
+           TEAM TABLE
+        ========================================================= */
+
+        .table-wrapper {
+            width: 100%;
+
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+
+            border-collapse: collapse;
+
+            min-width: 550px;
+        }
+
+        th {
+            padding: 12px 18px;
+
+            background: #f8fafc;
+
+            text-align: left;
+
+            color: #6b7280;
+
+            font-size: 10px;
+
+            text-transform: uppercase;
+
+            letter-spacing: .5px;
+
+            font-weight: 700;
+
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        td {
+            padding: 14px 18px;
+
+            border-bottom: 1px solid #f0f2f5;
+
+            color: #374151;
+
+            font-size: 12px;
+
+            vertical-align: middle;
+        }
+
+        tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+
+        /* =========================================================
+           EMPLOYEE
+        ========================================================= */
+
+        .employee-cell {
+            display: flex;
+
+            align-items: center;
+
+            gap: 10px;
+        }
+
+        .employee-avatar {
+            width: 34px;
+            height: 34px;
+
+            border-radius: 50%;
+
+            background: #f1f5f9;
+
+            color: #475569;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            font-size: 11px;
+
+            font-weight: 700;
+        }
+
+        .employee-name {
+            color: #374151;
+
+            font-weight: 600;
+        }
+
+        .employee-id {
+            color: #9ca3af;
+
+            font-size: 10px;
+
+            margin-top: 2px;
+        }
+
+
+        /* =========================================================
+           HIERARCHY
+        ========================================================= */
+
+        .hierarchy {
+            display: inline-block;
+
+            padding: 5px 9px;
+
+            border-radius: 15px;
+
+            font-size: 10px;
+
+            font-weight: 700;
+        }
+
+        .hierarchy-senior {
+            background: #eef2ff;
+            color: #4f46e5;
+        }
+
+        .hierarchy-junior {
+            background: #f0fdf4;
+            color: #16a34a;
+        }
+
+        .hierarchy-intern {
+            background: #fff7ed;
+            color: #ea580c;
+        }
+
+
+        /* =========================================================
+           EMPLOYEE STATUS
+        ========================================================= */
+
+        .employee-status {
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 5px;
+
+            font-size: 10px;
+
+            font-weight: 700;
+        }
+
+        .employee-status-dot {
+            width: 6px;
+            height: 6px;
+
+            border-radius: 50%;
+
+            background: currentColor;
+        }
+
+        .employee-active {
+            color: #059669;
+        }
+
+        .employee-inactive {
+            color: #9ca3af;
+        }
+
+
+        /* =========================================================
+           EMPTY TEAM
+        ========================================================= */
+
+        .empty-team {
+            text-align: center;
+
+            padding: 45px 20px;
+
+            color: #9ca3af;
+        }
+
+        .empty-team-icon {
+            font-size: 25px;
+
+            margin-bottom: 10px;
+        }
+
+        .empty-team-text {
+            font-size: 12px;
+        }
+
+
+        /* =========================================================
+           RESPONSIVE - 1100
+        ========================================================= */
+
+        @media (max-width: 1100px) {
+
+            .project-meta {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .details-grid {
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+
+        /* =========================================================
+           RESPONSIVE - 800
+        ========================================================= */
+
+        @media (max-width: 800px) {
+
+            .sidebar {
+                width: 210px;
+            }
+
+            .main {
+                margin-left: 210px;
+
+                width: calc(100% - 210px);
+            }
+
+            .topbar {
+                padding: 0 20px;
+            }
+
+            .content {
+                padding: 22px 20px;
+            }
+
+        }
+
+
+        /* =========================================================
+           RESPONSIVE - 600
+
+           SIDEBAR DOES NOT DISAPPEAR.
+           It remains fixed as compact navigation.
+        ========================================================= */
+
+        @media (max-width: 600px) {
+
+            .sidebar {
+                position: fixed;
+
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: auto;
+
+                width: 100%;
+                height: 68px;
+
+                flex-direction: row;
+
+                overflow: hidden;
+            }
+
+            .logo-section {
+                width: 68px;
+                height: 68px;
+
+                flex-shrink: 0;
+
+                justify-content: center;
+
+                padding: 0;
+            }
+
+            .logo-text {
+                display: none;
+            }
+
+            .sidebar-nav {
+                flex: 1;
+
+                height: 68px;
+
+                padding: 0 8px;
+
+                display: flex;
+
+                align-items: center;
+
+                gap: 5px;
+
+                overflow-x: auto;
+                overflow-y: hidden;
+            }
+
+            .nav-section-title {
+                display: none;
+            }
+
+            .nav-item {
+                height: 44px;
+
+                min-width: 44px;
+
+                width: 44px;
+
+                flex-shrink: 0;
+
+                justify-content: center;
+
+                padding: 0;
+
+                margin: 0;
+
+                border-radius: 8px;
+            }
+
+            .nav-item span:not(.nav-icon) {
+                display: none;
+            }
+
+            .nav-icon {
+                width: 22px;
+                min-width: 22px;
+            }
+
+            .admin-profile {
+                width: 58px;
+
+                height: 68px;
+
+                flex-shrink: 0;
+
+                justify-content: center;
+
+                padding: 0;
+
+                border-top: none;
+
+                border-left: 1px solid rgba(255,255,255,.08);
+            }
+
+            .admin-info {
+                display: none;
+            }
+
+            .main {
+                margin-left: 0;
+
+                width: 100%;
+
+                padding-top: 68px;
+            }
+
+            .topbar {
+                height: 70px;
+
+                padding: 0 15px;
+            }
+
+            .page-heading p {
+                display: none;
+            }
+
+            .page-heading h1 {
+                font-size: 18px;
+            }
+
+            .content {
+                padding: 18px 14px;
+            }
+
+            .project-header {
+                padding: 20px;
+            }
+
+            .project-header-top {
+                flex-direction: column;
+            }
+
+            .project-meta {
+                grid-template-columns: 1fr;
+            }
+
+            .project-actions {
+                flex-direction: column;
+
+                align-items: stretch;
+            }
+
+            .project-actions .btn,
+            .project-actions form {
+                width: 100%;
+            }
+
+            .project-actions form .btn {
+                width: 100%;
+            }
+
+            .topbar-admin-info {
+                display: none;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<!-- =============================================================
+     FIXED ADMIN SIDEBAR
+============================================================== -->
+
+<aside class="sidebar">
+
+
+    <!-- LOGO -->
+
+    <div class="logo-section">
+
+        <div class="logo">
+
+            <div class="logo-icon">
+                TL
+            </div>
+
+            <div class="logo-text">
+
+                <div class="logo-title"
+                     th:text="${adminSettings.companyName}">
+                    TeamLogger
+                </div>
+
+                <div class="logo-subtitle">
+                    ADMIN PANEL
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- NAVIGATION -->
+
+    <nav class="sidebar-nav">
+
+
+        <div class="nav-section-title">
+            Main
+        </div>
+
+
+        <a th:href="@{/admin/dashboard}"
+           class="nav-item"
+           data-path="/admin/dashboard">
+
+            <span class="nav-icon">▦</span>
+            <span>Dashboard</span>
+
+        </a>
+
+
+        <a th:href="@{/admin/employees}"
+           class="nav-item"
+           data-path="/admin/employees">
+
+            <span class="nav-icon">👥</span>
+            <span>Employees</span>
+
+        </a>
+
+
+        <a th:href="@{/admin/tracking}"
+           class="nav-item"
+           data-path="/admin/tracking">
+
+            <span class="nav-icon">◉</span>
+            <span>Today's Activity</span>
+
+        </a>
+
+
+        <a th:href="@{/admin/projects}"
+           class="nav-item"
+           data-path="/admin/projects">
+
+            <span class="nav-icon">▣</span>
+            <span>Projects</span>
+
+        </a>
+
+
+        <div class="nav-section-title">
+            Management
+        </div>
+
+
+        <a th:href="@{/admin/overtime}"
+           class="nav-item"
+           data-path="/admin/overtime">
+
+            <span class="nav-icon">◷</span>
+            <span>Overtime</span>
+
+        </a>
+
+
+        <a th:href="@{/admin/reports}"
+           class="nav-item"
+           data-path="/admin/reports">
+
+            <span class="nav-icon">▤</span>
+            <span>Reports</span>
+
+        </a>
+
+
+        <a th:href="@{/admin/login-approvals}"
+           class="nav-item"
+           data-path="/admin/login-approvals">
+
+            <span class="nav-icon">✓</span>
+            <span>Login Approvals</span>
+
+        </a>
+
+
+        <a th:href="@{/admin/screen-recording}"
+           class="nav-item"
+           data-path="/admin/screen-recording">
+
+            <span class="nav-icon">▧</span>
+            <span>Screen Recording</span>
+
+        </a>
+
+
+        <a th:href="@{/admin/settings}"
+           class="nav-item"
+           data-path="/admin/settings">
+
+            <span class="nav-icon">⚙</span>
+            <span>Settings</span>
+
+        </a>
+
+    </nav>
+
+
+    <!-- ADMIN PROFILE -->
+
+    <div class="admin-profile">
+
+        <div class="admin-avatar"
+             th:text="${admin != null and admin.name != null and !admin.name.isEmpty()
+                       ? #strings.substring(admin.name,0,1).toUpperCase()
+                       : 'A'}">
+            A
+        </div>
+
+        <div class="admin-info">
+
+            <div class="admin-name"
+                 th:text="${admin != null and admin.name != null
+                           ? admin.name
+                           : 'Admin'}">
+                Admin
+            </div>
+
+            <div class="admin-role">
+                Administrator
+            </div>
+
+        </div>
+
+    </div>
+
+</aside>
+
+
+<!-- =============================================================
+     MAIN CONTENT
+============================================================== -->
+
+<main class="main">
+
+
+    <!-- TOPBAR -->
+
+    <header class="topbar">
+
+        <div class="page-heading">
+
+            <h1>
+                Project Details
+            </h1>
+
+            <p>
+                View project information and assigned team
+            </p>
+
+        </div>
+
+
+        <div class="topbar-admin">
+
+            <div class="topbar-admin-info">
+
+                <div class="topbar-admin-name"
+                     th:text="${admin != null ? admin.name : 'Admin'}">
+                    Admin Name
+                </div>
+
+                <div class="topbar-admin-role">
+                    Administrator
+                </div>
+
+            </div>
+
+
+            <div class="topbar-admin-avatar"
+                 th:text="${admin != null
+                           and admin.name != null
+                           and !admin.name.isEmpty()
+                           ? #strings.substring(admin.name,0,1).toUpperCase()
+                           : 'A'}">
+                A
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <!-- CONTENT -->
+
+    <section class="content">
+
+
+        <!-- BREADCRUMB -->
+
+        <div class="breadcrumb">
+
+            <a th:href="@{/admin/projects}">
+                Projects
+            </a>
+
+            <span class="breadcrumb-separator">
+                /
+            </span>
+
+            <span>
+                Project Details
+            </span>
+
+        </div>
+
+
+        <!-- PROJECT HEADER -->
+
+        <div class="project-header">
+
+
+            <div class="project-header-top">
+
+
+                <div>
+
+                    <div class="project-title"
+                         th:text="${project.projectName}">
+                        Project Name
+                    </div>
+
+
+                    <div class="project-description"
+                         th:text="${project.description != null
+                                  ? project.description
+                                  : 'No project description provided.'}">
+                        Project description
+                    </div>
+
+                </div>
+
+
+                <!-- STATUS -->
+
+                <div>
+
+                    <span th:if="${project.status == 'ASSIGNED'}"
+                          class="status status-assigned">
+
+                        <span class="status-dot"></span>
+                        ASSIGNED
+
+                    </span>
+
+
+                    <span th:if="${project.status == 'PENDING'}"
+                          class="status status-pending">
+
+                        <span class="status-dot"></span>
+                        PENDING
+
+                    </span>
+
+
+                    <span th:if="${project.status == 'COMPLETED'}"
+                          class="status status-completed">
+
+                        <span class="status-dot"></span>
+                        COMPLETED
+
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <!-- PROJECT META -->
+
+            <div class="project-meta">
+
+
+                <div class="meta-item">
+
+                    <div class="meta-label">
+                        Project ID
+                    </div>
+
+                    <div class="meta-value"
+                         th:text="'#' + ${project.id}">
+                        #1
+                    </div>
+
+                </div>
+
+
+                <div class="meta-item">
+
+                    <div class="meta-label">
+                        Start Date
+                    </div>
+
+                    <div class="meta-value"
+                         th:text="${project.startDate}">
+                        2026-01-01
+                    </div>
+
+                </div>
+
+
+                <div class="meta-item">
+
+                    <div class="meta-label">
+                        Expected Completion
+                    </div>
+
+                    <div class="meta-value"
+                         th:text="${project.expectedCompletionDate}">
+                        2026-03-01
+                    </div>
+
+                </div>
+
+
+                <div class="meta-item">
+
+                    <div class="meta-label">
+                        Completed At
+                    </div>
+
+                    <div class="meta-value"
+                         th:text="${project.completedAt != null
+                                  ? #temporals.format(
+                                      project.completedAt,
+                                      'dd MMM yyyy, HH:mm'
+                                    )
+                                  : 'Not completed'}">
+                        Not completed
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ACTIONS -->
+
+            <div class="project-actions">
+
+
+                <a th:href="@{/admin/projects}"
+                   class="btn back-btn">
+
+                    ← Back to Projects
+
+                </a>
+
+
+                <form th:if="${project.status == 'PENDING'}"
+                      th:action="@{/admin/projects/{id}/confirm-completion(id=${project.id})}"
+                      method="post">
+
+                    <button type="submit"
+                            class="btn complete-btn">
+
+                        ✓ Confirm Completion
+
+                    </button>
+
+                </form>
+
+            </div>
+
+
+            <!-- COMPLETED NOTICE -->
+
+            <div th:if="${project.status == 'COMPLETED'}"
+                 class="completed-notice">
+
+                ✓ This project has been completed.
+                Its status will remain
+                <strong>COMPLETED</strong>
+                even after the original deadline.
+
+            </div>
+
+        </div>
+
+
+        <!-- DETAILS GRID -->
+
+        <div class="details-grid">
+
+
+            <!-- PROJECT LEADER -->
+
+            <div class="card">
+
+                <div class="card-header">
+
+                    <div class="card-title">
+                        Project Leader
+                    </div>
+
+                    <div class="card-subtitle">
+                        Employee responsible for the project
+                    </div>
+
+                </div>
+
+
+                <div class="card-body">
+
+
+                    <div class="leader-profile">
+
+
+                        <div class="leader-avatar"
+                             th:text="${#strings.substring(
+                                 projectLeader.name,
+                                 0,
+                                 1
+                             ).toUpperCase()}">
+                            P
+                        </div>
+
+
+                        <div>
+
+                            <div class="leader-name"
+                                 th:text="${projectLeader.name}">
+                                Project Leader
+                            </div>
+
+                            <div class="leader-designation"
+                                 th:text="${projectLeader.designation}">
+                                Project Leader
+                            </div>
+
+                            <div class="leader-id"
+                                 th:text="${projectLeader.employeeLoginId}">
+                                EMP-ID
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="info-list">
+
+
+                        <div class="info-row">
+
+                            <span class="info-label">
+                                Email
+                            </span>
+
+                            <span class="info-value"
+                                  th:text="${projectLeader.email}">
+                                email@example.com
+                            </span>
+
+                        </div>
+
+
+                        <div class="info-row">
+
+                            <span class="info-label">
+                                Employee ID
+                            </span>
+
+                            <span class="info-value"
+                                  th:text="${projectLeader.employeeLoginId}">
+                                EMP-001
+                            </span>
+
+                        </div>
+
+
+                        <div class="info-row">
+
+                            <span class="info-label">
+                                Designation
+                            </span>
+
+                            <span class="info-value"
+                                  th:text="${projectLeader.designation}">
+                                Project Leader
+                            </span>
+
+                        </div>
+
+
+                        <div class="info-row">
+
+                            <span class="info-label">
+                                Status
+                            </span>
+
+                            <span class="info-value"
+                                  th:text="${projectLeader.status}">
+                                ACTIVE
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- TEAM MEMBERS -->
+
+            <div class="card">
+
+
+                <div class="card-header">
+
+                    <div class="card-title">
+                        Project Team
+                    </div>
+
+                    <div class="card-subtitle"
+                         th:text="${teamMembers != null
+                                  ? teamMembers.size()
+                                    + ' employees under this Project Leader'
+                                  : '0 employees'}">
+                        0 employees under this Project Leader
+                    </div>
+
+                </div>
+
+
+                <!-- TEAM EXISTS -->
+
+                <div class="table-wrapper"
+                     th:if="${teamMembers != null and !teamMembers.isEmpty()}">
+
+                    <table>
+
+                        <thead>
+
+                        <tr>
+
+                            <th>
+                                Employee
+                            </th>
+
+                            <th>
+                                Designation
+                            </th>
+
+                            <th>
+                                Hierarchy
+                            </th>
+
+                            <th>
+                                Status
+                            </th>
+
+                        </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                        <tr th:each="member : ${teamMembers}">
+
+
+                            <!-- EMPLOYEE -->
+
+                            <td>
+
+                                <div class="employee-cell">
+
+
+                                    <div class="employee-avatar"
+                                         th:text="${#strings.substring(
+                                             member.name,
+                                             0,
+                                             1
+                                         ).toUpperCase()}">
+                                        E
+                                    </div>
+
+
+                                    <div>
+
+                                        <div class="employee-name"
+                                             th:text="${member.name}">
+                                            Employee Name
+                                        </div>
+
+                                        <div class="employee-id"
+                                             th:text="${member.employeeLoginId}">
+                                            EMP-001
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </td>
+
+
+                            <!-- DESIGNATION -->
+
+                            <td th:text="${member.designation}">
+                                Senior Developer
+                            </td>
+
+
+                            <!-- HIERARCHY -->
+
+                            <td>
+
+                                <span th:if="${member.designation != null
+                                              and #strings.containsIgnoreCase(
+                                                  member.designation,
+                                                  'Senior'
+                                              )}"
+                                      class="hierarchy hierarchy-senior">
+                                    SENIOR
+                                </span>
+
+
+                                <span th:if="${member.designation != null
+                                              and #strings.containsIgnoreCase(
+                                                  member.designation,
+                                                  'Junior'
+                                              )}"
+                                      class="hierarchy hierarchy-junior">
+                                    JUNIOR
+                                </span>
+
+
+                                <span th:if="${member.designation != null
+                                              and #strings.containsIgnoreCase(
+                                                  member.designation,
+                                                  'Intern'
+                                              )}"
+                                      class="hierarchy hierarchy-intern">
+                                    INTERN
+                                </span>
+
+                            </td>
+
+
+                            <!-- STATUS -->
+
+                            <td>
+
+                                <span th:if="${member.status == 'ACTIVE'}"
+                                      class="employee-status employee-active">
+
+                                    <span class="employee-status-dot"></span>
+                                    ACTIVE
+
+                                </span>
+
+
+                                <span th:unless="${member.status == 'ACTIVE'}"
+                                      class="employee-status employee-inactive">
+
+                                    <span class="employee-status-dot"></span>
+
+                                    <span th:text="${member.status}">
+                                        INACTIVE
+                                    </span>
+
+                                </span>
+
+                            </td>
+
+
+                        </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+
+                <!-- EMPTY TEAM -->
+
+                <div class="empty-team"
+                     th:if="${teamMembers == null or teamMembers.isEmpty()}">
+
+                    <div class="empty-team-icon">
+                        ♙
+                    </div>
+
+                    <div class="empty-team-text">
+                        No employees are currently under this
+                        Project Leader.
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+</main>
+
+
+<!-- =============================================================
+     ACTIVE SIDEBAR MENU
+============================================================== -->
+
+<script>
+
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const currentPath =
+            window.location.pathname.replace(/\/+$/, "") || "/";
+
+        const navItems =
+            document.querySelectorAll(".nav-item");
+
+
+        navItems.forEach(function (item) {
+
+            const path =
+                item.getAttribute("data-path");
+
+            if (!path) {
+                return;
+            }
+
+
+            const normalizedPath =
+                path.replace(/\/+$/, "");
+
+            const isDashboard =
+                normalizedPath === "/admin/dashboard";
+
+
+            const isActive =
+                isDashboard
+                    ? currentPath === normalizedPath
+                    : (
+                        currentPath === normalizedPath ||
+                        currentPath.startsWith(
+                            normalizedPath + "/"
+                        )
+                    );
+
+
+            if (isActive) {
+
+                item.classList.add("active");
+
+            } else {
+
+                item.classList.remove("active");
+
+            }
+
+        });
+
+    });
+
+</script>
+
+
+</body>
+
+</html>

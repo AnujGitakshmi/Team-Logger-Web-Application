@@ -1,0 +1,582 @@
+
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Administrator Registration | TeamLogger</title>
+
+  <style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #eef2ff, #f8fafc);
+        padding: 24px 0;
+    }
+
+    .signup-container {
+        width: 100%;
+        max-width: 540px;
+        padding: 20px;
+    }
+
+    .signup-card {
+        background: #fff;
+        border-radius: 18px;
+        padding: 35px;
+        box-shadow: 0 15px 45px rgba(0, 0, 0, 0.10);
+    }
+
+    .logo {
+        text-align: center;
+        margin-bottom: 10px;
+    }
+
+    .logo h1 {
+        font-size: 30px;
+        color: #111827;
+    }
+
+    .logo span {
+        color: #4f46e5;
+    }
+
+    .subtitle {
+        text-align: center;
+        color: #6b7280;
+        font-size: 14px;
+        line-height: 1.6;
+        margin-bottom: 25px;
+    }
+
+    .admin-badge {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 25px;
+    }
+
+    .admin-badge span {
+        padding: 8px 16px;
+        border-radius: 20px;
+        background: #eef2ff;
+        color: #4338ca;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .section-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: #312e81;
+        margin: 24px 0 16px;
+        padding-bottom: 9px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .form-group {
+        margin-bottom: 19px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #374151;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 13px 14px;
+        border: 1px solid #d1d5db;
+        border-radius: 10px;
+        outline: none;
+        font-size: 14px;
+        background: #fff;
+        color: #374151;
+        transition: 0.2s;
+    }
+
+    .form-group textarea {
+        min-height: 90px;
+        resize: vertical;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+        border-color: #4f46e5;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.10);
+    }
+
+    .field-help {
+        display: block;
+        margin-top: 6px;
+        color: #6b7280;
+        font-size: 12px;
+        line-height: 1.5;
+    }
+
+    .signup-btn {
+        width: 100%;
+        border: none;
+        padding: 14px;
+        border-radius: 10px;
+        background: #4f46e5;
+        color: #fff;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.2s;
+        margin-top: 8px;
+    }
+
+    .signup-btn:hover {
+        background: #4338ca;
+    }
+
+    .message {
+        padding: 12px 14px;
+        border-radius: 9px;
+        margin-bottom: 20px;
+        font-size: 13px;
+        line-height: 1.6;
+    }
+
+    .error-message {
+        background: #fef2f2;
+        color: #b91c1c;
+        border: 1px solid #fecaca;
+    }
+
+    .success-message {
+        background: #ecfdf5;
+        color: #047857;
+        border: 1px solid #a7f3d0;
+    }
+
+    .info-box {
+        margin-top: 22px;
+        padding: 14px;
+        border-radius: 10px;
+        background: #f9fafb;
+        color: #6b7280;
+        font-size: 12px;
+        line-height: 1.7;
+        text-align: center;
+    }
+
+    .login-link {
+        text-align: center;
+        margin-top: 22px;
+        font-size: 14px;
+        color: #6b7280;
+    }
+
+    .login-link a {
+        color: #4f46e5;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .login-link a:hover {
+        text-decoration: underline;
+    }
+
+    .hidden {
+        display: none !important;
+    }
+
+    @media (max-width: 480px) {
+        .signup-card {
+            padding: 25px 20px;
+        }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="signup-container">
+  <div class="signup-card">
+
+    <div class="logo">
+      <h1>Team<span>Logger</span></h1>
+    </div>
+
+    <div class="subtitle">
+      Register a new organization or request administrator
+      access to an existing organization.
+    </div>
+
+    <div class="admin-badge">
+      <span>Administrator Registration</span>
+    </div>
+
+    <div th:if="${error}"
+         class="message error-message"
+         th:text="${error}">
+    </div>
+
+    <div th:if="${success}"
+         class="message success-message"
+         th:text="${success}">
+    </div>
+
+    <form th:action="@{/signup}" method="post">
+
+      <!-- PERSONAL DETAILS -->
+
+      <div class="section-title">Personal Details</div>
+
+      <div class="form-group">
+        <label for="name">Full Name</label>
+        <input type="text"
+               id="name"
+               name="name"
+               placeholder="Enter your full name"
+               autocomplete="name"
+               maxlength="100"
+               required>
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input type="email"
+               id="email"
+               name="email"
+               placeholder="Enter your email address"
+               autocomplete="email"
+               maxlength="150"
+               required>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password"
+               id="password"
+               name="password"
+               placeholder="Create a password"
+               autocomplete="new-password"
+               minlength="8"
+               required>
+
+        <span class="field-help">
+                    Use at least 8 characters.
+                </span>
+      </div>
+
+      <!-- ADMINISTRATOR TYPE -->
+
+      <div class="section-title">Administrator Registration</div>
+
+      <div class="form-group">
+        <label for="organizationRole">Administrator Type</label>
+
+        <select id="organizationRole"
+                name="organizationRole"
+                required
+                onchange="handleAdministratorTypeChange()">
+
+          <option value="SUPER_ADMIN" selected>
+            Super Admin - Create New Organization
+          </option>
+
+          <option value="ORG_ADMIN">
+            Organization Admin - Join Existing Organization
+          </option>
+
+          <option value="BRANCH_ADMIN">
+            Branch Admin - Join Existing Organization
+          </option>
+
+        </select>
+
+        <span class="field-help">
+                    Choose the type of administrator account you want to register.
+                </span>
+      </div>
+
+      <!-- NEW ORGANIZATION -->
+
+      <div id="newOrganizationGroup">
+
+        <div class="section-title">Organization Details</div>
+
+        <div class="form-group">
+          <label for="organizationName">
+            Company / Organization Name
+          </label>
+
+          <input type="text"
+                 id="organizationName"
+                 name="organizationName"
+                 placeholder="Enter your company name"
+                 maxlength="150"
+                 autocomplete="organization">
+
+          <span class="field-help">
+                        Your new organization will be created when
+                        your Super Admin registration succeeds.
+                    </span>
+        </div>
+
+      </div>
+
+      <!-- EXISTING ORGANIZATION -->
+
+      <div class="form-group hidden"
+           id="existingOrganizationGroup">
+
+        <label for="organizationId">
+          Select Existing Organization
+        </label>
+
+        <select id="organizationId"
+                name="organizationId">
+
+          <option value="">Select an organization</option>
+
+          <option th:each="organization : ${organizations}"
+                  th:value="${organization.id}"
+                  th:text="${organization.name}">
+          </option>
+
+        </select>
+
+        <span class="field-help">
+                    Select the organization where you want to register.
+                </span>
+
+        <span class="field-help"
+              th:if="${organizations == null or #lists.isEmpty(organizations)}">
+                    No organizations are currently available.
+                </span>
+      </div>
+
+      <!-- BRANCH DETAILS -->
+
+      <div id="branchDetailsGroup">
+
+        <div class="section-title">Branch Details</div>
+
+        <div class="form-group">
+          <label for="branchName">Branch Name</label>
+
+          <input type="text"
+                 id="branchName"
+                 name="branchName"
+                 placeholder="e.g. Head Office"
+                 maxlength="150">
+        </div>
+
+        <!-- BRANCH LOCATION -->
+
+        <div class="section-title">Branch Location</div>
+
+        <div class="form-group">
+          <label for="country">Country</label>
+
+          <input type="text"
+                 id="country"
+                 name="country"
+                 placeholder="Enter country"
+                 maxlength="100">
+        </div>
+
+        <div class="form-group">
+          <label for="state">State</label>
+
+          <input type="text"
+                 id="state"
+                 name="state"
+                 placeholder="Enter state"
+                 maxlength="100">
+        </div>
+
+        <div class="form-group">
+          <label for="city">City</label>
+
+          <input type="text"
+                 id="city"
+                 name="city"
+                 placeholder="Enter city"
+                 maxlength="100">
+        </div>
+
+        <div class="form-group">
+          <label for="postalCode">Postal Code</label>
+
+          <input type="text"
+                 id="postalCode"
+                 name="postalCode"
+                 placeholder="Enter postal / ZIP code"
+                 maxlength="20"
+                 autocomplete="postal-code">
+        </div>
+
+        <div class="form-group">
+          <label for="address">Complete Branch Address</label>
+
+          <textarea id="address"
+                    name="address"
+                    placeholder="Enter building, street, area and landmark"
+                    maxlength="500"
+                    autocomplete="street-address"></textarea>
+
+          <span class="field-help">
+                        Enter the complete physical address of this branch.
+                    </span>
+        </div>
+
+      </div>
+
+      <button type="submit" class="signup-btn">
+        Submit Registration
+      </button>
+
+    </form>
+
+    <div class="info-box">
+      <strong>How registration works</strong>
+      <br><br>
+
+      <strong>Super Admin:</strong>
+      Creates a new organization and its initial branch.
+
+      <br>
+
+      <strong>Organization Admin:</strong>
+      Requests administrator access to an existing organization.
+
+      <br>
+
+      <strong>Branch Admin:</strong>
+      Requests administrator access for a new branch.
+
+      <br><br>
+
+      Existing organization registrations are subject to
+      Super Admin approval.
+    </div>
+
+    <div class="login-link">
+      Already have an account?
+      <a th:href="@{/login}">Login</a>
+    </div>
+
+  </div>
+</div>
+
+<script>
+
+  function setFieldRequired(element, required) {
+      if (element) {
+          element.required = required;
+      }
+  }
+
+  function handleAdministratorTypeChange() {
+
+      const role = document.getElementById("organizationRole").value;
+
+      const newOrganizationGroup =
+          document.getElementById("newOrganizationGroup");
+
+      const existingOrganizationGroup =
+          document.getElementById("existingOrganizationGroup");
+
+      const branchDetailsGroup =
+          document.getElementById("branchDetailsGroup");
+
+      const organizationName =
+          document.getElementById("organizationName");
+
+      const organizationId =
+          document.getElementById("organizationId");
+
+      const branchName =
+          document.getElementById("branchName");
+
+      const country = document.getElementById("country");
+      const state = document.getElementById("state");
+      const city = document.getElementById("city");
+      const postalCode = document.getElementById("postalCode");
+      const address = document.getElementById("address");
+
+      // Hide conditional sections.
+      newOrganizationGroup.classList.add("hidden");
+      existingOrganizationGroup.classList.add("hidden");
+      branchDetailsGroup.classList.add("hidden");
+
+      // Reset required flags.
+      setFieldRequired(organizationName, false);
+      setFieldRequired(organizationId, false);
+      setFieldRequired(branchName, false);
+      setFieldRequired(country, false);
+      setFieldRequired(state, false);
+      setFieldRequired(city, false);
+      setFieldRequired(postalCode, false);
+      setFieldRequired(address, false);
+
+      if (role === "SUPER_ADMIN") {
+
+          // New organization and initial branch.
+          newOrganizationGroup.classList.remove("hidden");
+          branchDetailsGroup.classList.remove("hidden");
+
+          setFieldRequired(organizationName, true);
+          setFieldRequired(branchName, true);
+          setFieldRequired(country, true);
+          setFieldRequired(state, true);
+          setFieldRequired(city, true);
+          setFieldRequired(address, true);
+
+          organizationId.value = "";
+
+      } else if (role === "ORG_ADMIN") {
+
+          // Existing organization only.
+          existingOrganizationGroup.classList.remove("hidden");
+
+          setFieldRequired(organizationId, true);
+
+          organizationName.value = "";
+          branchName.value = "";
+
+      } else if (role === "BRANCH_ADMIN") {
+
+          // Existing organization, new branch and location.
+          existingOrganizationGroup.classList.remove("hidden");
+          branchDetailsGroup.classList.remove("hidden");
+
+          setFieldRequired(organizationId, true);
+          setFieldRequired(branchName, true);
+          setFieldRequired(country, true);
+          setFieldRequired(state, true);
+          setFieldRequired(city, true);
+          setFieldRequired(address, true);
+
+          organizationName.value = "";
+      }
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+      handleAdministratorTypeChange();
+  });
+
+</script>
+
+</body>
+</html>

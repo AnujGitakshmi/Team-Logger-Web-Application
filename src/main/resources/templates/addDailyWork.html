@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+  <title>Add Today's Work - TeamLogger</title>
+
+  <style>
+
+    /* =========================================================
+       RESET
+    ========================================================= */
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family:
+            Inter,
+            -apple-system,
+            BlinkMacSystemFont,
+            "Segoe UI",
+            Roboto,
+            Arial,
+            sans-serif;
+
+        background: #f5f7fb;
+        color: #1f2937;
+        min-height: 100vh;
+    }
+
+    a {
+        text-decoration: none;
+        color: inherit;
+    }
+
+    button,
+    textarea {
+        font: inherit;
+    }
+
+    /* =========================================================
+       LAYOUT
+    ========================================================= */
+
+    .app {
+        display: flex;
+        min-height: 100vh;
+    }
+
+    /* =========================================================
+       SIDEBAR
+    ========================================================= */
+
+    .sidebar {
+        width: 250px;
+        background: #111827;
+        color: #ffffff;
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        padding: 22px 16px;
+        z-index: 100;
+    }
+
+    .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0 10px 28px;
+    }
+
+    .brand-logo {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        background: #2563eb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 17px;
+    }
+
+    .brand-name {
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: -0.3px;
+    }
+
+    .nav {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .nav-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 13px;
+        border-radius: 10px;
+        color: #cbd5e1;
+        font-size: 14px;
+        font-weight: 500;
+        transition: 0.2s ease;
+    }
+
+    .nav-link:hover {
+        background: #1f2937;
+        color: #ffffff;
+    }
+
+    .nav-link.active {
+        background: #2563eb;
+        color: #ffffff;
+    }
+
+    .nav-icon {
+        width: 20px;
+        text-align: center;
+        font-size: 16px;
+    }
+
+    /* =========================================================
+       MAIN
+    ========================================================= */
+
+    .main {
+        margin-left: 250px;
+        width: calc(100% - 250px);
+        min-height: 100vh;
+    }
+
+    /* =========================================================
+       TOPBAR
+    ========================================================= */
+
+    .topbar {
+        height: 76px;
+        background: #ffffff;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 32px;
+    }
+
+    .page-title {
+        font-size: 22px;
+        font-weight: 700;
+        color: #111827;
+    }
+
+    .page-subtitle {
+        margin-top: 3px;
+        font-size: 13px;
+        color: #6b7280;
+    }
+
+    .profile {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .profile-avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: #dbeafe;
+        color: #1d4ed8;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+    }
+
+    .profile-name {
+        font-size: 14px;
+        font-weight: 600;
+        color: #111827;
+    }
+
+    /* =========================================================
+       CONTENT
+    ========================================================= */
+
+    .content {
+        padding: 32px;
+        max-width: 1000px;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        color: #2563eb;
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 22px;
+    }
+
+    .back-link:hover {
+        text-decoration: underline;
+    }
+
+    /* =========================================================
+       PROJECT HEADER
+    ========================================================= */
+
+    .project-card {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 22px;
+        box-shadow: 0 4px 18px rgba(15, 23, 42, 0.04);
+    }
+
+    .project-title {
+        font-size: 22px;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 8px;
+    }
+
+    .project-description {
+        color: #6b7280;
+        font-size: 14px;
+        line-height: 1.6;
+    }
+
+    .project-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 16px;
+    }
+
+    .meta-item {
+        background: #f3f4f6;
+        color: #4b5563;
+        padding: 7px 11px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    /* =========================================================
+       FORM CARD
+    ========================================================= */
+
+    .form-card {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        padding: 28px;
+        box-shadow: 0 4px 18px rgba(15, 23, 42, 0.04);
+    }
+
+    .form-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 6px;
+    }
+
+    .form-description {
+        color: #6b7280;
+        font-size: 14px;
+        margin-bottom: 24px;
+        line-height: 1.5;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 14px;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 8px;
+    }
+
+    .date-box {
+        width: 100%;
+        padding: 12px 14px;
+        border: 1px solid #d1d5db;
+        border-radius: 10px;
+        background: #f9fafb;
+        color: #374151;
+        font-size: 14px;
+    }
+
+    .textarea {
+        width: 100%;
+        min-height: 220px;
+        resize: vertical;
+        padding: 14px;
+        border: 1px solid #d1d5db;
+        border-radius: 10px;
+        outline: none;
+        color: #111827;
+        background: #ffffff;
+        line-height: 1.6;
+        transition: 0.2s ease;
+    }
+
+    .textarea::placeholder {
+        color: #9ca3af;
+    }
+
+    .textarea:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.10);
+    }
+
+    .character-info {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 7px;
+        color: #9ca3af;
+        font-size: 12px;
+    }
+
+    /* =========================================================
+       ACTIONS
+    ========================================================= */
+
+    .actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 26px;
+    }
+
+    .btn {
+        border: none;
+        border-radius: 10px;
+        padding: 12px 20px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.2s ease;
+    }
+
+    .btn-primary {
+        background: #2563eb;
+        color: #ffffff;
+    }
+
+    .btn-primary:hover {
+        background: #1d4ed8;
+        transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+        background: #f3f4f6;
+        color: #374151;
+    }
+
+    .btn-secondary:hover {
+        background: #e5e7eb;
+    }
+
+    /* =========================================================
+       INFO
+    ========================================================= */
+
+    .info-box {
+        margin-top: 20px;
+        padding: 14px 16px;
+        border-radius: 10px;
+        background: #eff6ff;
+        border: 1px solid #dbeafe;
+        color: #1e40af;
+        font-size: 13px;
+        line-height: 1.5;
+    }
+
+    /* =========================================================
+       RESPONSIVE
+    ========================================================= */
+
+    @media (max-width: 900px) {
+
+        .sidebar {
+            width: 220px;
+        }
+
+        .main {
+            margin-left: 220px;
+            width: calc(100% - 220px);
+        }
+
+        .content {
+            padding: 24px;
+        }
+    }
+
+    @media (max-width: 700px) {
+
+        .sidebar {
+            position: relative;
+            width: 100%;
+            height: auto;
+            min-height: auto;
+        }
+
+        .app {
+            display: block;
+        }
+
+        .main {
+            margin-left: 0;
+            width: 100%;
+        }
+
+        .nav {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .topbar {
+            padding: 0 20px;
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        .profile-name {
+            display: none;
+        }
+    }
+
+    @media (max-width: 480px) {
+
+        .nav {
+            grid-template-columns: 1fr;
+        }
+
+        .topbar {
+            height: auto;
+            min-height: 70px;
+        }
+
+        .content {
+            padding: 16px;
+        }
+
+        .project-card,
+        .form-card {
+            padding: 20px;
+        }
+
+        .actions {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .btn {
+            width: 100%;
+        }
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+<div class="app">
+
+  <!-- =========================================================
+       SIDEBAR
+  ========================================================== -->
+
+  <aside class="sidebar">
+
+    <div class="brand">
+
+      <div class="brand-logo">
+        TL
+      </div>
+
+      <div class="brand-name">
+        TeamLogger
+      </div>
+
+    </div>
+
+    <nav class="nav">
+
+      <a th:href="@{/employee/dashboard}"
+         class="nav-link">
+
+        <span class="nav-icon">⌂</span>
+        <span>Dashboard</span>
+
+      </a>
+
+      <a th:href="@{/employee/projects}"
+         class="nav-link">
+
+        <span class="nav-icon">▣</span>
+        <span>My Projects</span>
+
+      </a>
+
+      <a th:href="@{/employee/tasks}"
+         class="nav-link active">
+
+        <span class="nav-icon">✓</span>
+        <span>My Tasks</span>
+
+      </a>
+
+      <a th:href="@{/employee/attendance}"
+         class="nav-link">
+
+        <span class="nav-icon">◷</span>
+        <span>Attendance</span>
+
+      </a>
+
+      <a th:href="@{/employee/overtime}"
+         class="nav-link">
+
+        <span class="nav-icon">⏱</span>
+        <span>Overtime</span>
+
+      </a>
+
+      <a th:href="@{/employee/notifications}"
+         class="nav-link">
+
+        <span class="nav-icon">♢</span>
+        <span>Notifications</span>
+
+      </a>
+
+      <a th:href="@{/employee/settings}"
+         class="nav-link">
+
+        <span class="nav-icon">⚙</span>
+        <span>Settings</span>
+
+      </a>
+
+      <a th:href="@{/logout}"
+         class="nav-link">
+
+        <span class="nav-icon">↪</span>
+        <span>Logout</span>
+
+      </a>
+
+    </nav>
+
+  </aside>
+
+
+  <!-- =========================================================
+       MAIN CONTENT
+  ========================================================== -->
+
+  <main class="main">
+
+    <!-- TOPBAR -->
+
+    <header class="topbar">
+
+      <div>
+
+        <div class="page-title">
+          Add Today's Work
+        </div>
+
+        <div class="page-subtitle">
+          Record the work you completed on this project today
+        </div>
+
+      </div>
+
+
+      <div class="profile">
+
+        <div class="profile-avatar"
+             th:text="${employee.name != null && !employee.name.isEmpty()
+                         ? employee.name.substring(0,1).toUpperCase()
+                         : 'U'}">
+          U
+        </div>
+
+        <div class="profile-name"
+             th:text="${employee.name}">
+          Employee
+        </div>
+
+      </div>
+
+    </header>
+
+
+    <!-- CONTENT -->
+
+    <section class="content">
+
+      <a th:href="@{/employee/tasks/project/{id}(id=${project.id})}"
+         class="back-link">
+
+        ← Back to Work History
+
+      </a>
+
+
+      <!-- PROJECT INFORMATION -->
+
+      <div class="project-card">
+
+        <div class="project-title"
+             th:text="${project.projectName}">
+          Project Name
+        </div>
+
+        <div class="project-description"
+             th:if="${project.description != null}"
+             th:text="${project.description}">
+          Project description
+        </div>
+
+        <div class="project-meta">
+
+                    <span class="meta-item">
+                        Work Date:
+                        <span th:text="${today}">
+                            2026-10-03
+                        </span>
+                    </span>
+
+          <span class="meta-item"
+                th:if="${project.status != null}"
+                th:text="'Status: ' + ${project.status}">
+                        Status: ASSIGNED
+                    </span>
+
+        </div>
+
+      </div>
+
+
+      <!-- ADD WORK FORM -->
+
+      <div class="form-card"
+           th:if="${project.status == null
+                         or !#strings.equalsIgnoreCase(project.status, 'COMPLETED')}">
+
+        <div class="form-title">
+          What did you work on today?
+        </div>
+
+        <div class="form-description">
+          Describe the work you completed, progress made,
+          problems encountered, or anything important related
+          to this project.
+        </div>
+
+
+        <form th:action="@{/employee/tasks/project/{id}/add(id=${project.id})}"
+              method="post">
+
+          <!-- Work date -->
+
+          <div class="form-group">
+
+            <label class="form-label">
+              Work Date
+            </label>
+
+            <input type="text"
+                   class="date-box"
+                   th:value="${today}"
+                   readonly>
+
+            <input type="hidden"
+                   name="workDate"
+                   th:value="${today}">
+
+          </div>
+
+
+          <!-- Description -->
+
+          <div class="form-group">
+
+            <label for="description"
+                   class="form-label">
+              Work Description
+            </label>
+
+            <textarea id="description"
+                      name="description"
+                      class="textarea"
+                      maxlength="5000"
+                      required
+                      placeholder="Example: Implemented employee login approval flow, fixed session authentication issue, and tested the approval status API..."></textarea>
+
+            <div class="character-info">
+
+                            <span>
+                                Maximum 5000 characters
+                            </span>
+
+              <span id="characterCount">
+                                0 / 5000
+                            </span>
+
+            </div>
+
+          </div>
+
+
+          <!-- ACTIONS -->
+
+          <div class="actions">
+
+            <button type="submit"
+                    class="btn btn-primary">
+              + Add Work
+            </button>
+
+            <a th:href="@{/employee/tasks/project/{id}(id=${project.id})}"
+               class="btn btn-secondary">
+              Cancel
+            </a>
+
+          </div>
+
+        </form>
+
+
+        <div class="info-box">
+
+          <strong>Tip:</strong>
+          Keep your work description clear and specific.
+          Mention what you completed, what you are currently
+          working on, and any blockers if applicable.
+
+        </div>
+
+      </div>
+
+
+      <!-- COMPLETED PROJECT -->
+
+      <div class="form-card"
+           th:if="${project.status != null
+                         and #strings.equalsIgnoreCase(project.status, 'COMPLETED')}">
+
+        <div class="form-title">
+          Project Completed
+        </div>
+
+        <div class="form-description">
+
+          This project has been completed.
+          New daily work cannot be added to a completed project.
+
+        </div>
+
+        <a th:href="@{/employee/tasks/project/{id}(id=${project.id})}"
+           class="btn btn-secondary">
+          ← Back to Work History
+        </a>
+
+      </div>
+
+    </section>
+
+  </main>
+
+</div>
+
+
+<!-- =========================================================
+     CHARACTER COUNTER
+========================================================== -->
+
+<script>
+
+  const description =
+      document.getElementById("description");
+
+  const characterCount =
+      document.getElementById("characterCount");
+
+  if (description && characterCount) {
+
+      description.addEventListener("input", function () {
+
+          characterCount.textContent =
+              this.value.length + " / 5000";
+
+      });
+
+  }
+
+</script>
+
+</body>
+
+</html>
+

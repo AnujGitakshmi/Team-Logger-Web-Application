@@ -31,3 +31,12 @@ build/
 
 ### VS Code ###
 .vscode/
+
+
+# Sensitive configuration
+src/main/resources/application.properties
+
+# Generated screenshots and recordings
+recordings/
+screenshots/
+screenshot_archives/

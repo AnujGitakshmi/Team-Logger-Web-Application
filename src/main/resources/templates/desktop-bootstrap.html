@@ -1,0 +1,193 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Connecting TeamLogger Workstation</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #dce7e5;
+            color: #f3f6f5;
+            font-family: "Segoe UI", Arial, sans-serif;
+        }
+
+        .panel {
+            width: min(420px, calc(100% - 32px));
+            padding: 35px;
+            border: 6px solid #171919;
+            border-radius: 22px;
+            background: #202525;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, .2);
+        }
+
+        .logo {
+            width: 52px;
+            height: 52px;
+            margin: 0 auto 20px;
+            display: grid;
+            place-items: center;
+            border-radius: 15px;
+            background: #a8f4ed;
+            color: #172322;
+            font-weight: 900;
+            font-size: 19px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 20px;
+        }
+
+        p {
+            margin-top: 12px;
+            color: #929e9b;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .spinner {
+            width: 30px;
+            height: 30px;
+            margin: 25px auto 0;
+            border: 3px solid #3a4543;
+            border-top-color: #a8f4ed;
+            border-radius: 50%;
+            animation: spin .8s linear infinite;
+        }
+
+        .error {
+            display: none;
+            margin-top: 18px;
+            padding: 12px;
+            border-radius: 10px;
+            background: rgba(250, 119, 119, .12);
+            color: #fa7777;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="panel">
+
+    <div class="logo">TL</div>
+
+    <h1>Connecting Workstation</h1>
+
+    <p id="status">
+        Establishing your secure desktop session...
+    </p>
+
+    <div class="spinner" id="spinner"></div>
+
+    <div class="error" id="error"></div>
+
+</div>
+
+<script>
+    let redemptionStarted = false;
+
+    function showError(message) {
+
+        document.getElementById("spinner").style.display = "none";
+
+        const errorElement = document.getElementById("error");
+
+        errorElement.textContent = message;
+        errorElement.style.display = "block";
+
+        document.getElementById("status").textContent =
+            "Unable to open your Workstation.";
+    }
+
+    // Called by the JavaFX WebView after this page loads.
+    async function receiveLaunchTicket(ticket) {
+
+        if (redemptionStarted) {
+            return;
+        }
+
+        redemptionStarted = true;
+
+        if (typeof ticket !== "string" ||
+                !/^[A-Za-z0-9_-]{40,50}$/.test(ticket)) {
+
+            showError("The desktop launch ticket is invalid.");
+            return;
+        }
+
+        document.getElementById("status").textContent =
+            "Verifying your desktop session...";
+
+        try {
+
+            const response = await fetch("/api/desktop/redeem", {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+
+                credentials: "same-origin",
+                cache: "no-store",
+
+                body: JSON.stringify({
+                    ticket: ticket
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(
+                    "Session verification failed. HTTP " + response.status
+                );
+            }
+
+            const result = await response.json();
+
+            if (result.status !== "DESKTOP_SESSION_CREATED") {
+                throw new Error("Desktop session could not be created.");
+            }
+
+            document.getElementById("status").textContent =
+                "Session verified. Opening your Workstation...";
+
+            window.location.replace("/workstation");
+
+        } catch (error) {
+
+            console.error("Desktop ticket redemption failed:", error);
+
+            showError(
+                error.message || "An unexpected error occurred."
+            );
+        }
+    }
+
+    // The JavaFX application will call receiveLaunchTicket(ticket).
+    // No ticket is accepted through URL parameters.
+</script>
+
+</body>
+</html>

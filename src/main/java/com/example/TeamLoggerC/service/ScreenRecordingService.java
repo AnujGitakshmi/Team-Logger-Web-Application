@@ -11,7 +11,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -71,8 +70,11 @@ public class ScreenRecordingService {
         // -----------------------------------------------------
 
         if (session.getEmployeeStartedAt() == null) {
-
             return "FAILED: Employee has not clicked Start Work.";
+        }
+
+        if (session.isWorkPaused()) {
+            return "FAILED: Employee work session is paused.";
         }
 
 
@@ -536,43 +538,18 @@ public class ScreenRecordingService {
     // GET CURRENT SESSION
     // =========================================================
 
-    private Session getCurrentSession(
-            Integer userId) {
-
-        LocalDate today =
-                LocalDate.now();
-
-
-        LocalDateTime start =
-                today.atStartOfDay();
-
-
-        LocalDateTime end =
-                today.plusDays(1)
-                        .atStartOfDay();
-
+    private Session getCurrentSession(Integer userId) {
 
         List<Session> openSessions =
-                sessionRepo
-                        .findByUserIdAndLoginTimeBetweenAndLogoutTimeIsNull(
-                                userId,
-                                start,
-                                end
-                        );
-
+                sessionRepo.findByUserIdAndLogoutTimeIsNull(userId);
 
         if (openSessions.isEmpty()) {
             return null;
         }
 
-
         return openSessions.stream()
-                .max(
-                        (s1, s2) ->
-                                s1.getLoginTime()
-                                        .compareTo(
-                                                s2.getLoginTime()
-                                        )
+                .max((s1, s2) ->
+                        s1.getLoginTime().compareTo(s2.getLoginTime())
                 )
                 .orElse(null);
     }

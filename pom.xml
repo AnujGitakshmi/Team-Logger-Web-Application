@@ -101,6 +101,20 @@
 			<version>${openpdf.version}</version>
 		</dependency>
 
+		<!-- JavaFX Desktop UI -->
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-controls</artifactId>
+			<version>21.0.7</version>
+		</dependency>
+
+		<!-- JavaFX WebView -->
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-web</artifactId>
+			<version>21.0.7</version>
+		</dependency>
+
 		<!-- DevTools -->
 <!--		<dependency>-->
 <!--			<groupId>org.springframework.boot</groupId>-->
@@ -174,6 +188,17 @@
 				<configuration>
 					<source>21</source>
 					<target>21</target>
+				</configuration>
+			</plugin>
+			<!-- JavaFX Maven Plugin -->
+			<plugin>
+				<groupId>org.openjfx</groupId>
+				<artifactId>javafx-maven-plugin</artifactId>
+				<version>0.0.8</version>
+				<configuration>
+					<mainClass>
+						com.example.TeamLoggerC.TeamLoggerDesktopLauncher
+					</mainClass>
 				</configuration>
 			</plugin>
 

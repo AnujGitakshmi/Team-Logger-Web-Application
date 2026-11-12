@@ -2,28 +2,38 @@ package com.example.TeamLoggerC.service;
 
 import com.example.TeamLoggerC.dto.OvertimeRecordDTO;
 import com.example.TeamLoggerC.entity.Session;
+import com.example.TeamLoggerC.entity.User;
 import com.example.TeamLoggerC.repository.SessionRepo;
+import com.example.TeamLoggerC.repository.UserRepo;
 import com.example.TeamLoggerC.tracker.ActivityTrackerService;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @Service
 public class SessionService {
 
     private final SessionRepo sessionRepo;
+    private final UserRepo userRepo;
     private final WorkScheduleService workScheduleService;
     private final ActivityTrackerService trackerService;
     private final ScreenshotCaptureService screenshotCaptureService;
     private final ScreenRecordingService screenRecordingService;
     private final AttendanceService attendanceService;
 
+    private static final int REGULAR_WORK_MINUTES = 8 * 60;
 
     // ==========================================
     // CONSTRUCTOR
@@ -31,6 +41,7 @@ public class SessionService {
 
     public SessionService(
             SessionRepo sessionRepo,
+            UserRepo userRepo,
             WorkScheduleService workScheduleService,
             ActivityTrackerService trackerService,
             ScreenshotCaptureService screenshotCaptureService,
@@ -38,13 +49,13 @@ public class SessionService {
             AttendanceService attendanceService) {
 
         this.sessionRepo = sessionRepo;
+        this.userRepo = userRepo;
         this.workScheduleService = workScheduleService;
         this.trackerService = trackerService;
         this.screenshotCaptureService = screenshotCaptureService;
         this.screenRecordingService = screenRecordingService;
         this.attendanceService = attendanceService;
     }
-
 
     // ==========================================
     // GET TODAY'S SESSIONS
@@ -54,11 +65,8 @@ public class SessionService {
 
         LocalDate today = LocalDate.now();
 
-        LocalDateTime startOfDay =
-                today.atStartOfDay();
-
-        LocalDateTime endOfDay =
-                today.plusDays(1).atStartOfDay();
+        LocalDateTime startOfDay = today.atStartOfDay();
+        LocalDateTime endOfDay = today.plusDays(1).atStartOfDay();
 
         return sessionRepo.findByUserIdAndLoginTimeBetween(
                 userId,
@@ -67,50 +75,70 @@ public class SessionService {
         );
     }
 
-
     // ==========================================
     // GET CURRENT OPEN SESSION
     // ==========================================
 
+    /*
+     * Finds the latest open session regardless of login date.
+     *
+     * Paused sessions remain open because Stop Work does
+     * not set logoutTime.
+     */
+
     public Session getCurrentSession(Integer userId) {
 
-        LocalDate today = LocalDate.now();
-
-        LocalDateTime startOfDay =
-                today.atStartOfDay();
-
-        LocalDateTime endOfDay =
-                today.plusDays(1).atStartOfDay();
-
-        List<Session> openSessions =
-                sessionRepo
-                        .findByUserIdAndLoginTimeBetweenAndLogoutTimeIsNull(
-                                userId,
-                                startOfDay,
-                                endOfDay
-                        );
-
-        if (openSessions.isEmpty()) {
-            return null;
-        }
-
-        return openSessions.stream()
-                .max((s1, s2) ->
-                        s1.getLoginTime()
-                                .compareTo(s2.getLoginTime()))
+        return sessionRepo
+                .findByUserIdAndLogoutTimeIsNull(userId)
+                .stream()
+                .max(Comparator.comparing(Session::getLoginTime))
                 .orElse(null);
     }
 
+    // ==========================================
+    // GET EMPLOYEE
+    // ==========================================
+
+    private User getEmployee(Integer userId) {
+
+        return userRepo.findById(userId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Employee not found."
+                        ));
+    }
+
+    // ==========================================
+    // GET EMPLOYEE ADMIN ID
+    // ==========================================
+
+    private Integer getAdminId(User employee) {
+
+        Integer adminId = employee.getAdminId();
+
+        if (adminId == null) {
+
+            throw new IllegalStateException(
+                    "Employee has no assigned admin. " +
+                            "Office schedule cannot be determined."
+            );
+        }
+
+        return adminId;
+    }
 
     // ==========================================
     // OFFICE HOURS STATUS
     // ==========================================
 
-    public boolean isOfficeHours() {
+    public boolean isOfficeHours(Integer userId) {
 
-        return workScheduleService.isOfficeHours();
+        User employee = getEmployee(userId);
+
+        Integer adminId = getAdminId(employee);
+
+        return workScheduleService.isOfficeHours(adminId);
     }
-
 
     // ==========================================
     // MANUAL START / STOP ALLOWED?
@@ -118,9 +146,8 @@ public class SessionService {
 
     public boolean canManuallyStartOrStop() {
 
-        return !workScheduleService.isOfficeHours();
+        return true;
     }
-
 
     // ==========================================
     // START WORK
@@ -129,154 +156,132 @@ public class SessionService {
     @Transactional
     public Session startWork(Integer userId) {
 
+        User employee = userRepo.findByIdForUpdate(userId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Employee not found."
+                        ));
+
+        /*
+         * If the application was stopped or unavailable
+         * around midnight, close any previous-day session
+         * before looking for the current session.
+         */
+        closeExpiredSessionsForUser(userId, LocalDate.now());
+
+        Integer adminId = getAdminId(employee);
         LocalDateTime now = LocalDateTime.now();
 
+        boolean officeHours =
+                workScheduleService.isOfficeHours(adminId, now);
+
+        Session session = getCurrentSession(userId);
+
+        boolean attendanceNeedsStarting = false;
+
         // ======================================
-        // OFFICE HOURS: 10 AM - 7 PM
+        // EXISTING OPEN SESSION
         // ======================================
 
-        if (workScheduleService.isOfficeHours(now)) {
+        if (session != null) {
 
-            Session officeSession =
-                    getTodayOfficeSession(userId);
+            /*
+             * An automatic office session may exist before
+             * the employee clicks Start Work.
+             */
+            if (session.getEmployeeStartedAt() == null) {
 
-            // ==================================
-            // OFFICE SESSION ALREADY EXISTS
-            // ==================================
+                session.setEmployeeStartedAt(now);
 
-            if (officeSession != null) {
-
-                /*
-                 * Record employee's Start Work click.
-                 */
-                if (officeSession.getEmployeeStartedAt() == null) {
-
-                    officeSession.setEmployeeStartedAt(now);
-
-                    officeSession =
-                            sessionRepo.save(officeSession);
+                if (session.getOfficeStart() == null) {
+                    session.setWorkStartedAt(now);
                 }
 
-                /*
-                 * Mark attendance PRESENT.
-                 *
-                 * Attendance is marked only when
-                 * the employee actually clicks
-                 * Start Work.
-                 */
-                attendanceService.markPresent(userId);
-
-                /*
-                 * Start keyboard/mouse activity tracking.
-                 */
-                trackerService.startTracking(userId);
-
-                /*
-                 * Start screenshot capture.
-                 *
-                 * The first screenshot is captured immediately.
-                 * Further screenshots use the Admin's configured
-                 * interval.
-                 */
-                screenshotCaptureService.startCapture(userId);
-
-                return officeSession;
+                attendanceNeedsStarting = true;
             }
 
-            // ==================================
-            // OFFICE SESSION DOES NOT EXIST
-            // ==================================
+            /*
+             * If this session was paused, this resumes
+             * the same session instead of creating another.
+             */
+            session.setWorkPaused(false);
 
-            Session newOfficeSession =
-                    startOfficeWork(userId);
+            session = sessionRepo.save(session);
 
-            if (newOfficeSession != null) {
-
-                /*
-                 * Record actual employee click time.
-                 */
-                newOfficeSession.setEmployeeStartedAt(now);
-
-                newOfficeSession =
-                        sessionRepo.save(newOfficeSession);
-
-                /*
-                 * Mark attendance PRESENT.
-                 */
+            if (attendanceNeedsStarting) {
                 attendanceService.markPresent(userId);
-
-                /*
-                 * Start activity tracking.
-                 */
-                trackerService.startTracking(userId);
-
-                /*
-                 * Start screenshot capture.
-                 */
-                screenshotCaptureService.startCapture(userId);
             }
 
-            return newOfficeSession;
+            startTrackingServices(userId);
+
+            return session;
         }
 
-
         // ======================================
-        // BEFORE 10 AM / AFTER 7 PM
-        // MANUAL MODE
+        // OFFICE HOURS
         // ======================================
 
-        Session existingSession =
-                getCurrentSession(userId);
+        if (officeHours) {
 
-        if (existingSession != null) {
+            session = createOfficeSession(userId, adminId, now);
 
-            /*
-             * If an open session already exists,
-             * make sure attendance is also marked.
-             *
-             * markPresent() is safe to call repeatedly
-             * because it returns the existing PRESENT record.
-             */
-            attendanceService.markPresent(userId);
+            if (session == null) {
 
-            /*
-             * If an open session already exists,
-             * make sure tracking is running.
-             */
-            trackerService.startTracking(userId);
+                throw new IllegalStateException(
+                        "Unable to create or retrieve the office session."
+                );
+            }
 
-            /*
-             * Make sure screenshot capture is running.
-             */
-            screenshotCaptureService.startCapture(userId);
+            if (session.getEmployeeStartedAt() == null) {
 
-            return existingSession;
+                session.setEmployeeStartedAt(now);
+                session.setWorkPaused(false);
+
+                session = sessionRepo.save(session);
+
+                attendanceNeedsStarting = true;
+            }
+
+            if (attendanceNeedsStarting) {
+                attendanceService.markPresent(userId);
+            }
+
+            startTrackingServices(userId);
+
+            return session;
         }
 
+        // ======================================
+        // MANUAL SESSION
+        // ======================================
 
-        // ======================================
-        // CREATE MANUAL SESSION
-        // ======================================
+        session = createManualSession(userId, now);
+
+        attendanceService.markPresent(userId);
+
+        startTrackingServices(userId);
+
+        return session;
+    }
+
+    // ==========================================
+    // CREATE MANUAL SESSION
+    // ==========================================
+
+    private Session createManualSession(
+            Integer userId,
+            LocalDateTime now) {
 
         Session session = new Session();
 
         session.setUserId(userId);
 
-        /*
-         * Manual session starts when employee
-         * clicks Start Work.
-         */
         session.setLoginTime(now);
-
         session.setWorkStartedAt(now);
+        session.setEmployeeStartedAt(now);
 
         session.setOfficeStart(null);
         session.setOfficeEnd(null);
-
-        /*
-         * Employee has clicked Start Work.
-         */
-        session.setEmployeeStartedAt(now);
 
         session.setTimezone(
                 ZoneId.systemDefault().toString()
@@ -291,220 +296,240 @@ public class SessionService {
         session.setProductivity(0.0);
 
         session.setLogoutTime(null);
+        session.setWorkPaused(false);
 
-        session =
-                sessionRepo.save(session);
-
-        /*
-         * Mark attendance PRESENT after the
-         * session has successfully been saved.
-         */
-        attendanceService.markPresent(userId);
-
-        /*
-         * Start activity tracking AFTER the
-         * session has successfully been saved.
-         */
-        trackerService.startTracking(userId);
-
-        /*
-         * Start screenshot capture AFTER the
-         * session has successfully been saved.
-         */
-        screenshotCaptureService.startCapture(userId);
-
-        return session;
+        return sessionRepo.save(session);
     }
 
+    // ==========================================
+    // START TRACKING SERVICES
+    // ==========================================
+
+    private void startTrackingServices(Integer userId) {
+
+        trackerService.startTracking(userId);
+
+        screenshotCaptureService.startCapture(userId);
+
+        screenRecordingService.startRecording(userId);
+    }
 
     // ==========================================
-    // STOP WORK
+    // STOP WORK / PAUSE SESSION
     // ==========================================
 
     @Transactional
     public Session stopWork(Integer userId) {
 
-        LocalDateTime now = LocalDateTime.now();
+        userRepo.findByIdForUpdate(userId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Employee not found."
+                        ));
 
-        // ======================================
-        // OFFICE HOURS
-        // ======================================
-
-        if (workScheduleService.isOfficeHours(now)) {
-
-            throw new IllegalStateException(
-                    "Work cannot be stopped during office hours."
-            );
-        }
-
-
-        // ======================================
-        // FIND TODAY'S OPEN SESSION
-        // ======================================
-
-        Session session =
-                getCurrentSession(userId);
+        Session session = getCurrentSession(userId);
 
         if (session == null) {
-
             return null;
         }
 
-
-        // ======================================
-        // STOP SCREENSHOT CAPTURE FIRST
-        // ======================================
-
         /*
-         * Cancel the scheduled screenshot task.
-         *
-         * No more screenshots will be captured
-         * after the employee stops work.
+         * An automatic office session that the employee
+         * has not started cannot be paused.
          */
+        if (session.getEmployeeStartedAt() == null) {
+            return null;
+        }
+
+        // Avoid repeating Stop Work operations.
+        if (session.isWorkPaused()) {
+            return session;
+        }
+
+        // ======================================
+        // STOP SCREENSHOT CAPTURE
+        // ======================================
+
         screenshotCaptureService.stopCapture(userId);
 
+        // ======================================
+        // STOP ACTIVITY TRACKING
+        // ======================================
+
         /*
-         * Stop activity tracking.
+         * Stop tracking before saving the paused state.
+         * ActivityTrackerService should synchronize the
+         * final active and idle counters during stop.
          */
         trackerService.stopTracking(userId);
 
-        /*
-         * Stop screen recording.
-         */
+        // ======================================
+        // STOP SCREEN RECORDING
+        // ======================================
+
         screenRecordingService.stopRecording(userId);
 
-
         // ======================================
-        // CLOSE SESSION
+        // PAUSE SESSION
         // ======================================
 
-        session.setLogoutTime(now);
-
-        session =
-                sessionRepo.save(session);
-
-
-        // ======================================
-        // CLOSE ATTENDANCE
-        // ======================================
+        session.setWorkPaused(true);
 
         /*
-         * Record the actual Stop Work time
-         * in today's attendance record.
+         * IMPORTANT:
+         * Do not set logoutTime.
+         * Do not end attendance.
+         * Do not create a new session on resume.
          */
-        attendanceService.markEndTime(userId);
 
-        return session;
+        return sessionRepo.save(session);
     }
-
 
     // ==========================================
     // GET TODAY'S AUTOMATIC OFFICE SESSION
     // ==========================================
 
-    private Session getTodayOfficeSession(Integer userId) {
+    private Session getTodayOfficeSession(
+            Integer userId,
+            Integer adminId) {
 
         LocalDate today = LocalDate.now();
 
         LocalDateTime officeStart =
-                workScheduleService.getOfficeStart(today);
+                workScheduleService.getOfficeStart(
+                        adminId,
+                        today
+                );
 
-        List<Session> officeSessions =
-                sessionRepo
-                        .findByUserIdAndOfficeStartAndLogoutTimeIsNull(
-                                userId,
-                                officeStart
-                        );
-
-        if (officeSessions.isEmpty()) {
-
-            return null;
-        }
-
-        return officeSessions.stream()
-                .max((s1, s2) ->
-                        s1.getLoginTime()
-                                .compareTo(s2.getLoginTime()))
+        return sessionRepo
+                .findByUserIdAndOfficeStartAndLogoutTimeIsNull(
+                        userId,
+                        officeStart
+                )
+                .stream()
+                .max(Comparator.comparing(Session::getLoginTime))
                 .orElse(null);
     }
 
-
     // ==========================================
-    // CHECK WHETHER EMPLOYEE CLICKED
-    // START WORK TODAY
+    // CHECK WHETHER EMPLOYEE STARTED WORK TODAY
     // ==========================================
 
     public boolean hasEmployeeStartedWork(Integer userId) {
 
+        User employee = getEmployee(userId);
+
+        Integer adminId = getAdminId(employee);
+
         Session officeSession =
-                getTodayOfficeSession(userId);
+                getTodayOfficeSession(userId, adminId);
 
         return officeSession != null
                 && officeSession.getEmployeeStartedAt() != null;
     }
 
-
     // ==========================================
     // AUTOMATIC OFFICE SESSION
     // ==========================================
 
+    /*
+     * Creates or retrieves the automatic office session.
+     * It does not start tracking or attendance by itself.
+     */
+
+    @Transactional
     public Session startOfficeWork(Integer userId) {
 
-        LocalDate today = LocalDate.now();
+        User employee = userRepo.findByIdForUpdate(userId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Employee not found."
+                        ));
+
+        /*
+         * Prevent an old open session from being reused
+         * when the application was unavailable overnight.
+         */
+        closeExpiredSessionsForUser(userId, LocalDate.now());
+
+        Integer adminId = getAdminId(employee);
+
+        return createOfficeSession(
+                userId,
+                adminId,
+                LocalDateTime.now()
+        );
+    }
+
+    // ==========================================
+    // CREATE / RETRIEVE AUTOMATIC OFFICE SESSION
+    // ==========================================
+
+    private Session createOfficeSession(
+            Integer userId,
+            Integer adminId,
+            LocalDateTime now) {
+
+        LocalDate today = now.toLocalDate();
 
         LocalDateTime officeStart =
-                workScheduleService.getOfficeStart(today);
+                workScheduleService.getOfficeStart(
+                        adminId,
+                        today
+                );
 
         LocalDateTime officeEnd =
-                workScheduleService.getOfficeEnd(today);
-
+                workScheduleService.getOfficeEnd(
+                        adminId,
+                        today
+                );
 
         // ======================================
-        // OUTSIDE OFFICE HOURS
+        // CHECK OFFICE HOURS
         // ======================================
 
-        if (!workScheduleService.isOfficeHours()) {
-
+        if (!workScheduleService.isOfficeHours(adminId, now)) {
             return null;
         }
 
+        // ======================================
+        // TRANSITION INTO OFFICE HOURS
+        // ======================================
+
+        transitionToOfficeHours(
+                userId,
+                adminId,
+                officeStart,
+                officeEnd
+        );
 
         // ======================================
-        // CLOSE PRE-10 AM MANUAL SESSION
+        // CHECK FOR EXISTING OPEN SESSION
         // ======================================
 
-        transitionToOfficeHours(userId);
+        Session currentSession = getCurrentSession(userId);
 
+        if (currentSession != null) {
+            return currentSession;
+        }
 
         // ======================================
         // CHECK EXISTING OFFICE SESSION
         // ======================================
 
-        List<Session> existingSessions =
+        Session existingOfficeSession =
                 sessionRepo
                         .findByUserIdAndOfficeStartAndLogoutTimeIsNull(
                                 userId,
                                 officeStart
-                        );
+                        )
+                        .stream()
+                        .max(Comparator.comparing(Session::getLoginTime))
+                        .orElse(null);
 
-        if (!existingSessions.isEmpty()) {
-
-            /*
-             * The office session already exists.
-             *
-             * IMPORTANT:
-             * Do NOT change employeeStartedAt here.
-             *
-             * The scheduler must NOT count as the
-             * employee clicking Start Work.
-             */
-            return existingSessions.stream()
-                    .max((s1, s2) ->
-                            s1.getLoginTime()
-                                    .compareTo(s2.getLoginTime()))
-                    .orElse(null);
+        if (existingOfficeSession != null) {
+            return existingOfficeSession;
         }
-
 
         // ======================================
         // CREATE AUTOMATIC OFFICE SESSION
@@ -514,22 +539,15 @@ public class SessionService {
 
         session.setUserId(userId);
 
-        /*
-         * Official session starts exactly at 10 AM.
-         */
         session.setLoginTime(officeStart);
 
         session.setOfficeStart(officeStart);
-
         session.setOfficeEnd(officeEnd);
 
-        /*
-         * Official work period starts at 10 AM.
-         */
         session.setWorkStartedAt(officeStart);
 
         /*
-         * Employee has NOT clicked Start Work yet.
+         * The employee has not clicked Start Work yet.
          */
         session.setEmployeeStartedAt(null);
 
@@ -546,67 +564,255 @@ public class SessionService {
         session.setProductivity(0.0);
 
         session.setLogoutTime(null);
+        session.setWorkPaused(false);
 
         return sessionRepo.save(session);
     }
 
-
     // ==========================================
-    // AUTOMATIC STOP AT 7 PM
+    // AUTOMATIC STOP OF OFFICE SESSIONS
     // ==========================================
 
+    /*
+     * Closes automatic office sessions at their own
+     * configured officeEnd time.
+     *
+     * Manual sessions have null officeStart and officeEnd,
+     * so this method does not close manual sessions.
+     */
+
+    @Transactional
     public void stopOfficeWork() {
 
-        LocalDate today = LocalDate.now();
+        LocalDateTime now = LocalDateTime.now();
 
-        LocalDateTime officeStart =
-                workScheduleService.getOfficeStart(today);
+        List<Session> openSessions =
+                sessionRepo.findByLogoutTimeIsNull();
 
-        LocalDateTime officeEnd =
-                workScheduleService.getOfficeEnd(today);
+        for (Session candidate : openSessions) {
 
-        List<Session> openOfficeSessions =
-                sessionRepo.findByOfficeStartAndOfficeEndAndLogoutTimeIsNull(
-                        officeStart,
-                        officeEnd
-                );
+            if (candidate.getOfficeStart() == null
+                    || candidate.getOfficeEnd() == null) {
+                continue;
+            }
 
-        for (Session session : openOfficeSessions) {
+            if (now.isBefore(candidate.getOfficeEnd())) {
+                continue;
+            }
 
-            Integer userId = session.getUserId();
+            Integer userId = candidate.getUserId();
 
-            // Stop screenshot capture
-            screenshotCaptureService.stopCapture(userId);
+            if (userRepo.findByIdForUpdate(userId).isEmpty()) {
+                continue;
+            }
 
-            // Stop activity tracking
-            trackerService.stopTracking(userId);
+            Session session = sessionRepo.findById(candidate.getId())
+                    .orElse(null);
 
-            // Stop screen recording
-            screenRecordingService.stopRecording(userId);
+            if (session == null || session.getLogoutTime() != null) {
+                continue;
+            }
 
-            // Close office session
-            session.setLogoutTime(officeEnd);
+            if (session.getOfficeStart() == null
+                    || session.getOfficeEnd() == null) {
+                continue;
+            }
+
+            LocalDateTime officialEndTime = session.getOfficeEnd();
+
+            if (now.isBefore(officialEndTime)) {
+                continue;
+            }
+
+            // ==================================
+            // STOP EMPLOYEE SERVICES IF STARTED
+            // ==================================
+
+            if (session.getEmployeeStartedAt() != null) {
+
+                screenshotCaptureService.stopCapture(userId);
+
+                trackerService.stopTracking(userId);
+
+                screenRecordingService.stopRecording(userId);
+            }
+
+            // ==================================
+            // PERMANENTLY CLOSE SESSION
+            // ==================================
+
+            session.setWorkPaused(false);
+            session.setLogoutTime(officialEndTime);
 
             sessionRepo.save(session);
 
-            /*
-             * If the employee actually clicked Start Work,
-             * close today's attendance at the official office
-             * end time.
-             *
-             * If the employee never clicked Start Work,
-             * there should be no PRESENT attendance record.
-             */
+            // ==================================
+            // CLOSE ATTENDANCE ON CORRECT DATE
+            // ==================================
+
             if (session.getEmployeeStartedAt() != null) {
 
                 attendanceService.markEndTimeAt(
                         userId,
-                        officeEnd.toLocalTime()
+                        officialEndTime.toLocalDate(),
+                        officialEndTime.toLocalTime()
                 );
             }
         }
     }
 
+    // ==========================================
+    // CLOSE SESSIONS AT MIDNIGHT
+    // ==========================================
+
+    /*
+     * Permanently closes sessions that belong to a
+     * previous calendar date and are still open.
+     *
+     * A paused session is also closed at midnight.
+     * Paused time is not added to activity counters.
+     */
+
+    @Transactional
+    public void closeSessionsAtMidnight() {
+
+        LocalDate today = LocalDate.now();
+
+        List<Session> openSessions =
+                sessionRepo.findByLogoutTimeIsNull();
+
+        Set<Integer> processedUsers = new HashSet<>();
+
+        for (Session candidate : openSessions) {
+
+            if (candidate.getLoginTime() == null) {
+                continue;
+            }
+
+            LocalDate sessionDate =
+                    candidate.getLoginTime().toLocalDate();
+
+            if (!sessionDate.isBefore(today)) {
+                continue;
+            }
+
+            Integer userId = candidate.getUserId();
+
+            if (userId == null || !processedUsers.add(userId)) {
+                continue;
+            }
+
+            closeExpiredSessionsForUser(userId, today);
+        }
+    }
+
+    // ==========================================
+    // CLOSE PREVIOUS-DAY SESSIONS FOR ONE EMPLOYEE
+    // ==========================================
+
+    /*
+     * Shared helper used by:
+     * 1. The midnight scheduler.
+     * 2. Start Work, in case the application was offline
+     *    when midnight occurred.
+     */
+
+    private void closeExpiredSessionsForUser(
+            Integer userId,
+            LocalDate today) {
+
+        if (userRepo.findByIdForUpdate(userId).isEmpty()) {
+            return;
+        }
+
+        List<Session> openSessions =
+                sessionRepo.findByUserIdAndLogoutTimeIsNull(userId);
+
+        for (Session candidate : openSessions) {
+
+            if (candidate.getLoginTime() == null) {
+                continue;
+            }
+
+            LocalDate sessionDate =
+                    candidate.getLoginTime().toLocalDate();
+
+            /*
+             * Only sessions from dates before today
+             * are eligible for midnight closure.
+             */
+            if (!sessionDate.isBefore(today)) {
+                continue;
+            }
+
+            Session session = sessionRepo.findById(candidate.getId())
+                    .orElse(null);
+
+            if (session == null || session.getLogoutTime() != null) {
+                continue;
+            }
+
+            if (session.getLoginTime() == null) {
+                continue;
+            }
+
+            sessionDate = session.getLoginTime().toLocalDate();
+
+            if (!sessionDate.isBefore(today)) {
+                continue;
+            }
+
+            LocalDateTime midnight =
+                    sessionDate.plusDays(1).atStartOfDay();
+
+            // ==================================
+            // STOP EMPLOYEE SERVICES
+            // ==================================
+
+            if (session.getEmployeeStartedAt() != null) {
+
+                screenshotCaptureService.stopCapture(userId);
+
+                /*
+                 * Stop tracking before closing the session.
+                 * This allows the final activity counters
+                 * to be synchronized while the session is open.
+                 */
+                trackerService.stopTracking(userId);
+
+                screenRecordingService.stopRecording(userId);
+            }
+
+            // ==================================
+            // PERMANENTLY CLOSE SESSION
+            // ==================================
+
+            session.setWorkPaused(false);
+            session.setLogoutTime(midnight);
+
+            sessionRepo.save(session);
+
+            // ==================================
+            // CLOSE ATTENDANCE ON SESSION DATE
+            // ==================================
+
+            if (session.getEmployeeStartedAt() != null) {
+
+                attendanceService.markEndTimeAt(
+                        userId,
+                        sessionDate,
+                        LocalTime.MIDNIGHT
+                );
+            }
+
+            System.out.println(
+                    "Previous-day session closed at midnight. " +
+                            "User ID: " + userId +
+                            ", Session ID: " + session.getId() +
+                            ", Session date: " + sessionDate
+            );
+        }
+    }
 
     // ==========================================
     // TODAY ACTIVE MINUTES
@@ -624,7 +830,6 @@ public class SessionService {
                 .sum();
     }
 
-
     // ==========================================
     // TODAY IDLE MINUTES
     // ==========================================
@@ -641,7 +846,6 @@ public class SessionService {
                 .sum();
     }
 
-
     // ==========================================
     // ACTIVE HOURS
     // ==========================================
@@ -650,7 +854,6 @@ public class SessionService {
 
         return getTodayActiveMinutes(userId) / 60;
     }
-
 
     // ==========================================
     // ACTIVE REMAINING MINUTES
@@ -661,7 +864,6 @@ public class SessionService {
         return getTodayActiveMinutes(userId) % 60;
     }
 
-
     // ==========================================
     // IDLE HOURS
     // ==========================================
@@ -671,7 +873,6 @@ public class SessionService {
         return getTodayIdleMinutes(userId) / 60;
     }
 
-
     // ==========================================
     // IDLE REMAINING MINUTES
     // ==========================================
@@ -680,7 +881,6 @@ public class SessionService {
 
         return getTodayIdleMinutes(userId) % 60;
     }
-
 
     // ==========================================
     // TODAY LOGIN TIME
@@ -695,27 +895,16 @@ public class SessionService {
                 .orElse(null);
     }
 
-
     // ==========================================
     // TODAY LOGOUT TIME
     // ==========================================
 
     public LocalDateTime getTodayLogoutTime(Integer userId) {
 
-        /*
-         * If any session is currently open,
-         * employee has not completely stopped working.
-         */
         if (getCurrentSession(userId) != null) {
-
             return null;
         }
 
-
-        /*
-         * Once all sessions are closed,
-         * return the latest logout time.
-         */
         return getTodaySessions(userId)
                 .stream()
                 .filter(session ->
@@ -726,25 +915,55 @@ public class SessionService {
                 .orElse(null);
     }
 
-
     // ==========================================
     // TRANSITION INTO OFFICE HOURS
     // ==========================================
 
+    /*
+     * Closes pre-office manual sessions when the employee
+     * enters the office-hours period.
+     */
+
+    @Transactional
     public void transitionToOfficeHours(Integer userId) {
+
+        User employee = getEmployee(userId);
+
+        Integer adminId = getAdminId(employee);
 
         LocalDate today = LocalDate.now();
 
         LocalDateTime officeStart =
-                workScheduleService.getOfficeStart(today);
+                workScheduleService.getOfficeStart(
+                        adminId,
+                        today
+                );
 
         LocalDateTime officeEnd =
-                workScheduleService.getOfficeEnd(today);
+                workScheduleService.getOfficeEnd(
+                        adminId,
+                        today
+                );
 
+        transitionToOfficeHours(
+                userId,
+                adminId,
+                officeStart,
+                officeEnd
+        );
+    }
 
-        // ======================================
-        // FIND OPEN SESSIONS BEFORE 10 AM
-        // ======================================
+    // ==========================================
+    // INTERNAL OFFICE-HOURS TRANSITION
+    // ==========================================
+
+    private void transitionToOfficeHours(
+            Integer userId,
+            Integer adminId,
+            LocalDateTime officeStart,
+            LocalDateTime officeEnd) {
+
+        LocalDate today = officeStart.toLocalDate();
 
         List<Session> openSessions =
                 sessionRepo
@@ -754,57 +973,49 @@ public class SessionService {
                                 officeStart.plusSeconds(1)
                         );
 
-
-        // ======================================
-        // CLOSE MANUAL SESSIONS
-        // ======================================
-
         for (Session session : openSessions) {
 
             boolean isOfficeSession =
                     officeStart.equals(session.getOfficeStart())
-                            &&
-                            officeEnd.equals(session.getOfficeEnd());
+                            && officeEnd.equals(session.getOfficeEnd());
 
-
-            if (!isOfficeSession
-                    && !session.getLoginTime().isAfter(officeStart)) {
-
-                /*
-                 * If a pre-10 AM manual session had
-                 * screenshot capture running, stop it
-                 * before closing the session.
-                 */
-                screenshotCaptureService.stopCapture(
-                        session.getUserId()
-                );
-
-                /*
-                 * Also stop activity tracking for
-                 * the pre-10 AM manual session.
-                 */
-                trackerService.stopTracking(
-                        session.getUserId()
-                );
-
-                session.setLogoutTime(officeStart);
-
-                screenRecordingService.stopRecording(
-                        session.getUserId()
-                );
-
-                sessionRepo.save(session);
+            if (isOfficeSession) {
+                continue;
             }
+
+            if (session.getLoginTime().isAfter(officeStart)) {
+                continue;
+            }
+
+            // ==================================
+            // STOP SERVICES AND CLOSE ATTENDANCE
+            // ==================================
+
+            if (session.getEmployeeStartedAt() != null) {
+
+                screenshotCaptureService.stopCapture(userId);
+
+                trackerService.stopTracking(userId);
+
+                screenRecordingService.stopRecording(userId);
+
+                attendanceService.markEndTimeAt(
+                        userId,
+                        officeStart.toLocalDate(),
+                        officeStart.toLocalTime()
+                );
+            }
+
+            // ==================================
+            // PERMANENTLY CLOSE OLD SESSION
+            // ==================================
+
+            session.setWorkPaused(false);
+            session.setLogoutTime(officeStart);
+
+            sessionRepo.save(session);
         }
     }
-
-
-    // ==========================================
-    // OVERTIME CONSTANT
-    // ==========================================
-
-    private static final int REGULAR_WORK_MINUTES = 8 * 60;
-
 
     // ==========================================
     // TODAY OVERTIME
@@ -812,15 +1023,13 @@ public class SessionService {
 
     public int getTodayOvertimeMinutes(Integer userId) {
 
-        int activeMinutes =
-                getTodayActiveMinutes(userId);
+        int activeMinutes = getTodayActiveMinutes(userId);
 
         return Math.max(
                 activeMinutes - REGULAR_WORK_MINUTES,
                 0
         );
     }
-
 
     // ==========================================
     // THIS WEEK OVERTIME
@@ -835,11 +1044,9 @@ public class SessionService {
                         today.getDayOfWeek().getValue() - 1
                 );
 
-        LocalDateTime start =
-                startOfWeek.atStartOfDay();
+        LocalDateTime start = startOfWeek.atStartOfDay();
 
-        LocalDateTime end =
-                today.plusDays(1).atStartOfDay();
+        LocalDateTime end = today.plusDays(1).atStartOfDay();
 
         List<Session> sessions =
                 sessionRepo.findByUserIdAndLoginTimeBetween(
@@ -850,7 +1057,6 @@ public class SessionService {
 
         return calculateOvertimeFromSessions(sessions);
     }
-
 
     // ==========================================
     // THIS MONTH OVERTIME
@@ -860,14 +1066,11 @@ public class SessionService {
 
         LocalDate today = LocalDate.now();
 
-        LocalDate firstDay =
-                today.withDayOfMonth(1);
+        LocalDate firstDay = today.withDayOfMonth(1);
 
-        LocalDateTime start =
-                firstDay.atStartOfDay();
+        LocalDateTime start = firstDay.atStartOfDay();
 
-        LocalDateTime end =
-                today.plusDays(1).atStartOfDay();
+        LocalDateTime end = today.plusDays(1).atStartOfDay();
 
         List<Session> sessions =
                 sessionRepo.findByUserIdAndLoginTimeBetween(
@@ -878,7 +1081,6 @@ public class SessionService {
 
         return calculateOvertimeFromSessions(sessions);
     }
-
 
     // ==========================================
     // CALCULATE OVERTIME FROM SESSIONS
@@ -891,15 +1093,7 @@ public class SessionService {
             return 0;
         }
 
-        /*
-         * Group active minutes by date.
-         *
-         * Each working day gets its own
-         * 8-hour regular-work allowance.
-         */
-
-        java.util.Map<LocalDate, Integer> dailyActive =
-                new java.util.HashMap<>();
+        Map<LocalDate, Integer> dailyActive = new HashMap<>();
 
         for (Session session : sessions) {
 
@@ -935,7 +1129,6 @@ public class SessionService {
         return totalOvertime;
     }
 
-
     // ==========================================
     // DAILY OVERTIME HISTORY
     // ==========================================
@@ -945,14 +1138,11 @@ public class SessionService {
 
         LocalDate today = LocalDate.now();
 
-        LocalDate startDate =
-                today.withDayOfMonth(1);
+        LocalDate startDate = today.withDayOfMonth(1);
 
-        LocalDateTime start =
-                startDate.atStartOfDay();
+        LocalDateTime start = startDate.atStartOfDay();
 
-        LocalDateTime end =
-                today.plusDays(1).atStartOfDay();
+        LocalDateTime end = today.plusDays(1).atStartOfDay();
 
         List<Session> sessions =
                 sessionRepo.findByUserIdAndLoginTimeBetween(
@@ -961,8 +1151,7 @@ public class SessionService {
                         end
                 );
 
-        java.util.Map<LocalDate, Integer> dailyActive =
-                new java.util.HashMap<>();
+        Map<LocalDate, Integer> dailyActive = new HashMap<>();
 
         for (Session session : sessions) {
 
@@ -985,14 +1174,12 @@ public class SessionService {
             );
         }
 
-        List<OvertimeRecordDTO> records =
-                new ArrayList<>();
+        List<OvertimeRecordDTO> records = new ArrayList<>();
 
-        for (java.util.Map.Entry<LocalDate, Integer> entry
+        for (Map.Entry<LocalDate, Integer> entry
                 : dailyActive.entrySet()) {
 
-            int activeMinutes =
-                    entry.getValue();
+            int activeMinutes = entry.getValue();
 
             int overtimeMinutes =
                     Math.max(
@@ -1000,7 +1187,6 @@ public class SessionService {
                             0
                     );
 
-            // Only show days where actual overtime exists
             if (overtimeMinutes > 0) {
 
                 records.add(
@@ -1021,5 +1207,36 @@ public class SessionService {
 
         return records;
     }
-}
 
+    // ==========================================
+    // TODAY ACTIVE SECONDS
+    // ==========================================
+
+    public long getTodayActiveSeconds(Integer userId) {
+
+        return getTodaySessions(userId)
+                .stream()
+                .mapToLong(session ->
+                        session.getActiveSeconds() != null
+                                ? session.getActiveSeconds()
+                                : 0L
+                )
+                .sum();
+    }
+
+    // ==========================================
+    // TODAY IDLE SECONDS
+    // ==========================================
+
+    public long getTodayIdleSeconds(Integer userId) {
+
+        return getTodaySessions(userId)
+                .stream()
+                .mapToLong(session ->
+                        session.getIdleSeconds() != null
+                                ? session.getIdleSeconds()
+                                : 0L
+                )
+                .sum();
+    }
+}

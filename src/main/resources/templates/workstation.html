@@ -1,41 +1,25 @@
 
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Workstation | TeamLogger</title>
+    <title>My Workstation | TeamLogger</title>
 
     <style>
         :root {
-            color-scheme: light;
-            --page-bg: #eaf0f8;
-            --text: #19263b;
-            --muted: #687991;
-            --glass: rgba(255,255,255,.53);
-            --glass-strong: rgba(255,255,255,.72);
-            --border: rgba(255,255,255,.78);
-            --accent: #3979ed;
-            --accent-soft: rgba(57,121,237,.12);
-            --shadow: 0 18px 55px rgba(35,55,85,.10);
-            --line: rgba(100,120,150,.17);
-        }
-
-        @media (prefers-color-scheme: dark) {
-            :root {
-                color-scheme: dark;
-                --page-bg: #101827;
-                --text: #edf3ff;
-                --muted: #9baac0;
-                --glass: rgba(24,39,61,.57);
-                --glass-strong: rgba(24,39,61,.76);
-                --border: rgba(255,255,255,.11);
-                --accent: #79aaff;
-                --accent-soft: rgba(75,137,255,.15);
-                --shadow: 0 18px 55px rgba(0,0,0,.22);
-                --line: rgba(190,210,240,.13);
-            }
+            --bg: #dce7e5;
+            --panel: #202525;
+            --panel-2: #292f2f;
+            --panel-3: #303838;
+            --text: #f3f6f5;
+            --muted: #929e9b;
+            --border: rgba(255,255,255,.07);
+            --mint: #a8f4ed;
+            --green: #75d9ba;
+            --red: #fa7777;
+            --orange: #e5a66d;
         }
 
         * {
@@ -46,20 +30,25 @@
 
         body {
             min-height: 100vh;
-            padding: 35px 5%;
-            font-family: "Segoe UI", Arial, sans-serif;
+            padding: 30px 18px;
+            background: var(--bg);
             color: var(--text);
-            background:
-                radial-gradient(circle at 8% 8%, rgba(65,130,255,.18), transparent 34%),
-                radial-gradient(circle at 92% 85%, rgba(139,93,255,.13), transparent 35%),
-                var(--page-bg);
-            transition: background .3s ease, color .3s ease;
+            font-family: "Segoe UI", Arial, sans-serif;
         }
 
-        .page {
+        button, a, select {
+            font: inherit;
+        }
+
+        .dashboard {
             width: 100%;
-            max-width: 1250px;
+            max-width: 1440px;
             margin: auto;
+            padding: 22px;
+            background: #202525;
+            border: 7px solid #171919;
+            border-radius: 25px;
+            box-shadow: 0 25px 65px rgba(0,0,0,.25);
         }
 
         /* Header */
@@ -68,7 +57,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 43px;
+            gap: 18px;
+            margin-bottom: 27px;
         }
 
         .brand {
@@ -77,431 +67,675 @@
             gap: 12px;
         }
 
-        .brand-logo {
-            width: 44px;
-            height: 44px;
+        .logo {
+            width: 42px;
+            height: 42px;
             display: grid;
             place-items: center;
-            border-radius: 14px;
-            color: white;
-            font-weight: 800;
-            font-size: 19px;
-            background: linear-gradient(135deg,#347cff,#7954ed);
-            box-shadow: 0 6px 22px rgba(60,115,240,.3);
+            border-radius: 13px;
+            color: #172322;
+            background: var(--mint);
+            font-size: 16px;
+            font-weight: 900;
         }
 
         .brand-name {
-            font-size: 19px;
+            font-size: 15px;
             font-weight: 800;
-            letter-spacing: .7px;
+            letter-spacing: .4px;
         }
 
-        .brand-name span {
-            color: var(--accent);
+        .brand-subtitle {
+            margin-top: 4px;
+            color: var(--muted);
+            font-size: 10px;
         }
 
         .header-right {
             display: flex;
             align-items: center;
-            gap: 9px;
-            color: var(--muted);
-            font-size: 12px;
-            letter-spacing: 1.4px;
+            gap: 15px;
         }
 
-        .header-indicator {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #22a879;
-        }
-
-        /* Heading */
-
-        .page-heading {
-            margin-bottom: 25px;
-        }
-
-        .eyebrow {
-            color: var(--accent);
+        .dashboard-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 11px 16px;
+            border: 1px solid rgba(168,244,237,.2);
+            border-radius: 10px;
+            color: var(--mint);
+            background: #303a39;
+            text-decoration: none;
             font-size: 11px;
+            font-weight: 700;
+            transition: .2s;
+        }
+
+        .dashboard-button:hover {
+            background: #3a4947;
+            transform: translateY(-2px);
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+        }
+
+        .user-avatar {
+            width: 38px;
+            height: 38px;
+            display: grid;
+            place-items: center;
+            flex-shrink: 0;
+            border-radius: 50%;
+            color: #182323;
+            background: var(--mint);
             font-weight: 800;
-            letter-spacing: 2.5px;
-            margin-bottom: 10px;
         }
 
-        .page-heading h1 {
-            font-size: clamp(29px,4vw,40px);
-            letter-spacing: -1.3px;
+        .user-name {
+            max-width: 145px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 12px;
+            font-weight: 700;
         }
 
-        .page-heading p {
+        .user-role {
+            margin-top: 3px;
             color: var(--muted);
-            margin-top: 9px;
-            font-size: 14px;
+            font-size: 10px;
         }
 
-        /* Shared glass card */
+        /* Welcome */
 
-        .glass-card {
-            background: var(--glass);
+        .welcome {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            margin-bottom: 22px;
+        }
+
+        .welcome h1 {
+            font-size: clamp(22px, 3vw, 29px);
+            letter-spacing: -.7px;
+        }
+
+        .welcome p {
+            margin-top: 6px;
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .workspace-label {
+            padding: 10px 14px;
             border: 1px solid var(--border);
-            border-radius: 22px;
-            backdrop-filter: blur(24px) saturate(150%);
-            -webkit-backdrop-filter: blur(24px) saturate(150%);
-            box-shadow: var(--shadow);
+            border-radius: 9px;
+            color: var(--mint);
+            font-size: 10px;
+            letter-spacing: .6px;
+            white-space: nowrap;
+        }
+
+        /* Main grid */
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: minmax(0,1fr) minmax(0,1fr) minmax(220px,.95fr);
+            grid-template-areas:
+                "profile tracking stats"
+                "tasks tasks stats";
+            gap: 14px;
+        }
+
+        .card {
+            min-width: 0;
+            overflow: hidden;
+            padding: 18px;
+            border: 1px solid var(--border);
+            border-radius: 17px;
+            background: var(--panel);
+        }
+
+        .card-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .card-title h2 {
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .card-title span {
+            color: var(--muted);
+            font-size: 10px;
         }
 
         /* Profile */
 
         .profile-card {
-            position: relative;
+            grid-area: profile;
+            padding: 0;
+            min-height: 225px;
+            background: #292e2e;
+        }
+
+        .profile-photo-area {
+            height: 145px;
             overflow: hidden;
-            display: grid;
-            grid-template-columns: 220px 1fr;
-            margin-bottom: 22px;
+            background: linear-gradient(135deg,#3b5553,#1d2928);
         }
 
-        .profile-card::after {
-            content: "";
-            position: absolute;
-            width: 330px;
-            height: 330px;
-            border-radius: 50%;
-            background: var(--accent-soft);
-            filter: blur(45px);
-            right: -110px;
-            top: -210px;
-            pointer-events: none;
-        }
-
-        .profile-visual {
-            position: relative;
-            z-index: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 32px 20px;
-            background: var(--glass-strong);
-            border-right: 1px solid var(--line);
-        }
-
-        .avatar-frame {
-            width: 125px;
-            height: 125px;
-            padding: 4px;
-            position: relative;
-            border-radius: 50%;
-            background: linear-gradient(140deg,#4ba4ff,#7956f5,#36d5c2);
-            box-shadow: 0 0 30px rgba(64,125,255,.22);
-        }
-
-        .profile-photo,
-        .avatar-placeholder {
+        .profile-photo {
             width: 100%;
             height: 100%;
-            border-radius: 50%;
             object-fit: cover;
-            border: 4px solid var(--page-bg);
         }
 
-        .avatar-placeholder {
+        .profile-placeholder {
+            width: 100%;
+            height: 100%;
             display: grid;
             place-items: center;
-            color: white;
-            font-size: 38px;
+            color: var(--mint);
+            font-size: 45px;
             font-weight: 800;
-            background: linear-gradient(145deg,#347cff,#7654ed);
-        }
-
-        .profile-caption {
-            margin-top: 17px;
-            color: var(--muted);
-            font-size: 10px;
-            font-weight: 700;
-            letter-spacing: 1.8px;
-            text-transform: uppercase;
         }
 
         .profile-info {
             position: relative;
-            z-index: 1;
-            padding: 32px 38px;
             display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .profile-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 14px;
-        }
-
-        .tag {
-            padding: 7px 11px;
-            border-radius: 8px;
-            color: var(--accent);
-            background: var(--accent-soft);
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin: -22px 12px 0;
+            padding: 13px;
             border: 1px solid var(--border);
-            font-size: 10px;
-            font-weight: 800;
-            letter-spacing: 1px;
-            text-transform: uppercase;
+            border-radius: 13px;
+            background: #303535;
         }
 
         .profile-name {
-            font-size: clamp(25px,3vw,34px);
-            font-weight: 750;
-            letter-spacing: -.8px;
-            overflow-wrap: anywhere;
-        }
-
-        .designation {
-            margin-top: 7px;
-            color: var(--accent);
-            font-weight: 650;
-            font-size: 15px;
-        }
-
-        .description {
-            max-width: 650px;
-            margin-top: 13px;
-            color: var(--muted);
-            font-size: 13px;
-            line-height: 1.7;
-        }
-
-        .profile-details {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 28px;
-            margin-top: 23px;
-            padding-top: 20px;
-            border-top: 1px solid var(--line);
-        }
-
-        .detail-label {
-            color: var(--muted);
-            font-size: 9px;
-            font-weight: 700;
-            letter-spacing: 1.3px;
-            text-transform: uppercase;
-            margin-bottom: 7px;
-        }
-
-        .detail-value {
-            color: var(--text);
-            font-size: 12px;
-            font-weight: 650;
-            overflow-wrap: anywhere;
-        }
-
-        /* Start work panel */
-
-        .start-panel {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 25px;
-            padding: 24px 28px;
-            margin-bottom: 22px;
-        }
-
-        .start-copy h2 {
-            font-size: 18px;
-            margin-bottom: 7px;
-        }
-
-        .start-copy p {
-            color: var(--muted);
-            font-size: 12px;
-            line-height: 1.6;
-        }
-
-        .start-button {
-            min-width: 190px;
-            padding: 15px 25px;
-            border: 0;
-            border-radius: 13px;
-            color: white;
             font-size: 14px;
             font-weight: 750;
-            letter-spacing: .3px;
-            background: linear-gradient(110deg,#347cff,#7255ed);
-            box-shadow: 0 9px 24px rgba(57,112,235,.28);
-            cursor: not-allowed;
-            opacity: .85;
+            overflow-wrap: anywhere;
         }
 
-        .start-button span {
-            margin-right: 8px;
-            font-size: 17px;
-        }
-
-        .action-note {
-            margin-top: 8px;
+        .profile-designation {
+            margin-top: 4px;
             color: var(--muted);
             font-size: 10px;
-            text-align: center;
         }
 
-        /* Timer cards */
-
-        .section-heading {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin: 30px 2px 14px;
+        .profile-id {
+            margin-top: 6px;
+            color: var(--mint);
+            font-size: 9px;
         }
 
-        .section-heading h2 {
-            font-size: 17px;
+        .profile-role {
+            flex-shrink: 0;
+            padding: 7px 9px;
+            border-radius: 8px;
+            color: var(--mint);
+            background: rgba(168,244,237,.09);
+            font-size: 9px;
             font-weight: 700;
         }
 
-        .section-heading span {
-            color: var(--muted);
-            font-size: 11px;
+        /* Tracking */
+
+        .tracking-card {
+            grid-area: tracking;
+            min-height: 225px;
         }
 
-        .timer-grid {
-            display: grid;
-            grid-template-columns: repeat(2,minmax(0,1fr));
-            gap: 18px;
+        .tracking-status {
+            color: var(--green) !important;
         }
 
-        .timer-card {
-            position: relative;
-            overflow: hidden;
-            padding: 24px;
-            min-height: 165px;
+        .tracking-paused {
+            color: var(--orange) !important;
         }
 
-        .timer-card::after {
-            content: "";
-            position: absolute;
-            width: 140px;
-            height: 140px;
-            right: -55px;
-            bottom: -75px;
-            border-radius: 50%;
-            background: var(--accent-soft);
-            filter: blur(10px);
-        }
-
-        .timer-top {
+        .timer-box {
             display: flex;
-            align-items: center;
             justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            padding: 17px;
+            border-radius: 12px;
+            background: var(--mint);
+            color: #172625;
         }
 
         .timer-label {
-            color: var(--muted);
-            font-size: 12px;
+            font-size: 10px;
             font-weight: 650;
         }
 
-        .timer-icon {
-            width: 35px;
-            height: 35px;
-            display: grid;
-            place-items: center;
-            border-radius: 11px;
-            color: var(--accent);
-            background: var(--accent-soft);
-            font-size: 17px;
-        }
-
         .timer-value {
-            margin-top: 20px;
-            font-size: clamp(27px,4vw,35px);
-            font-weight: 750;
-            letter-spacing: 1px;
+            margin-top: 6px;
+            font-size: clamp(23px,3vw,30px);
+            font-weight: 800;
+            letter-spacing: .5px;
             font-variant-numeric: tabular-nums;
         }
 
-        .timer-caption {
-            margin-top: 7px;
-            color: var(--muted);
-            font-size: 11px;
-        }
-
-        /* Productivity graph panel */
-
-        .productivity-card {
-            padding: 25px;
-            margin-top: 22px;
-        }
-
-        .productivity-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-
-        .productivity-header h2 {
-            font-size: 17px;
-        }
-
-        .productivity-header p {
-            color: var(--muted);
-            font-size: 11px;
-            margin-top: 6px;
-        }
-
-        .chart-area {
-            position: relative;
-            height: 190px;
-            margin-top: 22px;
-            border-radius: 13px;
-            overflow: hidden;
-            background:
-                repeating-linear-gradient(
-                    to bottom,
-                    transparent 0,
-                    transparent 46px,
-                    var(--line) 47px,
-                    transparent 48px
-                );
-        }
-
-        .chart-empty {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            color: var(--muted);
-            background: linear-gradient(90deg,transparent,var(--glass),transparent);
-        }
-
-        .chart-empty-icon {
-            width: 42px;
-            height: 42px;
+        .tracking-button {
+            width: 44px;
+            height: 44px;
             display: grid;
             place-items: center;
-            margin-bottom: 10px;
-            border-radius: 13px;
-            color: var(--accent);
-            background: var(--accent-soft);
-            font-size: 20px;
+            flex-shrink: 0;
+            border: none;
+            border-radius: 12px;
+            color: white;
+            background: #222929;
+            cursor: pointer;
+            font-size: 17px;
+            transition: .2s;
         }
 
-        .chart-empty strong {
+        .tracking-button:hover {
+            transform: scale(1.07);
+        }
+
+        .tracking-button:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .tracking-note {
+            margin-top: 13px;
+            color: var(--muted);
+            font-size: 10px;
+            line-height: 1.6;
+        }
+
+        .tracking-note strong {
+            color: var(--text);
+        }
+
+        /* Active and Idle Time */
+
+        .time-summary {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .time-summary-item {
+            padding: 13px;
+            border: 1px solid var(--border);
+            border-radius: 11px;
+            background: var(--panel-2);
+        }
+
+        .time-summary-label {
+            display: block;
+            color: var(--muted);
+            font-size: 10px;
+            margin-bottom: 7px;
+        }
+
+        .time-summary-item strong {
+            color: var(--mint);
+            font-size: 18px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Statistics */
+
+        .format-card {
+            grid-area: stats;
+            display: flex;
+            flex-direction: column;
+            gap: 13px;
+            padding: 0;
+            border: none;
+            background: transparent;
+            overflow: visible;
+        }
+
+        .stat-card {
+            min-height: 90px;
+            padding: 17px;
+            border: 1px solid var(--border);
+            border-radius: 15px;
+            background: var(--panel);
+        }
+
+        .stat-number {
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -.8px;
+        }
+
+        .stat-label {
+            margin-top: 5px;
+            color: var(--muted);
+            font-size: 10px;
+        }
+
+        .stat-wide {
+            min-height: 110px;
+        }
+
+        .stat-placeholder {
+            margin-top: 9px;
+            color: var(--muted);
+            font-size: 10px;
+            line-height: 1.5;
+        }
+
+        /* Tasks */
+
+        .tasks-card {
+            grid-area: tasks;
+            min-height: 265px;
+        }
+
+        .task-days {
+            display: grid;
+            grid-template-columns: repeat(7,1fr);
+            gap: 6px;
+            margin-bottom: 17px;
+        }
+
+        .day {
+            padding: 10px 3px;
+            border-radius: 9px;
+            color: var(--muted);
+            text-align: center;
+            font-size: 9px;
+        }
+
+        .day strong {
+            display: block;
+            margin-top: 6px;
             color: var(--text);
             font-size: 12px;
         }
 
-        .chart-empty span {
-            margin-top: 6px;
+        .day.selected {
+            color: #172625;
+            background: var(--mint);
+        }
+
+        .day.selected strong {
+            color: #172625;
+        }
+
+        .task-empty {
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 9px;
+            border: 1px dashed rgba(255,255,255,.10);
+            border-radius: 12px;
+            color: var(--muted);
+            text-align: center;
+        }
+
+        .task-empty-icon {
+            font-size: 24px;
+            color: var(--mint);
+        }
+
+        .task-empty strong {
+            color: var(--text);
+            font-size: 11px;
+        }
+
+        .task-empty span {
+            max-width: 280px;
             font-size: 10px;
+            line-height: 1.5;
+        }
+
+        /* Expand control */
+
+        .expand-area {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 23px 0 10px;
+        }
+
+        .expand-button {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 20px;
+            border: 1px solid rgba(168,244,237,.2);
+            border-radius: 30px;
+            color: var(--mint);
+            background: #303a39;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 700;
+            transition: .2s;
+        }
+
+        .expand-button:hover {
+            background: #3b4947;
+            transform: translateY(-2px);
+        }
+
+        .arrow {
+            display: inline-block;
+            font-size: 17px;
+            transition: transform .25s ease;
+        }
+
+        .expand-button[aria-expanded="true"] .arrow {
+            transform: rotate(180deg);
+        }
+
+        /* Additional content */
+
+        .extra-section {
+            display: none;
+            margin-top: 18px;
+            animation: reveal .3s ease;
+        }
+
+        .extra-section.show {
+            display: block;
+        }
+
+        @keyframes reveal {
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .extra-grid {
+            display: grid;
+            grid-template-columns: minmax(0,1.4fr) minmax(250px,.8fr);
+            gap: 14px;
+        }
+
+        /* Work activity */
+
+        .activity-card {
+            min-height: 390px;
+        }
+
+        .activity-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 17px;
+            color: var(--muted);
+            font-size: 9px;
+        }
+
+        .legend-dot {
+            display: inline-block;
+            width: 7px;
+            height: 7px;
+            margin-right: 4px;
+            border-radius: 50%;
+            background: var(--mint);
+        }
+
+        .heatmap {
+            display: grid;
+            grid-template-columns: 35px repeat(7,minmax(0,1fr));
+            gap: 7px;
+        }
+
+        .heat-label {
+            display: flex;
+            align-items: center;
+            color: var(--muted);
+            font-size: 9px;
+        }
+
+        .heat-cell {
+            aspect-ratio: 1.5;
+            border-radius: 5px;
+            background: #333a39;
+        }
+
+        .heat-cell.empty {
+            background: #303535;
+            background-image: repeating-linear-gradient(
+                135deg,
+                transparent,
+                transparent 4px,
+                rgba(255,255,255,.04) 4px,
+                rgba(255,255,255,.04) 6px
+            );
+        }
+
+        .activity-message {
+            margin-top: 18px;
+            padding: 13px;
+            border-radius: 11px;
+            color: var(--muted);
+            background: #292e2e;
+            font-size: 10px;
+            line-height: 1.6;
+        }
+
+        /* Productivity Graph */
+
+        .productivity-card {
+            min-height: 390px;
+        }
+
+        .productivity-heading {
+            align-items: center;
+        }
+
+        .productivity-period {
+            min-width: 105px;
+            padding: 9px 30px 9px 11px;
+            border: 1px solid rgba(168,244,237,.22);
+            border-radius: 9px;
+            outline: none;
+            color: var(--mint);
+            background: #303a39;
+            font-size: 10px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .productivity-period:focus {
+            border-color: var(--mint);
+        }
+
+        .productivity-period option {
+            color: var(--text);
+            background: var(--panel);
+        }
+
+        .productivity-description {
+            margin: -5px 0 15px;
+            color: var(--muted);
+            font-size: 10px;
+            line-height: 1.5;
+        }
+
+        .productivity-main-chart {
+            width: 100%;
+            height: 265px;
+            position: relative;
+        }
+
+        .productivity-main-chart canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .productivity-empty {
+            position: absolute;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: var(--muted);
+            text-align: center;
+            font-size: 11px;
+            line-height: 1.6;
+        }
+
+        .productivity-summary {
+            display: grid;
+            grid-template-columns: repeat(3,minmax(0,1fr));
+            gap: 9px;
+            margin-top: 17px;
+        }
+
+        .productivity-summary-item {
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: var(--panel-2);
+        }
+
+        .productivity-summary-item span {
+            display: block;
+            margin-bottom: 7px;
+            color: var(--muted);
+            font-size: 9px;
+        }
+
+        .productivity-summary-item strong {
+            color: var(--mint);
+            font-size: 15px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .productivity-message {
+            min-height: 18px;
+            margin-top: 12px;
+            color: var(--muted);
+            font-size: 10px;
+            line-height: 1.5;
         }
 
         /* Footer */
@@ -509,69 +743,137 @@
         .footer {
             display: flex;
             justify-content: space-between;
-            gap: 15px;
-            margin-top: 24px;
-            color: var(--muted);
-            font-size: 10px;
+            gap: 10px;
+            margin-top: 23px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border);
+            color: #727e7b;
+            font-size: 9px;
         }
 
-        @media (max-width: 760px) {
+        /* Responsive */
+
+        @media (max-width: 1050px) {
+            .dashboard-grid {
+                grid-template-columns: repeat(2,minmax(0,1fr));
+                grid-template-areas:
+                    "profile tracking"
+                    "tasks tasks"
+                    "stats stats";
+            }
+
+            .format-card {
+                display: grid;
+                grid-template-columns: repeat(3,minmax(0,1fr));
+            }
+
+            .extra-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 650px) {
             body {
-                padding: 24px 15px;
+                padding: 8px;
+            }
+
+            .dashboard {
+                padding: 13px;
+                border-width: 4px;
+                border-radius: 16px;
             }
 
             .topbar {
-                margin-bottom: 35px;
+                flex-wrap: wrap;
             }
 
             .header-right {
-                font-size: 9px;
-                letter-spacing: .5px;
-            }
-
-            .profile-card {
-                grid-template-columns: 1fr;
-            }
-
-            .profile-visual {
-                border-right: 0;
-                border-bottom: 1px solid var(--line);
-            }
-
-            .profile-info {
-                padding: 26px 23px;
-            }
-
-            .profile-details {
-                gap: 20px;
-            }
-
-            .start-panel {
-                align-items: stretch;
-                flex-direction: column;
-            }
-
-            .start-button {
                 width: 100%;
+                justify-content: space-between;
             }
-        }
 
-        @media (max-width: 480px) {
-            .timer-grid {
+            .dashboard-button {
+                padding: 10px 12px;
+                font-size: 10px;
+            }
+
+            .welcome {
+                align-items: flex-start;
+            }
+
+            .workspace-label {
+                font-size: 8px;
+                padding: 8px;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: minmax(0,1fr);
+                grid-template-areas:
+                    "profile"
+                    "tracking"
+                    "stats"
+                    "tasks";
+            }
+
+            .format-card {
+                display: grid;
+                grid-template-columns: repeat(2,minmax(0,1fr));
+            }
+
+            .stat-wide {
+                grid-column: span 2;
+            }
+
+            .extra-grid {
+                grid-template-columns: minmax(0,1fr);
+            }
+
+            .heatmap {
+                gap: 4px;
+                grid-template-columns: 30px repeat(7,minmax(0,1fr));
+            }
+
+            .heat-cell {
+                aspect-ratio: 1;
+            }
+
+            .productivity-main-chart {
+                height: 250px;
+            }
+
+            .productivity-summary {
                 grid-template-columns: 1fr;
             }
 
             .footer {
                 flex-direction: column;
+                line-height: 1.5;
             }
         }
 
-        @media (prefers-reduced-motion: reduce) {
-            *,
-            *::before,
-            *::after {
-                transition: none !important;
-                scroll-behavior: auto !important;
+        @media (max-width: 380px) {
+            .user-name {
+                max-width: 105px;
+            }
+
+            .workspace-label {
+                display: none;
+            }
+
+            .format-card {
+                grid-template-columns: 1fr;
+            }
+
+            .stat-wide {
+                grid-column: auto;
+            }
+
+            .productivity-heading {
+                align-items: flex-start;
+            }
+
+            .productivity-period {
+                min-width: 90px;
             }
         }
     </style>
@@ -579,209 +881,1297 @@
 
 <body>
 
-<div class="page">
+<div class="dashboard">
 
     <!-- Header -->
     <header class="topbar">
 
         <div class="brand">
-            <div class="brand-logo">TL</div>
-            <div class="brand-name">TEAM<span>LOGGER</span></div>
+            <div class="logo">TL</div>
+            <div>
+                <div class="brand-name">TEAMLOGGER</div>
+                <div class="brand-subtitle">Personal Workstation</div>
+            </div>
         </div>
 
         <div class="header-right">
-            <span class="header-indicator"></span>
-            PERSONAL WORKSPACE
-        </div>
 
+            <a th:href="@{/employee/dashboard}" class="dashboard-button">
+                <span>⌂</span>
+                Go to Employee Dashboard
+            </a>
+
+            <div class="user-menu">
+
+                <div class="user-avatar"
+                     th:text="${user.name != null and !user.name.isEmpty()
+                        ? #strings.substring(user.name,0,1).toUpperCase()
+                        : 'U'}">
+                    U
+                </div>
+
+                <div>
+                    <div class="user-name" th:text="${user.name}">
+                        Employee Name
+                    </div>
+                    <div class="user-role" th:text="${user.role}">
+                        EMPLOYEE
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
     </header>
 
-    <!-- Page title -->
-    <section class="page-heading">
-        <div class="eyebrow">YOUR DIGITAL WORKSPACE</div>
-        <h1>My Workstation<span style="color:var(--accent)">.</span></h1>
-        <p>Your work identity, activity and productivity in one place.</p>
+    <!-- Welcome -->
+    <section class="welcome">
+
+        <div>
+            <h1>My Workstation</h1>
+            <p>Manage your work session and monitor your daily activity.</p>
+        </div>
+
+        <div class="workspace-label">● PERSONAL WORKSPACE</div>
+
     </section>
 
-    <!-- Profile card -->
-    <section class="profile-card glass-card">
+    <!-- FIRST VIEW -->
+    <div class="dashboard-grid">
 
-        <div class="profile-visual">
+        <!-- Profile -->
+        <section class="card profile-card">
 
-            <div class="avatar-frame">
+            <div class="profile-photo-area">
 
                 <img
                         th:if="${user.profilePhoto != null and !user.profilePhoto.isEmpty()}"
                         th:src="${user.profilePhoto}"
                         class="profile-photo"
-                        alt="Profile photo">
+                        alt="Employee profile">
 
                 <div
                         th:unless="${user.profilePhoto != null and !user.profilePhoto.isEmpty()}"
-                        class="avatar-placeholder">
+                        class="profile-placeholder">
                     TL
                 </div>
 
             </div>
 
-            <div class="profile-caption">TeamLogger Member</div>
+            <div class="profile-info">
 
-        </div>
+                <div>
+                    <div class="profile-name" th:text="${user.name}">
+                        Employee Name
+                    </div>
 
-        <div class="profile-info">
+                    <div class="profile-designation"
+                         th:text="${user.designation != null and !user.designation.isEmpty()
+                            ? user.designation : 'Team Member'}">
+                        Designation
+                    </div>
 
-            <div class="profile-tags">
-                <span class="tag">Personal Profile</span>
-
-                <span class="tag"
-                      th:text="${user.role}">
-                    EMPLOYEE
-                </span>
-            </div>
-
-            <h2 class="profile-name"
-                th:text="${user.name}">
-                User Name
-            </h2>
-
-            <p class="designation"
-               th:text="${user.designation != null and !user.designation.isEmpty()
-                    ? user.designation : 'Team Member'}">
-                Designation
-            </p>
-
-            <p class="description"
-               th:text="${user.description != null and !user.description.isEmpty()
-                    ? user.description
-                    : 'Welcome to your personal TeamLogger workstation.'}">
-                Profile description
-            </p>
-
-            <div class="profile-details">
-
-                <div th:if="${user.employeeLoginId != null
-                    and !user.employeeLoginId.isEmpty()}">
-                    <div class="detail-label">Employee ID</div>
-                    <div class="detail-value"
-                         th:text="${user.employeeLoginId}">
+                    <div class="profile-id"
+                         th:if="${user.employeeLoginId != null}"
+                         th:text="'ID: ' + ${user.employeeLoginId}">
                         Employee ID
                     </div>
                 </div>
 
-                <div>
-                    <div class="detail-label">Department</div>
-                    <div class="detail-value"
-                         th:text="${user.domain != null
-                            ? user.domain : 'Not specified'}">
-                        Department
-                    </div>
-                </div>
-
-                <div>
-                    <div class="detail-label">Account Status</div>
-                    <div class="detail-value"
-                         th:text="${user.status}">
-                        ACTIVE
-                    </div>
+                <div class="profile-role" th:text="${user.role}">
+                    EMPLOYEE
                 </div>
 
             </div>
 
-        </div>
+        </section>
 
-    </section>
+        <!-- Time Tracking -->
+        <section class="card tracking-card">
 
-    <!-- Start work -->
-    <section class="start-panel glass-card">
+            <div class="card-title">
 
-        <div class="start-copy">
-            <h2>Ready to begin your work?</h2>
-            <p>
-                Start your work session when you are ready.
-                Activity tracking will begin only after you explicitly start.
-            </p>
-        </div>
+                <h2>Time Tracking</h2>
 
-        <!-- Temporarily disabled until the existing SessionService is connected -->
-        <div>
-            <button class="start-button" type="button" disabled>
-                <span>▶</span> Start Work
-            </button>
-            <div class="action-note">Work tracking is not started automatically</div>
-        </div>
+                <span id="trackingStatus"
+                      th:class="${workPaused ? 'tracking-paused' : (workRunning ? 'tracking-status' : '')}"
+                      th:text="${workRunning ? '● Working' : (workPaused ? 'Ⅱ Paused' : 'Not started')}">
+                    Not started
+                </span>
 
-    </section>
+            </div>
 
-    <!-- Timers -->
-    <div class="section-heading">
-        <h2>Work Activity</h2>
-        <span>Today's overview</span>
+            <div class="timer-box">
+
+                <div>
+
+                    <div class="timer-label" id="timerLabel"
+                         th:text="${workRunning ? 'TOTAL WORK TIME' : (workPaused ? 'SESSION PAUSED' : 'READY TO START')}">
+                        READY TO START
+                    </div>
+
+                    <div class="timer-value"
+                         id="workingTimer"
+                         th:attr="data-seconds=${(activeSeconds != null ? activeSeconds : 0) + (idleSeconds != null ? idleSeconds : 0)}">
+                        00:00:00
+                    </div>
+
+                </div>
+
+                <!-- Employee Work Actions -->
+                <div th:if="${isEmployee}">
+
+                    <!-- Start Work -->
+                    <form id="startWorkForm"
+                          th:action="@{/employee/work/start}"
+                          method="post"
+                          th:style="${!workStarted ? 'display:block' : 'display:none'}">
+
+                        <button type="submit"
+                                class="tracking-button"
+                                title="Start Work"
+                                aria-label="Start Work">
+                            ▶
+                        </button>
+
+                    </form>
+
+                    <!-- Resume Work -->
+                    <form id="resumeWorkForm"
+                          th:action="@{/employee/work/start}"
+                          method="post"
+                          th:style="${workPaused ? 'display:block' : 'display:none'}">
+
+                        <button type="submit"
+                                class="tracking-button"
+                                title="Resume Work"
+                                aria-label="Resume Work">
+                            ▶
+                        </button>
+
+                    </form>
+
+                    <!-- Stop / Pause Work -->
+                    <form id="stopWorkForm"
+                          th:action="@{/employee/work/stop}"
+                          method="post"
+                          th:style="${workRunning ? 'display:block' : 'display:none'}">
+
+                        <button type="submit"
+                                class="tracking-button"
+                                title="Stop Work"
+                                aria-label="Stop Work">
+                            ■
+                        </button>
+
+                    </form>
+
+                </div>
+
+                <div th:unless="${isEmployee}" class="tracking-button">
+                    ◷
+                </div>
+
+            </div>
+
+            <!-- Active Time and Idle Time -->
+            <div class="time-summary">
+
+                <div class="time-summary-item">
+
+                    <span class="time-summary-label">Active Time</span>
+
+                    <strong id="activeTime"
+                            th:attr="data-seconds=${activeSeconds}"
+                            th:text="${activeSeconds != null ? activeSeconds : 0}">
+                        00:00:00
+                    </strong>
+
+                </div>
+
+                <div class="time-summary-item">
+
+                    <span class="time-summary-label">Idle Time</span>
+
+                    <strong id="idleTime"
+                            th:attr="data-seconds=${idleSeconds}"
+                            th:text="${idleSeconds != null ? idleSeconds : 0}">
+                        00:00:00
+                    </strong>
+
+                </div>
+
+            </div>
+
+            <!-- Tracking Information -->
+            <div class="tracking-note">
+
+                <span id="trackingNote"
+                      th:text="${workRunning
+                            ? 'Your work session is running.'
+                            : (workPaused
+                                ? 'Your work session is paused. Resume when you are ready.'
+                                : 'Click the play button when you are ready to begin.')}">
+                    Click the play button when you are ready to begin.
+                </span>
+
+                <div th:if="${workStarted and currentSession != null
+                            and currentSession.employeeStartedAt != null}"
+                     style="margin-top:7px">
+
+                    Started at:
+
+                    <strong th:text="${currentSession.employeeStartedAt}">
+                        Start time
+                    </strong>
+
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- Statistics -->
+        <section class="format-card">
+
+            <div class="stat-card">
+                <div class="stat-number">--</div>
+                <div class="stat-label">Days in company</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-number">--</div>
+                <div class="stat-label">Completed projects</div>
+            </div>
+
+            <div class="stat-card stat-wide">
+                <div class="stat-number">--</div>
+                <div class="stat-label">Monthly work summary</div>
+                <div class="stat-placeholder">
+                    Your performance statistics will appear here.
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Tasks -->
+        <section class="card tasks-card">
+
+            <div class="card-title">
+                <h2>Tasks Overview</h2>
+                <span>Weekly view</span>
+            </div>
+
+            <div class="task-days">
+                <div class="day">Sun<strong>15</strong></div>
+                <div class="day">Mon<strong>16</strong></div>
+                <div class="day">Tue<strong>17</strong></div>
+                <div class="day selected">Wed<strong>18</strong></div>
+                <div class="day">Thu<strong>19</strong></div>
+                <div class="day">Fri<strong>20</strong></div>
+                <div class="day">Sat<strong>21</strong></div>
+            </div>
+
+            <div class="task-empty">
+                <div class="task-empty-icon">▤</div>
+                <strong>Task timeline will appear here</strong>
+                <span>
+                    Assigned tasks and their scheduled times will be
+                    displayed when connected to your task data.
+                </span>
+            </div>
+
+        </section>
+
     </div>
 
-    <section class="timer-grid">
+    <!-- EXPAND / COLLAPSE BUTTON -->
+    <div class="expand-area">
 
-        <div class="timer-card glass-card">
+        <button
+                type="button"
+                class="expand-button"
+                id="expandButton"
+                aria-expanded="false"
+                aria-controls="extraSection"
+                onclick="toggleExtraSection()">
 
-            <div class="timer-top">
-                <div class="timer-label">Working Time</div>
-                <div class="timer-icon">◷</div>
-            </div>
+            <span id="expandText">View More Details</span>
+            <span class="arrow" id="expandArrow">⌄</span>
 
-            <div class="timer-value" id="workingTimer">--:--:--</div>
+        </button>
 
-            <div class="timer-caption">
-                Total active working duration
-            </div>
+    </div>
 
-        </div>
+    <!-- SECOND VIEW -->
+    <section class="extra-section" id="extraSection">
 
-        <div class="timer-card glass-card">
+        <div class="extra-grid">
 
-            <div class="timer-top">
-                <div class="timer-label">Idle Time</div>
-                <div class="timer-icon">Ⅱ</div>
-            </div>
+            <!-- Work Activity -->
+            <section class="card activity-card">
 
-            <div class="timer-value" id="idleTimer">--:--:--</div>
+                <div class="card-title">
+                    <h2>Work Activity</h2>
+                    <span>Weekly overview</span>
+                </div>
 
-            <div class="timer-caption">
-                Total idle duration
-            </div>
+                <div class="activity-legend">
+                    <span><i class="legend-dot"></i> Activity data</span>
+                    <span>Weekly heatmap</span>
+                </div>
+
+                <div class="heatmap">
+
+                    <div></div>
+                    <div class="heat-label">Sun</div>
+                    <div class="heat-label">Mon</div>
+                    <div class="heat-label">Tue</div>
+                    <div class="heat-label">Wed</div>
+                    <div class="heat-label">Thu</div>
+                    <div class="heat-label">Fri</div>
+                    <div class="heat-label">Sat</div>
+
+                    <div class="heat-label">9am</div>
+                    <div class="heat-cell empty"></div>
+                    <div class="heat-cell empty"></div>
+                    <div class="heat-cell empty"></div>
+                    <div class="heat-cell empty"></div>
+                    <div class="heat-cell empty"></div>
+                    <div class="heat-cell empty"></div>
+                    <div class="heat-cell empty"></div>
+
+                    <div class="heat-label">10am</div>
+                    <div class="heat-cell empty"></div>
+                    <div class="heat-cell empty"></div>
+                    <div class="heat-cell empty"></div>
+                    <div class="heat-cell empty"></div>
+                    <div class="heat-cell empty"></div>
+                    <div class="heat-cell empty"></div>
+                    <div class="heat-cell empty"></div>
+
+                    <div class="heat-label">11am</div>
+                    <div class="heat-cell empty"></div>
+                    <div class="heat-cell empty"></div>
+                    <div class="heat-cell empty"></div>
+                    <div class="heat-cell empty"></div>
+                    <div class="heat-cell empty"></div>
+                    <div class="heat-cell empty"></div>
+                    <div class="heat-cell empty"></div>
+
+                    <div class="heat-label">12pm</div>
+                    <div class="heat-cell empty"></div>
+                    <div class="heat-cell empty"></div>
+                    <div class="heat-cell empty"></div>
+                    <div class="heat-cell empty"></div>
+                    <div class="heat-cell empty"></div>
+                    <div class="heat-cell empty"></div>
+                    <div class="heat-cell empty"></div>
+
+                    <div class="heat-label">1pm</div>
+                    <div class="heat-cell empty"></div>
+                    <div class="heat-cell empty"></div>
+                    <div class="heat-cell empty"></div>
+                    <div class="heat-cell empty"></div>
+                    <div class="heat-cell empty"></div>
+                    <div class="heat-cell empty"></div>
+                    <div class="heat-cell empty"></div>
+
+                    <div class="heat-label">2pm</div>
+                    <div class="heat-cell empty"></div>
+                    <div class="heat-cell empty"></div>
+                    <div class="heat-cell empty"></div>
+                    <div class="heat-cell empty"></div>
+                    <div class="heat-cell empty"></div>
+                    <div class="heat-cell empty"></div>
+                    <div class="heat-cell empty"></div>
+
+                    <div class="heat-label">3pm</div>
+                    <div class="heat-cell empty"></div>
+                    <div class="heat-cell empty"></div>
+                    <div class="heat-cell empty"></div>
+                    <div class="heat-cell empty"></div>
+                    <div class="heat-cell empty"></div>
+                    <div class="heat-cell empty"></div>
+                    <div class="heat-cell empty"></div>
+
+                </div>
+
+                <div class="activity-message">
+                    Actual activity intensity will be connected to your
+                    TeamLogger monitoring records. No activity values are
+                    displayed until real monitoring data is connected.
+                </div>
+
+            </section>
+
+            <!-- Productivity Graph -->
+            <section class="card productivity-card">
+
+                <div class="card-title productivity-heading">
+
+                    <h2>Productivity Graph</h2>
+
+                    <select id="productivityPeriod"
+                            class="productivity-period"
+                            aria-label="Select productivity period">
+
+                        <option value="daily">Daily</option>
+                        <option value="monthly">Monthly</option>
+                        <option value="yearly">Yearly</option>
+
+                    </select>
+
+                </div>
+
+                <p class="productivity-description"
+                   id="productivityDescription">
+                    Daily view: active time, idle time and productivity.
+                </p>
+
+                <div class="productivity-main-chart">
+
+                    <canvas id="productivityChart"></canvas>
+
+                    <div class="productivity-empty"
+                         id="productivityChartEmpty">
+                        Productivity data will appear here once real
+                        session records are available.
+                    </div>
+
+                </div>
+
+                <div class="productivity-summary"
+                     id="productivitySummary">
+
+                    <div class="productivity-summary-item">
+                        <span>Active Time</span>
+                        <strong id="graphActiveSummary">--</strong>
+                    </div>
+
+                    <div class="productivity-summary-item">
+                        <span>Idle Time</span>
+                        <strong id="graphIdleSummary">--</strong>
+                    </div>
+
+                    <div class="productivity-summary-item">
+                        <span>Productivity</span>
+                        <strong id="graphProductivitySummary">--</strong>
+                    </div>
+
+                </div>
+
+                <div class="productivity-message"
+                     id="productivityMessage"
+                     role="status"
+                     aria-live="polite"></div>
+
+            </section>
 
         </div>
 
     </section>
 
-    <!-- Productivity -->
-    <section class="productivity-card glass-card">
-
-        <div class="productivity-header">
-            <div>
-                <h2>Productivity Overview</h2>
-                <p>Your activity trends will appear here during work.</p>
-            </div>
-
-            <span class="tag">Today</span>
-        </div>
-
-        <div class="chart-area">
-
-            <div class="chart-empty">
-                <div class="chart-empty-icon">⌁</div>
-                <strong>Productivity graph will appear here</strong>
-                <span>Start a work session to generate activity data.</span>
-            </div>
-
-        </div>
-
-    </section>
-
+    <!-- Footer -->
     <footer class="footer">
-        <span>TeamLogger Personal Workstation</span>
-        <span>Activity tracking starts only with your permission.</span>
+        <span>TeamLogger · Personal Workstation</span>
+        <span>Work tracking starts only after you click Start Work.</span>
     </footer>
 
 </div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Workstation Timer and Session State -->
+<script>
+
+    // Convert seconds into HH:MM:SS
+    function formatSeconds(totalSeconds) {
+
+        totalSeconds = Math.max(0, Number(totalSeconds) || 0);
+
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+
+        return [hours, minutes, seconds]
+            .map(value => String(value).padStart(2, "0"))
+            .join(":");
+    }
+
+
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const workingTimer = document.getElementById("workingTimer");
+        const activeTime = document.getElementById("activeTime");
+        const idleTime = document.getElementById("idleTime");
+
+        const trackingStatus = document.getElementById("trackingStatus");
+        const timerLabel = document.getElementById("timerLabel");
+        const trackingNote = document.getElementById("trackingNote");
+
+        const startForm = document.getElementById("startWorkForm");
+        const resumeForm = document.getElementById("resumeWorkForm");
+        const stopForm = document.getElementById("stopWorkForm");
+
+
+        // Display initial server-rendered values
+        if (workingTimer) {
+            workingTimer.textContent =
+                formatSeconds(workingTimer.dataset.seconds);
+        }
+
+        if (activeTime) {
+            activeTime.textContent =
+                formatSeconds(activeTime.dataset.seconds);
+        }
+
+        if (idleTime) {
+            idleTime.textContent =
+                formatSeconds(idleTime.dataset.seconds);
+        }
+
+
+        // Update the workstation UI from backend state
+        function updateWorkStatus(data) {
+
+            const status = data.workStatus;
+
+            if (status === "WORKING") {
+
+                trackingStatus.textContent = "● Working";
+                trackingStatus.className = "tracking-status";
+
+                timerLabel.textContent = "TOTAL WORK TIME";
+
+                trackingNote.textContent =
+                    "Your work session is running.";
+
+                if (startForm) startForm.style.display = "none";
+                if (resumeForm) resumeForm.style.display = "none";
+                if (stopForm) stopForm.style.display = "block";
+
+            } else if (status === "PAUSED") {
+
+                trackingStatus.textContent = "Ⅱ Paused";
+                trackingStatus.className = "tracking-paused";
+
+                timerLabel.textContent = "SESSION PAUSED";
+
+                trackingNote.textContent =
+                    "Your work session is paused. Resume when you are ready.";
+
+                if (startForm) startForm.style.display = "none";
+                if (resumeForm) resumeForm.style.display = "block";
+                if (stopForm) stopForm.style.display = "none";
+
+            } else {
+
+                trackingStatus.textContent = "Not started";
+                trackingStatus.className = "";
+
+                timerLabel.textContent = "READY TO START";
+
+                trackingNote.textContent =
+                    "Click the play button when you are ready to begin.";
+
+                if (startForm) startForm.style.display = "block";
+                if (resumeForm) resumeForm.style.display = "none";
+                if (stopForm) stopForm.style.display = "none";
+            }
+        }
+
+
+        // Fetch current activity from backend
+        async function updateWorkstationTimer() {
+
+            try {
+
+                const response = await fetch(
+                    "/employee/activity/current",
+                    {
+                        method: "GET",
+                        headers: {
+                            "Accept": "application/json"
+                        },
+                        cache: "no-store"
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error("HTTP " + response.status);
+                }
+
+                const data = await response.json();
+
+                const activeSeconds =
+                    Math.max(0, Number(data.activeSeconds) || 0);
+
+                const idleSeconds =
+                    Math.max(0, Number(data.idleSeconds) || 0);
+
+                // Total work time excludes paused duration.
+                const totalWorkSeconds =
+                    activeSeconds + idleSeconds;
+
+
+                if (workingTimer) {
+                    workingTimer.textContent =
+                        formatSeconds(totalWorkSeconds);
+                }
+
+                if (activeTime) {
+                    activeTime.textContent =
+                        formatSeconds(activeSeconds);
+                }
+
+                if (idleTime) {
+                    idleTime.textContent =
+                        formatSeconds(idleSeconds);
+                }
+
+                // Update Start, Stop and Resume controls.
+                updateWorkStatus(data);
+
+            } catch (error) {
+
+                console.error(
+                    "Workstation timer update failed:",
+                    error
+                );
+            }
+        }
+
+
+        // Load immediately
+        updateWorkstationTimer();
+
+        // Poll every 5 seconds, including when paused.
+        setInterval(updateWorkstationTimer, 5000);
+
+    });
+
+
+    // Expand and collapse additional details
+    function toggleExtraSection() {
+
+        const section = document.getElementById("extraSection");
+        const button = document.getElementById("expandButton");
+        const text = document.getElementById("expandText");
+
+        const isExpanded = section.classList.toggle("show");
+
+        button.setAttribute("aria-expanded", isExpanded);
+
+        text.textContent = isExpanded
+            ? "Show Less"
+            : "View More Details";
+
+        if (isExpanded) {
+
+            section.scrollIntoView({
+                behavior: "smooth",
+                block: "start"
+            });
+
+            if (window.productivityChartInstance) {
+                window.productivityChartInstance.resize();
+            }
+
+            if (window.loadProductivityGraph) {
+                window.loadProductivityGraph();
+            }
+        }
+    }
+
+</script>
+
+
+<!-- Productivity Graph -->
+<script>
+
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const periodSelect =
+            document.getElementById("productivityPeriod");
+
+        const canvas =
+            document.getElementById("productivityChart");
+
+        const emptyMessage =
+            document.getElementById("productivityChartEmpty");
+
+        const description =
+            document.getElementById("productivityDescription");
+
+        const message =
+            document.getElementById("productivityMessage");
+
+        const activeSummary =
+            document.getElementById("graphActiveSummary");
+
+        const idleSummary =
+            document.getElementById("graphIdleSummary");
+
+        const productivitySummary =
+            document.getElementById("graphProductivitySummary");
+
+        if (!periodSelect || !canvas) {
+            return;
+        }
+
+        let chartInstance = null;
+        let requestNumber = 0;
+
+        const chartTextColor = "#929e9b";
+        const gridColor = "rgba(255,255,255,0.07)";
+
+
+        function formatHours(seconds) {
+
+            const hours = Math.max(0, Number(seconds) || 0) / 3600;
+
+            return hours.toFixed(2) + " hrs";
+        }
+
+
+        function calculateProductivity(active, idle) {
+
+            const total = active + idle;
+
+            return total > 0
+                ? (active / total) * 100
+                : 0;
+        }
+
+
+        function showEmpty(text) {
+
+            emptyMessage.textContent = text;
+            emptyMessage.style.display = "flex";
+            canvas.style.display = "none";
+
+            if (chartInstance) {
+
+                chartInstance.destroy();
+                chartInstance = null;
+
+                window.productivityChartInstance = null;
+            }
+        }
+
+
+        function showChart() {
+
+            emptyMessage.style.display = "none";
+            canvas.style.display = "block";
+        }
+
+
+        function updateSummary(data, period) {
+
+            let active = 0;
+            let idle = 0;
+
+            data.forEach(item => {
+
+                active += Math.max(
+                    0,
+                    Number(item.activeSeconds) || 0
+                );
+
+                idle += Math.max(
+                    0,
+                    Number(item.idleSeconds) || 0
+                );
+            });
+
+
+            if (period === "daily") {
+
+                activeSummary.textContent = formatHours(active);
+                idleSummary.textContent = formatHours(idle);
+
+                productivitySummary.textContent =
+                    calculateProductivity(active, idle).toFixed(1) + "%";
+
+            } else {
+
+                activeSummary.textContent = "--";
+                idleSummary.textContent = "--";
+
+                const validValues = data
+                    .map(item => Number(item.productivity))
+                    .filter(value =>
+                        Number.isFinite(value) && value >= 0
+                    );
+
+                const average = validValues.length
+                    ? validValues.reduce((sum, value) => sum + value, 0)
+                        / validValues.length
+                    : 0;
+
+                productivitySummary.textContent =
+                    validValues.length
+                        ? average.toFixed(1) + "%"
+                        : "--";
+            }
+        }
+
+
+        function getPercentageOptions() {
+
+            return {
+
+                responsive: true,
+                maintainAspectRatio: false,
+
+                interaction: {
+                    mode: "index",
+                    intersect: false
+                },
+
+                scales: {
+
+                    x: {
+                        ticks: {
+                            color: chartTextColor
+                        },
+
+                        grid: {
+                            display: false
+                        }
+                    },
+
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+
+                        ticks: {
+                            color: chartTextColor,
+                            callback: value => value + "%"
+                        },
+
+                        grid: {
+                            color: gridColor
+                        },
+
+                        title: {
+                            display: true,
+                            text: "Productivity",
+                            color: chartTextColor
+                        }
+                    }
+                },
+
+                plugins: {
+
+                    legend: {
+                        labels: {
+                            color: chartTextColor
+                        }
+                    },
+
+                    tooltip: {
+                        callbacks: {
+
+                            label: context =>
+                                context.dataset.label + ": " +
+                                Number(context.parsed.y).toFixed(1) + "%"
+                        }
+                    }
+                }
+            };
+        }
+
+
+        function renderDailyChart(data) {
+
+            const labels = data.map(item => item.label);
+
+            const activeValues = data.map(
+                item => (Number(item.activeSeconds) || 0) / 3600
+            );
+
+            const idleValues = data.map(
+                item => (Number(item.idleSeconds) || 0) / 3600
+            );
+
+            const productivityValues = data.map(item => {
+
+                const active = Number(item.activeSeconds) || 0;
+                const idle = Number(item.idleSeconds) || 0;
+
+                return calculateProductivity(active, idle);
+            });
+
+
+            chartInstance = new Chart(canvas, {
+
+                type: "bar",
+
+                data: {
+
+                    labels: labels,
+
+                    datasets: [
+
+                        {
+                            type: "bar",
+                            label: "Active Time (hours)",
+                            data: activeValues,
+                            backgroundColor: "#75d9ba",
+                            borderRadius: 5,
+                            yAxisID: "timeAxis",
+                            order: 2
+                        },
+
+                        {
+                            type: "bar",
+                            label: "Idle Time (hours)",
+                            data: idleValues,
+                            backgroundColor: "#e5a66d",
+                            borderRadius: 5,
+                            yAxisID: "timeAxis",
+                            order: 2
+                        },
+
+                        {
+                            type: "line",
+                            label: "Productivity (%)",
+                            data: productivityValues,
+                            borderColor: "#a8f4ed",
+                            backgroundColor: "#a8f4ed",
+                            pointBackgroundColor: "#a8f4ed",
+                            pointBorderColor: "#202525",
+                            pointRadius: 3,
+                            pointHoverRadius: 6,
+                            borderWidth: 2,
+                            tension: 0.35,
+                            yAxisID: "percentageAxis",
+                            order: 1
+                        }
+                    ]
+                },
+
+                options: {
+
+                    responsive: true,
+                    maintainAspectRatio: false,
+
+                    interaction: {
+                        mode: "index",
+                        intersect: false
+                    },
+
+                    scales: {
+
+                        x: {
+                            stacked: true,
+
+                            ticks: {
+                                color: chartTextColor
+                            },
+
+                            grid: {
+                                display: false
+                            }
+                        },
+
+                        timeAxis: {
+
+                            type: "linear",
+                            position: "left",
+                            stacked: true,
+                            beginAtZero: true,
+
+                            ticks: {
+                                color: chartTextColor,
+                                callback: value => value + "h"
+                            },
+
+                            grid: {
+                                color: gridColor
+                            },
+
+                            title: {
+                                display: true,
+                                text: "Hours",
+                                color: chartTextColor
+                            }
+                        },
+
+                        percentageAxis: {
+
+                            type: "linear",
+                            position: "right",
+                            beginAtZero: true,
+                            max: 100,
+
+                            ticks: {
+                                color: "#a8f4ed",
+                                callback: value => value + "%"
+                            },
+
+                            grid: {
+                                drawOnChartArea: false
+                            },
+
+                            title: {
+                                display: true,
+                                text: "Productivity",
+                                color: "#a8f4ed"
+                            }
+                        }
+                    },
+
+                    plugins: {
+
+                        legend: {
+                            labels: {
+                                color: chartTextColor
+                            }
+                        },
+
+                        tooltip: {
+
+                            callbacks: {
+
+                                label: function(context) {
+
+                                    if (context.dataset.yAxisID === "percentageAxis") {
+
+                                        return context.dataset.label + ": " +
+                                            context.parsed.y.toFixed(1) + "%";
+                                    }
+
+                                    return context.dataset.label + ": " +
+                                        context.parsed.y.toFixed(2) + " hours";
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+
+        function renderPercentageChart(data, period) {
+
+            const labels = data.map(item => item.label);
+
+            const values = data.map(item =>
+                Number(item.productivity) || 0
+            );
+
+
+            chartInstance = new Chart(canvas, {
+
+                type: period === "monthly" ? "line" : "bar",
+
+                data: {
+
+                    labels: labels,
+
+                    datasets: [{
+
+                        label: "Productivity (%)",
+                        data: values,
+
+                        borderColor: "#a8f4ed",
+
+                        backgroundColor: period === "monthly"
+                            ? "rgba(168,244,237,0.12)"
+                            : "#75d9ba",
+
+                        pointBackgroundColor: "#a8f4ed",
+                        pointBorderColor: "#202525",
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+
+                        borderWidth: 2,
+                        borderRadius: period === "yearly" ? 5 : 0,
+                        tension: 0.35,
+                        fill: period === "monthly"
+                    }]
+                },
+
+                options: getPercentageOptions()
+            });
+        }
+
+
+        async function loadProductivityGraph() {
+
+            const period = periodSelect.value;
+
+            const currentRequest = ++requestNumber;
+
+            message.textContent = "Loading productivity data...";
+
+
+            if (period === "daily") {
+
+                description.textContent =
+                    "Daily view: active time, idle time and productivity.";
+
+            } else if (period === "monthly") {
+
+                description.textContent =
+                    "Monthly view: productivity percentage for each month.";
+
+            } else {
+
+                description.textContent =
+                    "Yearly view: productivity percentage for each year.";
+            }
+
+
+            try {
+
+                if (typeof Chart === "undefined") {
+                    throw new Error("Chart.js could not be loaded.");
+                }
+
+
+                const response = await fetch(
+                    "/workstation/productivity?period=" +
+                    encodeURIComponent(period),
+                    {
+                        method: "GET",
+
+                        headers: {
+                            "Accept": "application/json"
+                        },
+
+                        cache: "no-store"
+                    }
+                );
+
+
+                if (!response.ok) {
+                    throw new Error("HTTP " + response.status);
+                }
+
+
+                const data = await response.json();
+
+
+                // Ignore older responses if the user changed the period.
+                if (currentRequest !== requestNumber) {
+                    return;
+                }
+
+
+                if (!Array.isArray(data) || data.length === 0) {
+
+                    showEmpty(
+                        "No productivity records are available for this period."
+                    );
+
+                    updateSummary([], period);
+
+                    message.textContent = "";
+
+                    return;
+                }
+
+
+                const validData = data.filter(item =>
+                    item &&
+                    typeof item.label !== "undefined"
+                );
+
+
+                if (validData.length === 0) {
+
+                    showEmpty(
+                        "No valid productivity records are available."
+                    );
+
+                    updateSummary([], period);
+
+                    message.textContent = "";
+
+                    return;
+                }
+
+
+                if (chartInstance) {
+
+                    chartInstance.destroy();
+                    chartInstance = null;
+
+                    window.productivityChartInstance = null;
+                }
+
+
+                showChart();
+
+
+                if (period === "daily") {
+
+                    renderDailyChart(validData);
+
+                } else {
+
+                    renderPercentageChart(validData, period);
+                }
+
+
+                window.productivityChartInstance = chartInstance;
+
+                updateSummary(validData, period);
+
+                message.textContent = "";
+
+
+            } catch (error) {
+
+                if (currentRequest !== requestNumber) {
+                    return;
+                }
+
+                console.error(
+                    "Productivity graph loading failed:",
+                    error
+                );
+
+                showEmpty(
+                    "Unable to load productivity data. Please try again."
+                );
+
+                updateSummary([], period);
+
+                message.textContent =
+                    "Productivity data could not be loaded.";
+            }
+        }
+
+
+        // Expose loader for expand button
+        window.loadProductivityGraph = loadProductivityGraph;
+
+
+        // Load graph when period changes
+        periodSelect.addEventListener(
+            "change",
+            loadProductivityGraph
+        );
+
+
+        // Load initial daily graph if section is visible
+        if (
+            document.getElementById("extraSection")
+                .classList.contains("show")
+        ) {
+            loadProductivityGraph();
+        }
+
+    });
+
+</script>
 
 </body>
 </html>

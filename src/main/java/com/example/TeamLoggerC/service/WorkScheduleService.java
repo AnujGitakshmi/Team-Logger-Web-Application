@@ -1,5 +1,7 @@
+
 package com.example.TeamLoggerC.service;
 
+import com.example.TeamLoggerC.entity.AdminSettings;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -9,86 +11,113 @@ import java.time.LocalTime;
 @Service
 public class WorkScheduleService {
 
+    private final AdminSettingsService adminSettingsService;
+
+    public WorkScheduleService(
+            AdminSettingsService adminSettingsService) {
+        this.adminSettingsService = adminSettingsService;
+    }
+
     // ==========================================
-    // OFFICE WORKING HOURS
-    // 10:00 AM to 7:00 PM
+    // GET ADMIN OFFICE START TIME
     // ==========================================
 
-    private static final LocalTime OFFICE_START =
-            LocalTime.of(10, 0);
+    public LocalTime getOfficeStartTime(Integer adminId) {
 
-    private static final LocalTime OFFICE_END =
-            LocalTime.of(19, 0);
+        AdminSettings settings =
+                adminSettingsService.getSettings(adminId);
 
+        return settings.getWorkingStartTime();
+    }
+
+    // ==========================================
+    // GET ADMIN OFFICE END TIME
+    // ==========================================
+
+    public LocalTime getOfficeEndTime(Integer adminId) {
+
+        AdminSettings settings =
+                adminSettingsService.getSettings(adminId);
+
+        return settings.getWorkingEndTime();
+    }
 
     // ==========================================
     // CHECK CURRENT OFFICE HOURS
     // ==========================================
 
-    public boolean isOfficeHours() {
+    public boolean isOfficeHours(Integer adminId) {
 
-        LocalTime now = LocalTime.now();
-
-        return !now.isBefore(OFFICE_START)
-                && now.isBefore(OFFICE_END);
+        return isOfficeHours(
+                adminId,
+                LocalDateTime.now()
+        );
     }
 
-
     // ==========================================
-    // CHECK A PARTICULAR DATE/TIME
+    // CHECK OFFICE HOURS AT PARTICULAR TIME
     // ==========================================
 
-    public boolean isOfficeHours(LocalDateTime dateTime) {
+    public boolean isOfficeHours(
+            Integer adminId,
+            LocalDateTime dateTime) {
 
-        LocalTime time = dateTime.toLocalTime();
+        LocalTime start = getOfficeStartTime(adminId);
+        LocalTime end = getOfficeEndTime(adminId);
 
-        return !time.isBefore(OFFICE_START)
-                && time.isBefore(OFFICE_END);
+        LocalTime current = dateTime.toLocalTime();
+
+        return !current.isBefore(start)
+                && current.isBefore(end);
     }
-
 
     // ==========================================
     // GET OFFICE START DATETIME
     // ==========================================
 
-    public LocalDateTime getOfficeStart(LocalDate date) {
+    public LocalDateTime getOfficeStart(Integer adminId,
+                                        LocalDate date) {
 
         return LocalDateTime.of(
                 date,
-                OFFICE_START
+                getOfficeStartTime(adminId)
         );
     }
-
 
     // ==========================================
     // GET OFFICE END DATETIME
     // ==========================================
 
-    public LocalDateTime getOfficeEnd(LocalDate date) {
+    public LocalDateTime getOfficeEnd(Integer adminId,
+                                      LocalDate date) {
 
         return LocalDateTime.of(
                 date,
-                OFFICE_END
+                getOfficeEndTime(adminId)
         );
     }
 
-
     // ==========================================
-    // GET OFFICE START TIME
+    // CHECK BEFORE OFFICE START
     // ==========================================
 
-    public LocalTime getOfficeStartTime() {
+    public boolean isBeforeOfficeStart(
+            Integer adminId,
+            LocalDateTime dateTime) {
 
-        return OFFICE_START;
+        return dateTime.toLocalTime()
+                .isBefore(getOfficeStartTime(adminId));
     }
 
-
     // ==========================================
-    // GET OFFICE END TIME
+    // CHECK AFTER OFFICE END
     // ==========================================
 
-    public LocalTime getOfficeEndTime() {
+    public boolean isAfterOfficeEnd(
+            Integer adminId,
+            LocalDateTime dateTime) {
 
-        return OFFICE_END;
+        return !dateTime.toLocalTime()
+                .isBefore(getOfficeEndTime(adminId));
     }
 }

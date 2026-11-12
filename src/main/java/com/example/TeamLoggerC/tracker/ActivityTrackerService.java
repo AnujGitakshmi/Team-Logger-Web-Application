@@ -1,3 +1,4 @@
+
 package com.example.TeamLoggerC.tracker;
 
 import com.example.TeamLoggerC.entity.Session;
@@ -8,9 +9,12 @@ import com.example.TeamLoggerC.service.ActivityService;
 import com.example.TeamLoggerC.service.ApplicationEnforcementService;
 import com.example.TeamLoggerC.service.CurrentNetworkIpService;
 import com.example.TeamLoggerC.service.DiscoveredApplicationService;
+import com.example.TeamLoggerC.service.IpApplicationRuleService;
+
+import jakarta.annotation.PreDestroy;
+
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import com.example.TeamLoggerC.service.IpApplicationRuleService;
 
 import java.util.List;
 import java.util.Map;
@@ -24,42 +28,14 @@ public class ActivityTrackerService {
     // =========================================================
 
     private final ActivityService activityService;
-
     private final SessionRepo sessionRepo;
-
     private final ApplicationActivityRepo applicationActivityRepo;
-
     private final IpApplicationRuleService ipApplicationRuleService;
-
-
     private final ApplicationEnforcementService applicationEnforcementService;
-
-    /*
-     * Used by ApplicationActivityTracker to resolve:
-     *
-     * userId -> User -> adminId
-     */
     private final UserRepo userRepo;
-
-    /*
-     * Used to automatically add detected applications
-     * into discovered_applications.
-     */
     private final DiscoveredApplicationService discoveredApplicationService;
-
-    /*
-     * Used by ApplicationActivityTracker to detect
-     * the employee machine's current IPv4 address.
-     *
-     * Current IP
-     *     ↓
-     * IP-specific policy
-     *     ↓
-     * Employee policy
-     *     ↓
-     * Application permission
-     */
     private final CurrentNetworkIpService currentNetworkIpService;
+    private final ActiveWindowService activeWindowService;
 
 
     // =========================================================
@@ -75,8 +51,7 @@ public class ActivityTrackerService {
     // =========================================================
 
     private final Map<Integer, ApplicationActivityTracker>
-            applicationTrackers =
-            new ConcurrentHashMap<>();
+            applicationTrackers = new ConcurrentHashMap<>();
 
 
     // =========================================================
@@ -84,6 +59,14 @@ public class ActivityTrackerService {
     // =========================================================
 
     private final Map<Integer, ActivityState> lastStates =
+            new ConcurrentHashMap<>();
+
+
+    // =========================================================
+    // PER-EMPLOYEE START / STOP LOCKS
+    // =========================================================
+
+    private final Map<Integer, Object> trackerLocks =
             new ConcurrentHashMap<>();
 
 
@@ -104,24 +87,14 @@ public class ActivityTrackerService {
     ) {
 
         this.activityService = activityService;
-
-        this.applicationActivityRepo =
-                applicationActivityRepo;
-
+        this.activeWindowService = activeWindowService;
+        this.applicationActivityRepo = applicationActivityRepo;
         this.sessionRepo = sessionRepo;
-
         this.userRepo = userRepo;
-
-        this.discoveredApplicationService =
-                discoveredApplicationService;
-
+        this.discoveredApplicationService = discoveredApplicationService;
         this.ipApplicationRuleService = ipApplicationRuleService;
-
-        this.currentNetworkIpService =
-                currentNetworkIpService;
-
-        this.applicationEnforcementService =
-                applicationEnforcementService;
+        this.currentNetworkIpService = currentNetworkIpService;
+        this.applicationEnforcementService = applicationEnforcementService;
     }
 
 
@@ -131,154 +104,159 @@ public class ActivityTrackerService {
 
     public void startTracking(Integer userId) {
 
-        // -----------------------------------------------------
-        // Already tracking
-        // -----------------------------------------------------
-
-        if (trackers.containsKey(userId)) {
-            return;
-        }
-
-
-        // -----------------------------------------------------
-        // Find current session
-        // -----------------------------------------------------
-
-        Session session =
-                getCurrentOpenSession(userId);
-
-        if (session == null) {
-
-            System.out.println(
-                    "Cannot start activity tracking. "
-                            + "No open session for User: "
-                            + userId
-            );
-
-            return;
-        }
-
-
-        // -----------------------------------------------------
-        // Employee must click Start Work
-        // -----------------------------------------------------
-
-        if (session.getEmployeeStartedAt() == null) {
-
-            System.out.println(
-                    "Cannot start activity tracking. "
-                            + "Employee has not clicked Start Work. "
-                            + "User: "
-                            + userId
-            );
-
-            return;
-        }
-
-
-        // =====================================================
-        // 1. CREATE ACTIVE / IDLE TRACKER
-        // =====================================================
-
-        ActivityTracker tracker =
-                new ActivityTracker();
-
-        tracker.start();
-
-        trackers.put(
+        Object lock = trackerLocks.computeIfAbsent(
                 userId,
-                tracker
+                id -> new Object()
         );
 
+        synchronized (lock) {
 
-        // =====================================================
-        // 2. START ACTIVITY SERVICE
-        // =====================================================
+            // Already tracking.
+            if (trackers.containsKey(userId)) {
+                return;
+            }
 
-        activityService.startTracking(userId);
+            // Find current open session.
+            Session session = getCurrentOpenSession(userId);
 
+            if (session == null) {
 
-        // =====================================================
-        // 3. CREATE APPLICATION TRACKER
-        // =====================================================
-
-        ActiveWindowService activeWindowService =
-                new ActiveWindowService();
-
-
-        /*
-         * ApplicationActivityTracker receives:
-         *
-         * 1. userId
-         * 2. ActiveWindowService
-         * 3. ApplicationActivityRepo
-         * 4. SessionRepo
-         * 5. UserRepo
-         * 6. DiscoveredApplicationService
-         * 7. ApplicationPolicyService
-         * 8. CurrentNetworkIpService
-         * 9. ApplicationEnforcementService
-         *
-         * Application policy resolution:
-         *
-         * Employee
-         *      ↓
-         * Current machine IP
-         *      ↓
-         * IP-specific AccessPolicy
-         *      ↓
-         * Employee AccessPolicy
-         *      ↓
-         * ApplicationPermission
-         *      ↓
-         * ALLOW / BLOCK / RESTRICT
-         *      ↓
-         * Windows process enforcement
-         */
-
-        ApplicationActivityTracker
-                applicationActivityTracker =
-                new ApplicationActivityTracker(
-                        userId,
-                        activeWindowService,
-                        applicationActivityRepo,
-                        sessionRepo,
-                        userRepo,
-                        discoveredApplicationService,
-                        ipApplicationRuleService,
-                        currentNetworkIpService,
-                        applicationEnforcementService
+                System.out.println(
+                        "Cannot start activity tracking. "
+                                + "No open session for User: "
+                                + userId
                 );
 
+                return;
+            }
 
-        applicationActivityTracker.start();
+            // Employee must explicitly click Start Work.
+            if (session.getEmployeeStartedAt() == null
+                    || session.isWorkPaused()) {
 
+                System.out.println(
+                        "Cannot start activity tracking. "
+                                + "Employee has not started or session is paused. "
+                                + "User: " + userId
+                );
 
-        applicationTrackers.put(
-                userId,
-                applicationActivityTracker
-        );
+                return;
+            }
 
+            ActivityTracker tracker = new ActivityTracker();
 
-        // =====================================================
-        // 4. STORE INITIAL STATE
-        // =====================================================
+            ApplicationActivityTracker applicationTracker = null;
 
-        lastStates.put(
-                userId,
-                tracker.getCurrentState()
-        );
+            try {
 
+                System.out.println(
+                        "========== STARTING ACTIVITY TRACKER =========="
+                );
 
-        System.out.println(
-                "Activity tracking started for User: "
-                        + userId
-        );
+                System.out.println("USER ID = " + userId);
+                System.out.println("SESSION ID = " + session.getId());
+                System.out.println(
+                        "EMPLOYEE STARTED AT = "
+                                + session.getEmployeeStartedAt()
+                );
 
-        System.out.println(
-                "Application tracking started for User: "
-                        + userId
-        );
+                // 1. Initialize active / idle counters.
+                tracker.initializeCounters(
+                        session.getActiveSeconds() != null
+                                ? session.getActiveSeconds()
+                                : 0,
+
+                        session.getIdleSeconds() != null
+                                ? session.getIdleSeconds()
+                                : 0
+                );
+
+                // 2. Start active / idle tracking.
+                tracker.start();
+
+                // 3. Start database activity tracking.
+                activityService.startTracking(userId);
+
+                // 4. Create application tracker using
+                // the injected ActiveWindowService.
+                applicationTracker =
+                        new ApplicationActivityTracker(
+                                userId,
+                                activeWindowService,
+                                applicationActivityRepo,
+                                sessionRepo,
+                                userRepo,
+                                discoveredApplicationService,
+                                ipApplicationRuleService,
+                                currentNetworkIpService,
+                                applicationEnforcementService
+                        );
+
+                // 5. Start application tracking.
+                applicationTracker.start();
+
+                // 6. Register trackers only after successful startup.
+                trackers.put(userId, tracker);
+
+                applicationTrackers.put(
+                        userId,
+                        applicationTracker
+                );
+
+                // 7. Store initial state.
+                lastStates.put(
+                        userId,
+                        tracker.getCurrentState()
+                );
+
+                System.out.println(
+                        "Activity tracking started for User: " + userId
+                );
+
+                System.out.println(
+                        "Application tracking started for User: " + userId
+                );
+
+                System.out.println(
+                        "TRACKER CREATED = "
+                                + trackers.containsKey(userId)
+                );
+
+                System.out.println(
+                        "==============================================="
+                );
+
+            } catch (Exception e) {
+
+                System.err.println(
+                        "Error starting tracking for User "
+                                + userId + ": " + e.getMessage()
+                );
+
+                e.printStackTrace();
+
+                // Clean up partially started services.
+                if (applicationTracker != null) {
+                    try {
+                        applicationTracker.stop();
+                    } catch (Exception stopError) {
+                        stopError.printStackTrace();
+                    }
+                }
+
+                try {
+                    tracker.stop();
+                } catch (Exception stopError) {
+                    stopError.printStackTrace();
+                }
+
+                applicationTrackers.remove(userId);
+                trackers.remove(userId);
+                lastStates.remove(userId);
+
+                activityService.stopTracking(userId);
+            }
+        }
     }
 
 
@@ -289,11 +267,24 @@ public class ActivityTrackerService {
     @Scheduled(fixedDelay = 5000)
     public void monitorActivityStates() {
 
-        for (Integer userId : trackers.keySet()) {
+        for (Map.Entry<Integer, ActivityTracker> entry
+                : trackers.entrySet()) {
 
-            updateActivityState(userId);
+            Integer userId = entry.getKey();
 
-            syncSessionActivity(userId);
+            ActivityTracker tracker = entry.getValue();
+
+            synchronized (tracker) {
+
+                // Ensure tracker is still active.
+                if (trackers.get(userId) != tracker) {
+                    continue;
+                }
+
+                updateActivityState(userId);
+
+                syncSessionActivity(userId);
+            }
         }
     }
 
@@ -304,26 +295,19 @@ public class ActivityTrackerService {
 
     public void updateActivityState(Integer userId) {
 
-        ActivityTracker tracker =
-                trackers.get(userId);
+        ActivityTracker tracker = trackers.get(userId);
 
         if (tracker == null) {
             return;
         }
 
-
         ActivityState currentState =
                 tracker.getCurrentState();
-
 
         ActivityState previousState =
                 lastStates.get(userId);
 
-
-        // -----------------------------------------------------
-        // First state
-        // -----------------------------------------------------
-
+        // First state.
         if (previousState == null) {
 
             lastStates.put(
@@ -336,11 +320,7 @@ public class ActivityTrackerService {
             return;
         }
 
-
-        // -----------------------------------------------------
-        // STATE CHANGED
-        // -----------------------------------------------------
-
+        // State changed.
         if (currentState != previousState) {
 
             activityService.updateState(
@@ -348,12 +328,10 @@ public class ActivityTrackerService {
                     currentState
             );
 
-
             lastStates.put(
                     userId,
                     currentState
             );
-
 
             System.out.println(
                     "User "
@@ -373,95 +351,52 @@ public class ActivityTrackerService {
 
     private void syncSessionActivity(Integer userId) {
 
-        ActivityTracker tracker =
-                trackers.get(userId);
+        ActivityTracker tracker = trackers.get(userId);
 
         if (tracker == null) {
             return;
         }
 
-
-        Session session =
-                getCurrentOpenSession(userId);
+        Session session = getCurrentOpenSession(userId);
 
         if (session == null) {
             return;
         }
 
-
-        // -----------------------------------------------------
-        // Employee must have clicked Start Work
-        // -----------------------------------------------------
-
-        if (session.getEmployeeStartedAt() == null) {
+        // Employee must have clicked Start Work.
+        if (session.getEmployeeStartedAt() == null
+                || session.isWorkPaused()) {
             return;
         }
 
+        // Get counters.
+        long activeSeconds = tracker.getActiveSeconds();
 
-        // -----------------------------------------------------
-        // Get counters
-        // -----------------------------------------------------
+        long idleSeconds = tracker.getIdleSeconds();
 
-        long activeSeconds =
-                tracker.getActiveSeconds();
+        // Save seconds.
+        session.setActiveSeconds((int) activeSeconds);
 
-        long idleSeconds =
-                tracker.getIdleSeconds();
+        session.setIdleSeconds((int) idleSeconds);
 
+        // Save minutes.
+        session.setActiveMinutes((int) (activeSeconds / 60));
 
-        // -----------------------------------------------------
-        // Save seconds
-        // -----------------------------------------------------
+        session.setIdleMinutes((int) (idleSeconds / 60));
 
-        session.setActiveSeconds(
-                (int) activeSeconds
-        );
-
-        session.setIdleSeconds(
-                (int) idleSeconds
-        );
-
-
-        // -----------------------------------------------------
-        // Save minutes
-        // -----------------------------------------------------
-
-        session.setActiveMinutes(
-                (int) (activeSeconds / 60)
-        );
-
-        session.setIdleMinutes(
-                (int) (idleSeconds / 60)
-        );
-
-
-        // -----------------------------------------------------
-        // Productivity
-        // -----------------------------------------------------
-
-        long totalSeconds =
-                activeSeconds + idleSeconds;
-
+        // Calculate productivity.
+        long totalSeconds = activeSeconds + idleSeconds;
 
         if (totalSeconds > 0) {
 
             double productivity =
-                    ((double) activeSeconds
-                            / totalSeconds)
-                            * 100.0;
+                    ((double) activeSeconds / totalSeconds) * 100.0;
 
-            session.setProductivity(
-                    productivity
-            );
+            session.setProductivity(productivity);
         }
 
-
-        // -----------------------------------------------------
-        // Save session
-        // -----------------------------------------------------
-
+        // Save session.
         sessionRepo.save(session);
-
 
         System.out.println(
                 "User "
@@ -479,29 +414,21 @@ public class ActivityTrackerService {
     // GET CURRENT OPEN SESSION
     // =========================================================
 
-    private Session getCurrentOpenSession(
-            Integer userId
-    ) {
+    private Session getCurrentOpenSession(Integer userId) {
 
         List<Session> sessions =
-                sessionRepo
-                        .findByUserIdAndLogoutTimeIsNull(
-                                userId
-                        );
-
+                sessionRepo.findByUserIdAndLogoutTimeIsNull(userId);
 
         if (sessions.isEmpty()) {
             return null;
         }
 
-
         return sessions.stream()
                 .max(
                         (s1, s2) ->
-                                s1.getLoginTime()
-                                        .compareTo(
-                                                s2.getLoginTime()
-                                        )
+                                s1.getLoginTime().compareTo(
+                                        s2.getLoginTime()
+                                )
                 )
                 .orElse(null);
     }
@@ -513,69 +440,59 @@ public class ActivityTrackerService {
 
     public void stopTracking(Integer userId) {
 
-        ActivityTracker tracker =
-                trackers.get(userId);
-
-        if (tracker == null) {
-            return;
-        }
-
-
-        // -----------------------------------------------------
-        // Final synchronization
-        // -----------------------------------------------------
-
-        syncSessionActivity(userId);
-
-
-        // =====================================================
-        // STOP APPLICATION TRACKING FIRST
-        // =====================================================
-
-        ApplicationActivityTracker
-                applicationActivityTracker =
-                applicationTrackers.remove(userId);
-
-
-        if (applicationActivityTracker != null) {
-
-            applicationActivityTracker.stop();
-
-
-            System.out.println(
-                    "Application tracking stopped for User: "
-                            + userId
-            );
-        }
-
-
-        // =====================================================
-        // REMOVE ACTIVE / IDLE TRACKER
-        // =====================================================
-
-        trackers.remove(userId);
-
-        lastStates.remove(userId);
-
-
-        // =====================================================
-        // STOP NATIVE INPUT TRACKING
-        // =====================================================
-
-        tracker.stop();
-
-
-        // =====================================================
-        // CLOSE ACTIVE / IDLE DATABASE ACTIVITY
-        // =====================================================
-
-        activityService.stopTracking(userId);
-
-
-        System.out.println(
-                "Activity tracking stopped for User: "
-                        + userId
+        Object lock = trackerLocks.computeIfAbsent(
+                userId,
+                id -> new Object()
         );
+
+        synchronized (lock) {
+
+            ActivityTracker tracker = trackers.get(userId);
+
+            if (tracker == null) {
+                return;
+            }
+
+            synchronized (tracker) {
+
+                // Confirm tracker is still active.
+                if (trackers.get(userId) != tracker) {
+                    return;
+                }
+
+                // 1. Stop application tracking.
+                ApplicationActivityTracker applicationTracker =
+                        applicationTrackers.remove(userId);
+
+                if (applicationTracker != null) {
+
+                    applicationTracker.stop();
+
+                    System.out.println(
+                            "Application tracking stopped for User: "
+                                    + userId
+                    );
+                }
+
+                // 2. Stop active / idle tracker.
+                tracker.stop();
+
+                // 3. Save final counters.
+                syncSessionActivity(userId);
+
+                // 4. Remove tracker.
+                trackers.remove(userId, tracker);
+
+                lastStates.remove(userId);
+
+                // 5. Close current database activity.
+                activityService.stopTracking(userId);
+
+                System.out.println(
+                        "Activity tracking stopped for User: " + userId
+                );
+            }
+        }
     }
 
 
@@ -585,13 +502,19 @@ public class ActivityTrackerService {
 
     public long getActiveSeconds(Integer userId) {
 
-        ActivityTracker tracker =
-                trackers.get(userId);
+        ActivityTracker tracker = trackers.get(userId);
 
+        if (tracker != null) {
+            return tracker.getActiveSeconds();
+        }
 
-        return tracker != null
-                ? tracker.getActiveSeconds()
-                : 0;
+        Session session = getCurrentOpenSession(userId);
+
+        if (session == null || session.getActiveSeconds() == null) {
+            return 0L;
+        }
+
+        return session.getActiveSeconds();
     }
 
 
@@ -601,13 +524,19 @@ public class ActivityTrackerService {
 
     public long getIdleSeconds(Integer userId) {
 
-        ActivityTracker tracker =
-                trackers.get(userId);
+        ActivityTracker tracker = trackers.get(userId);
 
+        if (tracker != null) {
+            return tracker.getIdleSeconds();
+        }
 
-        return tracker != null
-                ? tracker.getIdleSeconds()
-                : 0;
+        Session session = getCurrentOpenSession(userId);
+
+        if (session == null || session.getIdleSeconds() == null) {
+            return 0L;
+        }
+
+        return session.getIdleSeconds();
     }
 
 
@@ -615,13 +544,9 @@ public class ActivityTrackerService {
     // GET CURRENT STATE
     // =========================================================
 
-    public ActivityState getCurrentState(
-            Integer userId
-    ) {
+    public ActivityState getCurrentState(Integer userId) {
 
-        ActivityTracker tracker =
-                trackers.get(userId);
-
+        ActivityTracker tracker = trackers.get(userId);
 
         return tracker != null
                 ? tracker.getCurrentState()
@@ -636,5 +561,62 @@ public class ActivityTrackerService {
     public boolean isTracking(Integer userId) {
 
         return trackers.containsKey(userId);
+    }
+
+
+    // =========================================================
+    // APPLICATION SHUTDOWN
+    // =========================================================
+
+    @PreDestroy
+    public void shutdownTracking() {
+
+        System.out.println(
+                "Shutting down all activity trackers..."
+        );
+
+        // Stop each employee's tracking cleanly.
+        for (Integer userId : trackers.keySet()) {
+
+            try {
+                stopTracking(userId);
+
+            } catch (Exception e) {
+
+                System.err.println(
+                        "Error stopping trackers for User "
+                                + userId + ": " + e.getMessage()
+                );
+
+                e.printStackTrace();
+            }
+        }
+
+        // Stop any remaining application trackers.
+        for (ApplicationActivityTracker tracker :
+                applicationTrackers.values()) {
+
+            try {
+                tracker.stop();
+
+            } catch (Exception e) {
+
+                System.err.println(
+                        "Error stopping application tracker: "
+                                + e.getMessage()
+                );
+            }
+        }
+
+        applicationTrackers.clear();
+        trackers.clear();
+        lastStates.clear();
+
+        // Do not unregister the process-wide native hook here.
+        // Spring context shutdown does not always mean JVM shutdown.
+
+        System.out.println(
+                "All activity trackers shut down."
+        );
     }
 }

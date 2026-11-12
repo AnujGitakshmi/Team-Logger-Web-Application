@@ -18,6 +18,9 @@ public class User {
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 
+    @Column(name = "workstation_activated", nullable = false)
+    private boolean workstationActivated = false;
+
     /**
      * IMPORTANT:
      * This field must always contain a HASHED password.
@@ -133,6 +136,14 @@ public class User {
     // =====================================================
     // GETTERS AND SETTERS
     // =====================================================
+
+    public boolean isWorkstationActivated() {
+        return workstationActivated;
+    }
+
+    public void setWorkstationActivated(boolean workstationActivated) {
+        this.workstationActivated = workstationActivated;
+    }
 
     public Integer getId() {
         return id;

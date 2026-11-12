@@ -51,7 +51,15 @@ public class SecurityConfig {
             throws Exception {
 
         http
+                // Keep CSRF enabled everywhere except the exact
+                // one-time desktop ticket redemption POST endpoint.
                 .csrf(csrf -> csrf
+                        .ignoringRequestMatchers(request ->
+                                HttpMethod.POST.matches(request.getMethod())
+                                        && "/api/desktop/redeem".equals(
+                                        request.getServletPath()
+                                )
+                        )
                         .ignoringRequestMatchers(
                                 "/api/extension/website-activity"
                         )
@@ -63,17 +71,33 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
 
+                        // Public authentication pages.
                         .requestMatchers(
                                 "/login",
                                 "/signup",
                                 "/organization/register"
                         ).permitAll()
 
+                        // Existing login approval pages.
                         .requestMatchers(
                                 "/employee/login-pending",
                                 "/employee/login-approval-status"
                         ).permitAll()
 
+                        // Desktop bootstrap page.
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/desktop/bootstrap"
+                        ).permitAll()
+
+                        // Only the exact ticket redemption endpoint
+                        // is publicly accessible.
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/desktop/redeem"
+                        ).permitAll()
+
+                        // Existing public endpoints.
                         .requestMatchers("/api/test").permitAll()
                         .requestMatchers("/test/recording/**").permitAll()
 
@@ -82,6 +106,7 @@ public class SecurityConfig {
                                 "/api/extension/website-activity"
                         ).permitAll()
 
+                        // Static resources.
                         .requestMatchers(
                                 "/css/**",
                                 "/js/**",
@@ -89,11 +114,11 @@ public class SecurityConfig {
                                 "/favicon.ico"
                         ).permitAll()
 
-                        // Only accounts granted ROLE_SUPER_ADMIN can enter.
+                        // Super Admin routes.
                         .requestMatchers("/super-admin/**")
                         .hasAuthority("ROLE_SUPER_ADMIN")
 
-                        // Normal Admin and Branch Admin routes.
+                        // Admin routes.
                         .requestMatchers("/admin/**")
                         .hasAuthority("ROLE_ADMIN")
 
@@ -101,6 +126,7 @@ public class SecurityConfig {
                         .requestMatchers("/employee/**")
                         .hasAuthority("ROLE_EMPLOYEE")
 
+                        // Everything else requires authentication.
                         .anyRequest().authenticated()
                 )
 

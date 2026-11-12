@@ -4,6 +4,9 @@
 
 <head>
 
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
+
     <meta charset="UTF-8">
 
     <meta name="viewport"
@@ -1431,36 +1434,29 @@
 
                     <!-- OFFICE SESSION -->
 
-                    <p th:if="${currentSession != null and officeHours}">
-
+                    <p th:if="${workStarted and officeHours}">
                         Your office work session is running
                         from 10:00 AM to 7:00 PM.
-
                     </p>
-
 
                     <!-- MANUAL SESSION -->
 
-                    <p th:if="${currentSession != null and !officeHours}">
-
+                    <p th:if="${workStarted and !officeHours}">
                         Your manual working session is currently active.
-
                     </p>
 
 
                     <!-- NO SESSION -->
 
-                    <p th:if="${currentSession == null}">
-
-                        You do not have an active working session.
-
+                    <p th:unless="${workStarted}">
+                        You have not started working yet.
                     </p>
 
 
                     <!-- WORKING -->
 
                     <div class="status"
-                         th:if="${currentSession != null}">
+                         th:if="${workStarted}">
 
                         <span class="status-dot"></span>
 
@@ -1472,7 +1468,7 @@
                     <!-- NOT WORKING -->
 
                     <div class="status status-not-working"
-                         th:if="${currentSession == null}">
+                         th:unless="${workStarted}">
 
                         <span class="status-dot"></span>
 
@@ -2275,21 +2271,16 @@
 
 
                             <span class="attendance-value"
-                                  th:if="${currentSession != null}"
+                                  th:if="${workStarted}"
                                   style="color:#16a34a;">
-
-                                Working
-
-                            </span>
-
+                                    Working
+                             </span>
 
                             <span class="attendance-value"
-                                  th:if="${currentSession == null}"
+                                  th:unless="${workStarted}"
                                   style="color:#6b7280;">
-
                                 Not Working
-
-                            </span>
+                             </span>
 
                         </div>
 
@@ -2704,6 +2695,197 @@
 
 
 </script>
+<!-- =========================================================
+     AUTOMATIC DESKTOP WORKSTATION LAUNCH
+     ========================================================= -->
+
+<script th:if="${workstationActivated}">
+
+    let desktopLaunchStarted = false;
+
+    async function launchDesktopWorkstation() {
+
+        if (desktopLaunchStarted) {
+            return;
+        }
+
+        desktopLaunchStarted = true;
+
+        try {
+
+            const csrfToken = document.querySelector(
+                'meta[name="_csrf"]'
+            )?.getAttribute("content");
+
+            const csrfHeader = document.querySelector(
+                'meta[name="_csrf_header"]'
+            )?.getAttribute("content");
+
+            if (!csrfToken || !csrfHeader) {
+                throw new Error("CSRF token unavailable.");
+            }
+
+            // STEP 1: Request a one-time launch ticket.
+
+            const ticketResponse = await fetch(
+                "/employee/desktop/launch-ticket",
+                {
+                    method: "POST",
+                    credentials: "same-origin",
+                    headers: {
+                        "Accept": "application/json",
+                        [csrfHeader]: csrfToken
+                    },
+                    cache: "no-store"
+                }
+            );
+
+            if (!ticketResponse.ok) {
+                throw new Error(
+                    "Launch ticket request failed: HTTP "
+                    + ticketResponse.status
+                );
+            }
+
+            const ticketData = await ticketResponse.json();
+
+            if (
+                ticketData.status !== "READY" ||
+                typeof ticketData.ticket !== "string"
+            ) {
+                throw new Error("Invalid desktop launch ticket.");
+            }
+
+            // STEP 2: Send the ticket to the JavaFX helper.
+
+            const helperResponse = await fetch(
+                "http://127.0.0.1:8765/launch",
+                {
+                    method: "POST",
+                    mode: "cors",
+                    credentials: "omit",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        ticket: ticketData.ticket
+                    }),
+                    cache: "no-store"
+                }
+            );
+
+            if (!helperResponse.ok) {
+                throw new Error(
+                    "Desktop helper returned HTTP "
+                    + helperResponse.status
+                );
+            }
+
+            console.log(
+                "Desktop workstation launch request sent."
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Desktop workstation launch failed:",
+                error
+            );
+
+        }
+    }
+
+    if (document.readyState === "loading") {
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            launchDesktopWorkstation,
+            { once: true }
+        );
+
+    } else {
+
+        launchDesktopWorkstation();
+
+    }
+
+</script>
+
+<!-- =========================================================
+     DESKTOP WORKSTATION → ORIGINAL BROWSER NAVIGATION
+     ========================================================= -->
+
+<script th:if="${workstationActivated}">
+
+    let dashboardNavigationCheckInProgress = false;
+
+    async function checkDesktopNavigationRequest() {
+
+        if (dashboardNavigationCheckInProgress) {
+            return;
+        }
+
+        dashboardNavigationCheckInProgress = true;
+
+        try {
+
+            const response = await fetch(
+                "http://127.0.0.1:8765/navigation-status",
+                {
+                    method: "GET",
+                    mode: "cors",
+                    credentials: "omit",
+                    cache: "no-store",
+                    headers: {
+                        "Accept": "application/json"
+                    }
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(
+                    "Navigation check failed: HTTP "
+                    + response.status
+                );
+            }
+
+            const data = await response.json();
+
+            if (data.navigate === true) {
+
+                console.log(
+                    "Desktop requested Employee Dashboard navigation."
+                );
+
+                window.location.assign("/employee/dashboard");
+            }
+
+        } catch (error) {
+
+            // The helper may not be running yet.
+            // Do not interrupt normal dashboard activity.
+
+            console.debug(
+                "Desktop navigation listener:",
+                error.message
+            );
+
+        } finally {
+
+            dashboardNavigationCheckInProgress = false;
+        }
+    }
+
+    // Check immediately and then every second.
+    checkDesktopNavigationRequest();
+
+    setInterval(
+        checkDesktopNavigationRequest,
+        1000
+    );
+
+</script>
+
 
 
 </body>

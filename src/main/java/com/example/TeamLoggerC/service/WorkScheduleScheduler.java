@@ -14,22 +14,22 @@ public class WorkScheduleScheduler {
     }
 
     // ==========================================
-    // AUTOMATIC WORK STOP
+    // AUTOMATIC SESSION MANAGEMENT
     //
     // Runs every minute.
     //
-    // After office hours:
-    // Close today's office sessions at the
-    // configured office end time.
+    // 1. Closes previous-day sessions at midnight.
+    // 2. Closes today's office sessions at their
+    //    configured office end time.
     // ==========================================
 
     @Scheduled(fixedRate = 60000)
     public void stopOfficeWorkAutomatically() {
 
-        if (sessionService.isOfficeHours()) {
-            return;
-        }
+        // First: permanently close sessions from previous dates.
+        sessionService.closeSessionsAtMidnight();
 
+        // Second: close sessions whose office hours have ended.
         sessionService.stopOfficeWork();
     }
 }

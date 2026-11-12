@@ -1,3 +1,4 @@
+
 package com.example.TeamLoggerC.service;
 
 import com.example.TeamLoggerC.entity.Screenshot;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -25,7 +27,6 @@ public class ScreenshotCaptureService {
     private final SessionRepo sessionRepo;
     private final UserRepo userRepo;
 
-
     // =========================================================
     // SCREENSHOT SCHEDULER
     // =========================================================
@@ -33,16 +34,27 @@ public class ScreenshotCaptureService {
     private final ScheduledExecutorService scheduler =
             Executors.newScheduledThreadPool(4);
 
-
     // =========================================================
     // ACTIVE SCREENSHOT TASKS
-    //
-    // userId -> scheduled screenshot task
     // =========================================================
 
     private final Map<Integer, ScheduledFuture<?>> screenshotTasks =
             new ConcurrentHashMap<>();
 
+    // Employees currently allowed to capture screenshots.
+    private final Set<Integer> activeCaptureUsers =
+            ConcurrentHashMap.newKeySet();
+
+    // Synchronization lock for each employee.
+    private final Map<Integer, Object> captureLocks =
+            new ConcurrentHashMap<>();
+
+    private Object getCaptureLock(Integer userId) {
+        return captureLocks.computeIfAbsent(
+                userId,
+                id -> new Object()
+        );
+    }
 
     // =========================================================
     // CONSTRUCTOR
@@ -62,178 +74,132 @@ public class ScreenshotCaptureService {
         this.userRepo = userRepo;
     }
 
-
     // =========================================================
     // START SCREENSHOT CAPTURE
     // =========================================================
 
     public void startCapture(Integer userId) {
 
-        // -----------------------------------------------------
-        // Prevent duplicate scheduler
-        // -----------------------------------------------------
+        synchronized (getCaptureLock(userId)) {
 
-        if (isCapturing(userId)) {
+            if (isCapturing(userId)) {
+                System.out.println(
+                        "Screenshot capture is already running "
+                                + "for User: " + userId
+                );
+                return;
+            }
 
-            System.out.println(
-                    "Screenshot capture is already running "
-                            + "for User: " + userId
-            );
+            Session session = getCurrentOpenSession(userId);
 
-            return;
-        }
+            if (session == null) {
+                System.out.println(
+                        "Cannot start screenshot capture. "
+                                + "No open session for User: "
+                                + userId
+                );
+                return;
+            }
 
+            if (session.getEmployeeStartedAt() == null
+                    || session.isWorkPaused()) {
 
-        // -----------------------------------------------------
-        // Get current session
-        // -----------------------------------------------------
+                System.out.println(
+                        "Cannot start screenshot capture. "
+                                + "Employee has not started work "
+                                + "or session is paused. User: "
+                                + userId
+                );
+                return;
+            }
 
-        Session session =
-                getCurrentOpenSession(userId);
+            User employee = userRepo.findById(userId)
+                    .orElse(null);
 
-        if (session == null) {
+            if (employee == null) {
+                System.out.println(
+                        "Cannot start screenshot capture. "
+                                + "Employee not found. User: "
+                                + userId
+                );
+                return;
+            }
 
-            System.out.println(
-                    "Cannot start screenshot capture. "
-                            + "No open session for User: "
-                            + userId
-            );
+            Integer adminId = employee.getAdminId();
 
-            return;
-        }
+            if (adminId == null) {
+                System.out.println(
+                        "Cannot start screenshot capture. "
+                                + "Employee has no admin assigned. "
+                                + "User: " + userId
+                );
+                return;
+            }
 
+            if (!settingsService.isEnabled(adminId)) {
+                System.out.println(
+                        "Screenshot capture is disabled "
+                                + "by Admin: " + adminId
+                                + " for User: " + userId
+                );
+                return;
+            }
 
-        // -----------------------------------------------------
-        // Employee must have clicked Start Work
-        // -----------------------------------------------------
+            int intervalMinutes =
+                    settingsService.getIntervalMinutes(adminId);
 
-        if (session.getEmployeeStartedAt() == null) {
+            if (intervalMinutes <= 0) {
+                intervalMinutes = 5;
+            }
 
-            System.out.println(
-                    "Cannot start screenshot capture. "
-                            + "Employee has not started work. "
-                            + "User: " + userId
-            );
+            final int finalIntervalMinutes = intervalMinutes;
 
-            return;
-        }
+            // Allow capture before scheduling the first screenshot.
+            activeCaptureUsers.add(userId);
 
+            try {
 
-        // -----------------------------------------------------
-        // Get employee
-        // -----------------------------------------------------
+                ScheduledFuture<?> task =
+                        scheduler.scheduleAtFixedRate(
+                                () -> captureScreenshot(userId),
+                                finalIntervalMinutes,
+                                finalIntervalMinutes,
+                                TimeUnit.MINUTES
+                        );
 
-        User employee =
-                userRepo.findById(userId)
-                        .orElse(null);
+                screenshotTasks.put(userId, task);
 
-        if (employee == null) {
+                // Capture the first screenshot immediately.
+                captureScreenshot(userId);
 
-            System.out.println(
-                    "Cannot start screenshot capture. "
-                            + "Employee not found. "
-                            + "User: " + userId
-            );
-
-            return;
-        }
-
-
-        // -----------------------------------------------------
-        // Get admin ID
-        // -----------------------------------------------------
-
-        Integer adminId =
-                employee.getAdminId();
-
-        if (adminId == null) {
-
-            System.out.println(
-                    "Cannot start screenshot capture. "
-                            + "Employee has no admin assigned. "
-                            + "User: " + userId
-            );
-
-            return;
-        }
-
-
-        // -----------------------------------------------------
-        // Check screenshot setting
-        // -----------------------------------------------------
-
-        if (!settingsService.isEnabled(adminId)) {
-
-            System.out.println(
-                    "Screenshot capture is disabled "
-                            + "by Admin: " + adminId
-                            + " for User: " + userId
-            );
-
-            return;
-        }
-
-
-        // -----------------------------------------------------
-        // Get screenshot interval
-        // -----------------------------------------------------
-
-        int intervalMinutes =
-                settingsService.getIntervalMinutes(adminId);
-
-
-        // -----------------------------------------------------
-        // Validate interval
-        // -----------------------------------------------------
-
-        if (intervalMinutes <= 0) {
-            intervalMinutes = 5;
-        }
-
-
-        final int finalIntervalMinutes =
-                intervalMinutes;
-
-
-        // -----------------------------------------------------
-        // Capture first screenshot immediately
-        // -----------------------------------------------------
-
-        captureScreenshot(userId);
-
-
-        // -----------------------------------------------------
-        // Schedule future screenshots
-        // -----------------------------------------------------
-
-        ScheduledFuture<?> task =
-                scheduler.scheduleAtFixedRate(
-                        () -> captureScreenshot(userId),
-                        finalIntervalMinutes,
-                        finalIntervalMinutes,
-                        TimeUnit.MINUTES
+                System.out.println(
+                        "Screenshot capture started. "
+                                + "User: " + userId
+                                + " | Interval: "
+                                + finalIntervalMinutes
+                                + " minutes"
                 );
 
+            } catch (Exception e) {
 
-        // -----------------------------------------------------
-        // Store task
-        // -----------------------------------------------------
+                activeCaptureUsers.remove(userId);
 
-        screenshotTasks.put(
-                userId,
-                task
-        );
+                ScheduledFuture<?> task =
+                        screenshotTasks.remove(userId);
 
+                if (task != null) {
+                    task.cancel(false);
+                }
 
-        System.out.println(
-                "Screenshot capture started."
-                        + " User: " + userId
-                        + " | Interval: "
-                        + finalIntervalMinutes
-                        + " minutes"
-        );
+                System.err.println(
+                        "Unable to start screenshot capture "
+                                + "for User: " + userId
+                );
+
+                e.printStackTrace();
+            }
+        }
     }
-
 
     // =========================================================
     // CAPTURE ONE SCREENSHOT
@@ -241,199 +207,143 @@ public class ScreenshotCaptureService {
 
     public void captureScreenshot(Integer userId) {
 
-        try {
+        synchronized (getCaptureLock(userId)) {
 
-            // -------------------------------------------------
-            // Check current session
-            // -------------------------------------------------
-
-            Session session =
-                    getCurrentOpenSession(userId);
-
-            if (session == null) {
-
-                System.out.println(
-                        "No open session. "
-                                + "Screenshot skipped for User: "
-                                + userId
-                );
-
-                stopCapture(userId);
-
+            // Do not capture after Stop Work.
+            if (!activeCaptureUsers.contains(userId)) {
                 return;
             }
 
+            try {
 
-            // -------------------------------------------------
-            // Check Start Work
-            // -------------------------------------------------
+                // Get current open session.
+                Session session = getCurrentOpenSession(userId);
 
-            if (session.getEmployeeStartedAt() == null) {
+                if (session == null) {
+
+                    System.out.println(
+                            "No open session. "
+                                    + "Screenshot skipped for User: "
+                                    + userId
+                    );
+
+                    stopCapture(userId);
+                    return;
+                }
+
+                // Check Start Work and pause status.
+                if (session.getEmployeeStartedAt() == null
+                        || session.isWorkPaused()) {
+
+                    System.out.println(
+                            "Employee has not started work "
+                                    + "or session is paused. "
+                                    + "Screenshot skipped for User: "
+                                    + userId
+                    );
+
+                    stopCapture(userId);
+                    return;
+                }
+
+                // Get employee.
+                User employee = userRepo.findById(userId)
+                        .orElse(null);
+
+                if (employee == null) {
+
+                    System.out.println(
+                            "Employee not found. "
+                                    + "Screenshot skipped for User: "
+                                    + userId
+                    );
+
+                    stopCapture(userId);
+                    return;
+                }
+
+                // Get admin.
+                Integer adminId = employee.getAdminId();
+
+                if (adminId == null) {
+
+                    System.out.println(
+                            "Employee has no admin. "
+                                    + "Screenshot skipped for User: "
+                                    + userId
+                    );
+
+                    stopCapture(userId);
+                    return;
+                }
+
+                // Check screenshot settings.
+                if (!settingsService.isEnabled(adminId)) {
+
+                    System.out.println(
+                            "Screenshot capture disabled "
+                                    + "by Admin: " + adminId
+                                    + ". Skipping User: "
+                                    + userId
+                    );
+
+                    stopCapture(userId);
+                    return;
+                }
+
+                // Capture screen.
+                String filePath =
+                        storageService.captureScreen(userId);
+
+                // Check active state again before saving.
+                if (!activeCaptureUsers.contains(userId)) {
+                    return;
+                }
+
+                // Extract file name.
+                String fileName = Paths.get(filePath)
+                        .getFileName()
+                        .toString();
+
+                // Create Screenshot entity.
+                Screenshot screenshot = new Screenshot();
+
+                screenshot.setUserId(userId);
+                screenshot.setSessionId(session.getId());
+                screenshot.setFileName(fileName);
+                screenshot.setFilePath(filePath);
+
+                LocalDateTime capturedAt = LocalDateTime.now();
+
+                screenshot.setCapturedAt(capturedAt);
+
+                // Initial storage.
+                screenshot.setStorageType("LOCAL");
+                screenshot.setArchived(false);
+                screenshot.setArchivePath(null);
+                screenshot.setExpiresAt(null);
+
+                // Save database record.
+                screenshotService.saveScreenshot(screenshot);
 
                 System.out.println(
-                        "Employee has not started work. "
-                                + "Screenshot skipped for User: "
-                                + userId
+                        "Screenshot saved successfully. "
+                                + "User: " + userId
+                                + " | Session: " + session.getId()
+                                + " | File: " + fileName
                 );
 
-                return;
-            }
+            } catch (Exception e) {
 
-
-            // -------------------------------------------------
-            // Get employee
-            // -------------------------------------------------
-
-            User employee =
-                    userRepo.findById(userId)
-                            .orElse(null);
-
-            if (employee == null) {
-
-                System.out.println(
-                        "Employee not found. "
-                                + "Screenshot skipped for User: "
-                                + userId
+                System.err.println(
+                        "Screenshot capture failed "
+                                + "for User: " + userId
                 );
 
-                stopCapture(userId);
-
-                return;
+                e.printStackTrace();
             }
-
-
-            // -------------------------------------------------
-            // Get admin
-            // -------------------------------------------------
-
-            Integer adminId =
-                    employee.getAdminId();
-
-            if (adminId == null) {
-
-                System.out.println(
-                        "Employee has no admin. "
-                                + "Screenshot skipped for User: "
-                                + userId
-                );
-
-                stopCapture(userId);
-
-                return;
-            }
-
-
-            // -------------------------------------------------
-            // Check if screenshot feature is enabled
-            // -------------------------------------------------
-
-            if (!settingsService.isEnabled(adminId)) {
-
-                System.out.println(
-                        "Screenshot capture disabled "
-                                + "by Admin: " + adminId
-                                + ". Skipping User: "
-                                + userId
-                );
-
-                stopCapture(userId);
-
-                return;
-            }
-
-
-            // -------------------------------------------------
-            // Capture screen
-            // -------------------------------------------------
-
-            String filePath =
-                    storageService.captureScreen(userId);
-
-
-            // -------------------------------------------------
-            // Extract file name
-            // -------------------------------------------------
-
-            String fileName =
-                    Paths.get(filePath)
-                            .getFileName()
-                            .toString();
-
-
-            // -------------------------------------------------
-            // Create Screenshot entity
-            // -----------------------------------------------------
-
-            Screenshot screenshot =
-                    new Screenshot();
-
-            screenshot.setUserId(
-                    userId
-            );
-
-            screenshot.setSessionId(
-                    session.getId()
-            );
-
-            screenshot.setFileName(
-                    fileName
-            );
-
-            screenshot.setFilePath(
-                    filePath
-            );
-
-            LocalDateTime capturedAt = LocalDateTime.now();
-
-            screenshot.setCapturedAt(capturedAt);
-
-            // =========================================================
-            // INITIAL STORAGE
-           // =========================================================
-
-            // Screenshot is stored locally for the first 7 days.
-            screenshot.setStorageType("LOCAL");
-
-          // Screenshot has not been archived yet.
-            screenshot.setArchived(false);
-
-         // No ZIP archive exists yet.
-            screenshot.setArchivePath(null);
-
-         // expiresAt is not used for permanent deletion.
-         // The screenshot will be retained for 12 months
-         // before being moved to ZIP archive.
-            screenshot.setExpiresAt(null);
-
-            // -------------------------------------------------
-            // Save DB record
-            // -------------------------------------------------
-
-            screenshotService.saveScreenshot(
-                    screenshot
-            );
-
-
-            System.out.println(
-                    "Screenshot saved successfully."
-                            + " User: " + userId
-                            + " | Session: "
-                            + session.getId()
-                            + " | File: "
-                            + fileName
-            );
-
-        } catch (Exception e) {
-
-            System.err.println(
-                    "Screenshot capture failed "
-                            + "for User: " + userId
-            );
-
-            e.printStackTrace();
         }
     }
-
 
     // =========================================================
     // STOP SCREENSHOT CAPTURE
@@ -441,20 +351,25 @@ public class ScreenshotCaptureService {
 
     public void stopCapture(Integer userId) {
 
-        ScheduledFuture<?> task =
-                screenshotTasks.remove(userId);
+        // Disable new captures immediately.
+        activeCaptureUsers.remove(userId);
 
-        if (task != null) {
+        synchronized (getCaptureLock(userId)) {
 
-            task.cancel(false);
+            ScheduledFuture<?> task =
+                    screenshotTasks.remove(userId);
 
-            System.out.println(
-                    "Screenshot capture stopped "
-                            + "for User: " + userId
-            );
+            if (task != null) {
+
+                task.cancel(false);
+
+                System.out.println(
+                        "Screenshot capture stopped "
+                                + "for User: " + userId
+                );
+            }
         }
     }
-
 
     // =========================================================
     // CHECK WHETHER SCREENSHOT CAPTURE IS RUNNING
@@ -465,32 +380,29 @@ public class ScreenshotCaptureService {
         ScheduledFuture<?> task =
                 screenshotTasks.get(userId);
 
-        return task != null
+        return activeCaptureUsers.contains(userId)
+                && task != null
                 && !task.isCancelled()
                 && !task.isDone();
     }
-
 
     // =========================================================
     // GET CURRENT OPEN SESSION
     // =========================================================
 
-    private Session getCurrentOpenSession(
-            Integer userId) {
+    private Session getCurrentOpenSession(Integer userId) {
 
         return sessionRepo
                 .findByUserIdAndLogoutTimeIsNull(userId)
                 .stream()
                 .max(
                         (s1, s2) ->
-                                s1.getLoginTime()
-                                        .compareTo(
-                                                s2.getLoginTime()
-                                        )
+                                s1.getLoginTime().compareTo(
+                                        s2.getLoginTime()
+                                )
                 )
                 .orElse(null);
     }
-
 
     // =========================================================
     // STOP ALL SCREENSHOT CAPTURE
@@ -498,9 +410,7 @@ public class ScreenshotCaptureService {
 
     public void stopAllCaptures() {
 
-        for (Integer userId :
-                screenshotTasks.keySet()) {
-
+        for (Integer userId : screenshotTasks.keySet()) {
             stopCapture(userId);
         }
 
@@ -508,7 +418,6 @@ public class ScreenshotCaptureService {
                 "All screenshot capture tasks stopped."
         );
     }
-
 
     // =========================================================
     // SHUTDOWN SCHEDULER

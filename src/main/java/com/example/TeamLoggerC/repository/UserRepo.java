@@ -6,6 +6,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 import java.util.Optional;
+import jakarta.persistence.LockModeType;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface UserRepo extends JpaRepository<User, Integer> {
 
@@ -161,5 +165,18 @@ public interface UserRepo extends JpaRepository<User, Integer> {
     findByOrganizationIdAndOrganizationRoleIgnoreCaseOrderByNameAsc(
             Integer organizationId,
             String organizationRole
+    );
+
+    // =====================================================
+// SESSION MANAGEMENT: LOCK EMPLOYEE DURING START/STOP
+// =====================================================
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT u FROM User u WHERE u.id = :userId")
+    Optional<User> findByIdForUpdate(@Param("userId") Integer userId);
+
+    // Get active employees across all admins
+    List<User> findByRoleIgnoreCaseAndStatusIgnoreCase(
+            String role,
+            String status
     );
 }

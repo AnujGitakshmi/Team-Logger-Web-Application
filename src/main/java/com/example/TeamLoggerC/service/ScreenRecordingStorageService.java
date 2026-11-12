@@ -1,3 +1,4 @@
+
 package com.example.TeamLoggerC.service;
 
 import org.bytedeco.ffmpeg.global.avcodec;
@@ -5,10 +6,11 @@ import org.bytedeco.ffmpeg.global.avutil;
 import org.bytedeco.javacv.FFmpegFrameRecorder;
 import org.bytedeco.javacv.Frame;
 import org.bytedeco.javacv.Java2DFrameConverter;
+import org.bytedeco.javacv.FFmpegLogCallback;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-//import javax.imageio.ImageIO;
 import java.awt.AWTException;
 import java.awt.Dimension;
 import java.awt.GraphicsEnvironment;
@@ -16,17 +18,19 @@ import java.awt.Rectangle;
 import java.awt.Robot;
 import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.bytedeco.javacv.FFmpegLogCallback;
 
 @Service
 public class ScreenRecordingStorageService {
@@ -43,8 +47,6 @@ public class ScreenRecordingStorageService {
     // =========================================================
 
     private static final int DEFAULT_FPS = 5;
-
-    //private static final int VIDEO_BITRATE = 2_500_000;
 
 
     // =========================================================
@@ -63,6 +65,23 @@ public class ScreenRecordingStorageService {
 
     private final Map<Integer, RecordingWorker> activeRecordings =
             new ConcurrentHashMap<>();
+
+
+    // =========================================================
+    // PER-EMPLOYEE LOCKS
+    // =========================================================
+
+    private final Map<Integer, Object> recordingLocks =
+            new ConcurrentHashMap<>();
+
+
+    private Object getRecordingLock(Integer userId) {
+
+        return recordingLocks.computeIfAbsent(
+                userId,
+                id -> new Object()
+        );
+    }
 
 
     // =========================================================
@@ -85,8 +104,6 @@ public class ScreenRecordingStorageService {
             Integer userId,
             Integer sessionId) {
 
-        FFmpegLogCallback.set();
-
         if (userId == null) {
             throw new IllegalArgumentException(
                     "User ID cannot be null."
@@ -99,175 +116,150 @@ public class ScreenRecordingStorageService {
             );
         }
 
+        synchronized (getRecordingLock(userId)) {
 
-        // -----------------------------------------------------
-        // Check Java headless mode
-        // -----------------------------------------------------
+            FFmpegLogCallback.set();
 
-        if (GraphicsEnvironment.isHeadless()) {
-
-            throw new IllegalStateException(
-                    "Screen recording cannot start because "
-                            + "the application is running in headless mode."
-            );
-        }
-
-
-        // -----------------------------------------------------
-        // Prevent duplicate recording
-        // -----------------------------------------------------
-
-        RecordingWorker existing =
-                activeRecordings.get(userId);
-
-        if (existing != null && existing.isRunning()) {
-
-            System.out.println(
-                    "Screen recording is already running."
-                            + " User: " + userId
-            );
-
-            return existing.getFilePath();
-        }
-
-
-        // -----------------------------------------------------
-        // Create employee/session directory
-        // -----------------------------------------------------
-
-        Path sessionDirectory =
-                Paths.get(
-                        recordingDirectory,
-                        "employee_" + userId,
-                        "session_" + sessionId
+            if (GraphicsEnvironment.isHeadless()) {
+                throw new IllegalStateException(
+                        "Screen recording cannot start because "
+                                + "the application is running in headless mode."
                 );
-
-        try {
-
-            Files.createDirectories(
-                    sessionDirectory
-            );
-
-        } catch (IOException e) {
-
-            throw new RuntimeException(
-                    "Unable to create recording directory: "
-                            + sessionDirectory,
-                    e
-            );
-        }
-
-
-        // -----------------------------------------------------
-        // Create unique timestamp
-        // -----------------------------------------------------
-
-        String timestamp =
-                LocalDateTime.now()
-                        .format(FILE_DATE_FORMAT);
-
-
-        // -----------------------------------------------------
-        // Create unique file name
-        //
-        // Example:
-        //
-        // recording_20260928_160044_237_a8f31c.mp4
-        // -----------------------------------------------------
-
-        String uniqueId =
-                UUID.randomUUID()
-                        .toString()
-                        .replace("-", "")
-                        .substring(0, 12);
-
-
-        String fileName =
-                "recording_"
-                        + timestamp
-                        + "_"
-                        + uniqueId
-                        + ".mp4";
-
-
-        Path filePath =
-                sessionDirectory.resolve(
-                        fileName
-                );
-
-
-        // -----------------------------------------------------
-        // Create recording worker
-        // -----------------------------------------------------
-
-        RecordingWorker worker =
-                new RecordingWorker(
-                        userId,
-                        sessionId,
-                        filePath
-                );
-
-
-        // -----------------------------------------------------
-        // Store worker
-        // -----------------------------------------------------
-
-        RecordingWorker previous =
-                activeRecordings.putIfAbsent(
-                        userId,
-                        worker
-                );
-
-        if (previous != null) {
-
-            if (previous.isRunning()) {
-
-                return previous.getFilePath();
             }
 
-            activeRecordings.remove(
-                    userId,
-                    previous
-            );
+            // -------------------------------------------------
+            // Check existing worker
+            // -------------------------------------------------
 
+            RecordingWorker existing =
+                    activeRecordings.get(userId);
+
+            if (existing != null) {
+
+                if (existing.isRunning()) {
+
+                    System.out.println(
+                            "Screen recording is already running."
+                                    + " User: " + userId
+                    );
+
+                    return existing.getFilePath();
+                }
+
+                // Wait for complete cleanup of previous worker.
+                existing.waitForTermination();
+
+                activeRecordings.remove(
+                        userId,
+                        existing
+                );
+            }
+
+
+            // -------------------------------------------------
+            // Create employee/session directory
+            // -------------------------------------------------
+
+            Path sessionDirectory =
+                    Paths.get(
+                            recordingDirectory,
+                            "employee_" + userId,
+                            "session_" + sessionId
+                    );
+
+            try {
+
+                Files.createDirectories(
+                        sessionDirectory
+                );
+
+            } catch (IOException e) {
+
+                throw new RuntimeException(
+                        "Unable to create recording directory: "
+                                + sessionDirectory,
+                        e
+                );
+            }
+
+
+            // -------------------------------------------------
+            // Create unique filename
+            // -------------------------------------------------
+
+            String timestamp =
+                    LocalDateTime.now()
+                            .format(FILE_DATE_FORMAT);
+
+            String uniqueId =
+                    UUID.randomUUID()
+                            .toString()
+                            .replace("-", "")
+                            .substring(0, 12);
+
+            String fileName =
+                    "recording_"
+                            + timestamp
+                            + "_"
+                            + uniqueId
+                            + ".mp4";
+
+            Path filePath =
+                    sessionDirectory.resolve(fileName);
+
+
+            // -------------------------------------------------
+            // Create worker
+            // -------------------------------------------------
+
+            RecordingWorker worker =
+                    new RecordingWorker(
+                            userId,
+                            sessionId,
+                            filePath
+                    );
+
+
+            // Register worker before starting its thread.
             activeRecordings.put(
                     userId,
                     worker
             );
-        }
 
 
-        // -----------------------------------------------------
-        // Start worker
-        // -----------------------------------------------------
+            // -------------------------------------------------
+            // Start worker
+            // -------------------------------------------------
 
-        try {
+            try {
 
-            worker.start();
+                worker.start();
 
-        } catch (RuntimeException e) {
+            } catch (RuntimeException e) {
 
-            activeRecordings.remove(
-                    userId,
-                    worker
+                worker.stop();
+
+                activeRecordings.remove(
+                        userId,
+                        worker
+                );
+
+                throw e;
+            }
+
+
+            System.out.println(
+                    "Screen recording started."
+                            + " User: " + userId
+                            + " | Session: " + sessionId
+                            + " | File: "
+                            + filePath.toAbsolutePath()
             );
 
-            throw e;
+            return filePath
+                    .toAbsolutePath()
+                    .toString();
         }
-
-
-        System.out.println(
-                "Screen recording started."
-                        + " User: " + userId
-                        + " | Session: " + sessionId
-                        + " | File: "
-                        + filePath.toAbsolutePath()
-        );
-
-
-        return filePath
-                .toAbsolutePath()
-                .toString();
     }
 
 
@@ -281,46 +273,46 @@ public class ScreenRecordingStorageService {
             return null;
         }
 
+        synchronized (getRecordingLock(userId)) {
 
-        RecordingWorker worker =
-                activeRecordings.remove(userId);
+            RecordingWorker worker =
+                    activeRecordings.get(userId);
+
+            if (worker == null) {
+
+                System.out.println(
+                        "No active screen recording found."
+                                + " User: " + userId
+                );
+
+                return null;
+            }
 
 
-        if (worker == null) {
+            /*
+             * Wait until the worker has completely terminated
+             * and FFmpeg cleanup has finished.
+             */
 
-            System.out.println(
-                    "No active screen recording found."
-                            + " User: " + userId
+            worker.stop();
+
+
+            // Remove only after complete termination.
+            activeRecordings.remove(
+                    userId,
+                    worker
             );
 
-            return null;
+
+            System.out.println(
+                    "Screen recording stopped."
+                            + " User: " + userId
+                            + " | File: "
+                            + worker.getFilePath()
+            );
+
+            return worker.getFilePath();
         }
-
-
-        /*
-         * IMPORTANT:
-         *
-         * stop() does NOT directly call recorder.stop()
-         * or recorder.release().
-         *
-         * The recording thread owns the FFmpeg recorder
-         * and performs cleanup inside run() -> finally.
-         *
-         * This prevents concurrent FFmpeg access.
-         */
-
-        worker.stop();
-
-
-        System.out.println(
-                "Screen recording stopped."
-                        + " User: " + userId
-                        + " | File: "
-                        + worker.getFilePath()
-        );
-
-
-        return worker.getFilePath();
     }
 
 
@@ -329,6 +321,10 @@ public class ScreenRecordingStorageService {
     // =========================================================
 
     public boolean isRecording(Integer userId) {
+
+        if (userId == null) {
+            return false;
+        }
 
         RecordingWorker worker =
                 activeRecordings.get(userId);
@@ -344,6 +340,10 @@ public class ScreenRecordingStorageService {
 
     public String getActiveRecordingPath(
             Integer userId) {
+
+        if (userId == null) {
+            return null;
+        }
 
         RecordingWorker worker =
                 activeRecordings.get(userId);
@@ -362,12 +362,10 @@ public class ScreenRecordingStorageService {
 
     public void stopAllRecordings() {
 
-        for (Integer userId :
-                activeRecordings.keySet()) {
+        for (Integer userId : activeRecordings.keySet()) {
 
             stopRecording(userId);
         }
-
 
         System.out.println(
                 "All screen recordings stopped."
@@ -388,13 +386,11 @@ public class ScreenRecordingStorageService {
             return;
         }
 
-
         try {
 
             Files.deleteIfExists(
                     Paths.get(filePath)
             );
-
 
             System.out.println(
                     "Recording file deleted: "
@@ -426,7 +422,6 @@ public class ScreenRecordingStorageService {
             return 0L;
         }
 
-
         try {
 
             return Files.size(
@@ -451,7 +446,6 @@ public class ScreenRecordingStorageService {
 
     private static class RecordingWorker
             implements Runnable {
-
 
         private final Integer userId;
 
@@ -497,19 +491,24 @@ public class ScreenRecordingStorageService {
                 return;
             }
 
-
             workerThread =
                     new Thread(
                             this,
                             "ScreenRecorder-User-" + userId
                     );
 
-
-            // Allow application shutdown.
             workerThread.setDaemon(true);
 
+            try {
 
-            workerThread.start();
+                workerThread.start();
+
+            } catch (RuntimeException e) {
+
+                running.set(false);
+
+                throw e;
+            }
         }
 
 
@@ -522,50 +521,38 @@ public class ScreenRecordingStorageService {
 
             Robot robot = null;
 
-
             try {
 
-                // -------------------------------------------------
+                // ---------------------------------------------
                 // Create Robot
-                // -------------------------------------------------
+                // ---------------------------------------------
 
                 robot = new Robot();
 
 
-                // -------------------------------------------------
-                // Get complete screen size
-                // -------------------------------------------------
+                // ---------------------------------------------
+                // Get screen size
+                // ---------------------------------------------
 
                 Dimension screenSize =
                         Toolkit.getDefaultToolkit()
                                 .getScreenSize();
 
-
-                Rectangle screenRectangle =
-                        new Rectangle(
-                                screenSize
-                        );
-
-
                 int width =
-                        screenRectangle.width;
-
+                        screenSize.width;
 
                 int height =
-                        screenRectangle.height;
+                        screenSize.height;
 
 
-                // -------------------------------------------------
-                // Ensure dimensions are compatible with YUV420P
-                //
-                // H.264/YUV420P generally requires even dimensions.
-                // -------------------------------------------------
+                // ---------------------------------------------
+                // Ensure even dimensions for YUV420P
+                // ---------------------------------------------
 
                 width =
                         width % 2 == 0
                                 ? width
                                 : width - 1;
-
 
                 height =
                         height % 2 == 0
@@ -573,7 +560,7 @@ public class ScreenRecordingStorageService {
                                 : height - 1;
 
 
-                screenRectangle =
+                Rectangle screenRectangle =
                         new Rectangle(
                                 0,
                                 0,
@@ -582,9 +569,9 @@ public class ScreenRecordingStorageService {
                         );
 
 
-                // -------------------------------------------------
+                // ---------------------------------------------
                 // Create FFmpeg recorder
-                // -------------------------------------------------
+                // ---------------------------------------------
 
                 recorder =
                         new FFmpegFrameRecorder(
@@ -594,46 +581,9 @@ public class ScreenRecordingStorageService {
                         );
 
 
-                // -------------------------------------------------
-                // Basic MP4 settings
-                // -------------------------------------------------
-
-//                recorder.setFormat("mp4");
-//
-//
-//                recorder.setFrameRate(
-//                        DEFAULT_FPS
-//                );
-//
-//
-//                recorder.setVideoBitrate(
-//                        VIDEO_BITRATE
-//                );
-//
-//
-//                recorder.setVideoCodec(
-//                        avcodec.AV_CODEC_ID_H264
-//                );
-//
-//
-//                recorder.setPixelFormat(
-//                        avutil.AV_PIX_FMT_YUV420P
-//                );
-//
-//
-//                // -------------------------------------------------
-//                // H.264 encoder settings
-//                //
-//                // The previous OpenH264 warning about bitrate
-//                // control can be reduced by explicitly using
-//                // constant-quality mode rather than asking
-//                // OpenH264 to perform incompatible bitrate control.
-//                // -------------------------------------------------
-//
-//                recorder.setVideoOption(
-//                        "profile",
-//                        "baseline"
-//                );
+                // ---------------------------------------------
+                // MP4 settings
+                // ---------------------------------------------
 
                 recorder.setFormat("mp4");
 
@@ -648,24 +598,24 @@ public class ScreenRecordingStorageService {
                 );
 
 
-                // -------------------------------------------------
+                // ---------------------------------------------
                 // Start FFmpeg
-                // -------------------------------------------------
+                // ---------------------------------------------
 
                 recorder.start();
 
 
-                // -------------------------------------------------
+                // ---------------------------------------------
                 // Create converter
-                // -------------------------------------------------
+                // ---------------------------------------------
 
                 converter =
                         new Java2DFrameConverter();
 
 
-                // -------------------------------------------------
+                // ---------------------------------------------
                 // Frame timing
-                // -------------------------------------------------
+                // ---------------------------------------------
 
                 final long frameIntervalNanos =
                         1_000_000_000L / DEFAULT_FPS;
@@ -677,114 +627,78 @@ public class ScreenRecordingStorageService {
                                 + " | Session: " + sessionId
                                 + " | Resolution: "
                                 + width + "x" + height
-                                + " | FPS: "
-                                + DEFAULT_FPS
+                                + " | FPS: " + DEFAULT_FPS
                 );
 
 
-                // -------------------------------------------------
+                // ---------------------------------------------
                 // Recording loop
-                // -------------------------------------------------
+                // ---------------------------------------------
 
                 long nextFrameTime =
                         System.nanoTime();
 
-
                 while (running.get()) {
 
-                    // ---------------------------------------------
-                    // Capture screen
-                    // ---------------------------------------------
-
+                    // Capture screen.
                     BufferedImage image =
                             robot.createScreenCapture(
                                     screenRectangle
                             );
 
 
-                    // ---------------------------------------------
-                    // Convert image
-                    // ---------------------------------------------
-
+                    // Convert image.
                     Frame frame =
-                            converter.convert(
-                                    image
-                            );
+                            converter.convert(image);
 
 
-                    // ---------------------------------------------
-                    // Record frame
-                    // ---------------------------------------------
-
+                    // Record frame.
                     if (frame != null
                             && running.get()) {
 
-                        recorder.record(
-                                frame
-                        );
+                        recorder.record(frame);
                     }
 
 
-                    // ---------------------------------------------
-                    // Schedule next frame
-                    // ---------------------------------------------
-
+                    // Schedule next frame.
                     nextFrameTime +=
                             frameIntervalNanos;
-
 
                     long remainingNanos =
                             nextFrameTime
                                     - System.nanoTime();
-
 
                     if (remainingNanos > 0) {
 
                         try {
 
                             long millis =
-                                    remainingNanos
-                                            / 1_000_000L;
-
+                                    remainingNanos / 1_000_000L;
 
                             int nanos =
-                                    (int)
-                                            (remainingNanos
-                                                    % 1_000_000L);
-
+                                    (int) (
+                                            remainingNanos
+                                                    % 1_000_000L
+                                    );
 
                             Thread.sleep(
                                     millis,
                                     nanos
                             );
 
-
                         } catch (InterruptedException e) {
 
-                            /*
-                             * Normal stop operation.
-                             *
-                             * Do not print this as an error.
-                             */
-
-                            Thread.currentThread()
-                                    .interrupt();
-
+                            // Normal stop operation.
                             break;
                         }
+
                     } else {
 
-                        /*
-                         * Recording took longer than the frame
-                         * interval. Reset timing rather than
-                         * continuously falling behind.
-                         */
-
+                        // Reset timing if recording falls behind.
                         nextFrameTime =
                                 System.nanoTime();
                     }
                 }
-
 
             } catch (AWTException e) {
 
@@ -794,7 +708,6 @@ public class ScreenRecordingStorageService {
                 );
 
                 e.printStackTrace();
-
 
             } catch (Exception e) {
 
@@ -806,18 +719,12 @@ public class ScreenRecordingStorageService {
 
                 e.printStackTrace();
 
-
             } finally {
 
-                // -------------------------------------------------
-                // ONLY THE RECORDING THREAD CLOSES FFmpeg
-                // -------------------------------------------------
-
+                // Only the recording thread closes FFmpeg.
                 closeRecorder();
 
-
                 running.set(false);
-
 
                 System.out.println(
                         "Recording worker finished."
@@ -834,40 +741,65 @@ public class ScreenRecordingStorageService {
 
         void stop() {
 
-            /*
-             * Only signal the worker to stop.
-             *
-             * Do NOT call closeRecorder() here.
-             */
-
             running.set(false);
-
 
             Thread thread =
                     workerThread;
 
+            if (thread == null
+                    || thread == Thread.currentThread()) {
 
-            if (thread != null
-                    && thread != Thread.currentThread()) {
+                return;
+            }
 
-                thread.interrupt();
+            thread.interrupt();
 
+            waitForTermination();
+        }
+
+
+        // =====================================================
+        // WAIT FOR COMPLETE TERMINATION
+        // =====================================================
+
+        void waitForTermination() {
+
+            Thread thread =
+                    workerThread;
+
+            if (thread == null
+                    || thread == Thread.currentThread()) {
+
+                return;
+            }
+
+            boolean interrupted = false;
+
+            /*
+             * Do not use a fixed timeout.
+             * Wait until the recording thread finishes
+             * its finally block and closes FFmpeg.
+             */
+
+            while (thread.isAlive()) {
 
                 try {
 
-                    /*
-                     * Wait for the recording thread to execute
-                     * its finally block and close FFmpeg.
-                     */
-
-                    thread.join(5000);
-
+                    thread.join();
 
                 } catch (InterruptedException e) {
 
-                    Thread.currentThread()
-                            .interrupt();
+                    /*
+                     * Remember interruption, but continue
+                     * waiting for safe FFmpeg cleanup.
+                     */
+
+                    interrupted = true;
                 }
+            }
+
+            if (interrupted) {
+                Thread.currentThread().interrupt();
             }
         }
 
@@ -891,6 +823,8 @@ public class ScreenRecordingStorageService {
                                     + " User: " + userId
                     );
 
+                    e.printStackTrace();
+
                 } finally {
 
                     try {
@@ -903,8 +837,9 @@ public class ScreenRecordingStorageService {
                                 "Unable to release FFmpeg recorder."
                                         + " User: " + userId
                         );
-                    }
 
+                        e.printStackTrace();
+                    }
 
                     recorder = null;
                 }
@@ -922,8 +857,9 @@ public class ScreenRecordingStorageService {
                     System.err.println(
                             "Unable to close frame converter."
                     );
-                }
 
+                    e.printStackTrace();
+                }
 
                 converter = null;
             }

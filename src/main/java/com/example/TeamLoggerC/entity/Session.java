@@ -51,7 +51,18 @@ public class Session {
     @Column(name = "employee_started_at")
     private LocalDateTime employeeStartedAt;
 
+    @Column(name = "work_paused", nullable = false)
+    private boolean workPaused = false;
+
     public Session() {
+    }
+
+    public boolean isWorkPaused() {
+        return workPaused;
+    }
+
+    public void setWorkPaused(boolean workPaused) {
+        this.workPaused = workPaused;
     }
 
     public Integer getId() {

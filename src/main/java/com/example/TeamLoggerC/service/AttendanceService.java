@@ -1,8 +1,11 @@
+
 package com.example.TeamLoggerC.service;
 
 import com.example.TeamLoggerC.entity.Attendance;
+import com.example.TeamLoggerC.entity.User;
 import com.example.TeamLoggerC.repository.AttendanceRepo;
 import com.example.TeamLoggerC.repository.UserRepo;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,12 +29,10 @@ public class AttendanceService {
         this.userRepo = userRepo;
     }
 
+    // ============================================================
+    // MARK PRESENT WHEN EMPLOYEE CLICKS START WORK
+    // ============================================================
 
-    /*
-     * ============================================================
-     * MARK PRESENT WHEN EMPLOYEE CLICKS START WORK
-     * ============================================================
-     */
     @Transactional
     public Attendance markPresent(Integer employeeId) {
 
@@ -48,30 +49,18 @@ public class AttendanceService {
 
             Attendance attendance = existing.get();
 
-            /*
-             * Already PRESENT.
-             * Do not create another record.
-             */
-            if ("PRESENT".equalsIgnoreCase(
-                    attendance.getStatus()
-            )) {
+            if ("PRESENT".equalsIgnoreCase(attendance.getStatus())) {
                 return attendance;
             }
 
-            /*
-             * If an ABSENT record already exists,
-             * Start Work changes it to PRESENT.
-             */
+            // Convert an existing ABSENT record to PRESENT.
             attendance.setStatus("PRESENT");
             attendance.setStartTime(now);
+            attendance.setEndTime(null);
 
             return attendanceRepo.save(attendance);
         }
 
-        /*
-         * No attendance record exists.
-         * Create a new PRESENT record.
-         */
         Attendance attendance = new Attendance();
 
         attendance.setEmployeeId(employeeId);
@@ -83,15 +72,10 @@ public class AttendanceService {
         return attendanceRepo.save(attendance);
     }
 
+    // ============================================================
+    // MARK ABSENT IF EMPLOYEE HAS NOT STARTED WORK
+    // ============================================================
 
-    /*
-     * ============================================================
-     * MARK ABSENT AFTER 12 PM
-     * ============================================================
-     *
-     * If employee has not started work by 12 PM,
-     * create/update today's attendance as ABSENT.
-     */
     @Transactional
     public void markAbsentIfNotStarted(Integer employeeId) {
 
@@ -103,33 +87,21 @@ public class AttendanceService {
                         today
                 );
 
-        /*
-         * Attendance record already exists.
-         */
         if (existing.isPresent()) {
 
             Attendance attendance = existing.get();
 
-            /*
-             * Never change PRESENT to ABSENT.
-             */
-            if ("PRESENT".equalsIgnoreCase(
-                    attendance.getStatus()
-            )) {
+            // Never change PRESENT to ABSENT.
+            if ("PRESENT".equalsIgnoreCase(attendance.getStatus())) {
                 return;
             }
 
             attendance.setStatus("ABSENT");
-
             attendanceRepo.save(attendance);
 
             return;
         }
 
-        /*
-         * No record exists.
-         * Create ABSENT record.
-         */
         Attendance attendance = new Attendance();
 
         attendance.setEmployeeId(employeeId);
@@ -140,30 +112,20 @@ public class AttendanceService {
         attendanceRepo.save(attendance);
     }
 
+    // ============================================================
+    // MARK ALL ACTIVE EMPLOYEES ABSENT IF NOT STARTED
+    // ============================================================
 
-    /*
-     * ============================================================
-     * MARK ALL EMPLOYEES ABSENT
-     * ============================================================
-     *
-     * NOTE:
-     * This method currently searches with adminId = null.
-     *
-     * If employees belong to an admin through adminId,
-     * this query will probably NOT find them.
-     *
-     * We will fix this after checking the scheduler/user repository.
-     */
     @Transactional
     public void markAllEmployeesAbsentIfNotStarted() {
 
-        List<com.example.TeamLoggerC.entity.User> employees =
-                userRepo.findByAdminIdAndRole(
-                        null,
-                        "EMPLOYEE"
+        List<User> employees =
+                userRepo.findByRoleIgnoreCaseAndStatusIgnoreCase(
+                        "EMPLOYEE",
+                        "ACTIVE"
                 );
 
-        for (com.example.TeamLoggerC.entity.User employee : employees) {
+        for (User employee : employees) {
 
             if (employee.getId() == null) {
                 continue;
@@ -173,39 +135,31 @@ public class AttendanceService {
         }
     }
 
+    // ============================================================
+    // GET TODAY'S ATTENDANCE
+    // ============================================================
 
-    /*
-     * ============================================================
-     * GET TODAY'S ATTENDANCE
-     * ============================================================
-     */
     public Optional<Attendance> getTodayAttendance(
             Integer employeeId
     ) {
 
-        return attendanceRepo
-                .findByEmployeeIdAndAttendanceDate(
-                        employeeId,
-                        LocalDate.now()
-                );
+        return attendanceRepo.findByEmployeeIdAndAttendanceDate(
+                employeeId,
+                LocalDate.now()
+        );
     }
 
+    // ============================================================
+    // GET ATTENDANCE FOR A YEAR
+    // ============================================================
 
-    /*
-     * ============================================================
-     * GET ATTENDANCE FOR A YEAR
-     * ============================================================
-     */
     public List<Attendance> getYearAttendance(
             Integer employeeId,
             int year
     ) {
 
-        LocalDate startDate =
-                LocalDate.of(year, 1, 1);
-
-        LocalDate endDate =
-                LocalDate.of(year, 12, 31);
+        LocalDate startDate = LocalDate.of(year, 1, 1);
+        LocalDate endDate = LocalDate.of(year, 12, 31);
 
         return attendanceRepo
                 .findByEmployeeIdAndAttendanceDateBetweenOrderByAttendanceDateAsc(
@@ -215,12 +169,10 @@ public class AttendanceService {
                 );
     }
 
+    // ============================================================
+    // GET ALL ATTENDANCE
+    // ============================================================
 
-    /*
-     * ============================================================
-     * GET ALL ATTENDANCE
-     * ============================================================
-     */
     public List<Attendance> getAllAttendance(
             Integer employeeId
     ) {
@@ -231,17 +183,11 @@ public class AttendanceService {
                 );
     }
 
+    // ============================================================
+    // COUNT PRESENT DAYS
+    // ============================================================
 
-    /*
-     * ============================================================
-     * COUNT PRESENT DAYS
-     * ============================================================
-     *
-     * Existing method retained for compatibility.
-     */
-    public long countPresentDays(
-            Integer employeeId
-    ) {
+    public long countPresentDays(Integer employeeId) {
 
         return attendanceRepo.countByEmployeeIdAndStatus(
                 employeeId,
@@ -249,17 +195,11 @@ public class AttendanceService {
         );
     }
 
+    // ============================================================
+    // COUNT ABSENT DAYS
+    // ============================================================
 
-    /*
-     * ============================================================
-     * COUNT ABSENT DAYS
-     * ============================================================
-     *
-     * Existing method retained for compatibility.
-     */
-    public long countAbsentDays(
-            Integer employeeId
-    ) {
+    public long countAbsentDays(Integer employeeId) {
 
         return attendanceRepo.countByEmployeeIdAndStatus(
                 employeeId,
@@ -267,21 +207,16 @@ public class AttendanceService {
         );
     }
 
+    // ============================================================
+    // COUNT PRESENT DAYS FOR SELECTED YEAR
+    // ============================================================
 
-    /*
-     * ============================================================
-     * COUNT PRESENT DAYS FOR SELECTED YEAR
-     * ============================================================
-     */
     public long countPresentDays(
             Integer employeeId,
             int year
     ) {
 
-        return getYearAttendance(
-                employeeId,
-                year
-        )
+        return getYearAttendance(employeeId, year)
                 .stream()
                 .filter(attendance ->
                         "PRESENT".equalsIgnoreCase(
@@ -291,21 +226,16 @@ public class AttendanceService {
                 .count();
     }
 
+    // ============================================================
+    // COUNT ABSENT DAYS FOR SELECTED YEAR
+    // ============================================================
 
-    /*
-     * ============================================================
-     * COUNT ABSENT DAYS FOR SELECTED YEAR
-     * ============================================================
-     */
     public long countAbsentDays(
             Integer employeeId,
             int year
     ) {
 
-        return getYearAttendance(
-                employeeId,
-                year
-        )
+        return getYearAttendance(employeeId, year)
                 .stream()
                 .filter(attendance ->
                         "ABSENT".equalsIgnoreCase(
@@ -315,22 +245,10 @@ public class AttendanceService {
                 .count();
     }
 
+    // ============================================================
+    // DETERMINE DISPLAY STATUS FOR CALENDAR
+    // ============================================================
 
-    /*
-     * ============================================================
-     * DETERMINE DISPLAY STATUS FOR CALENDAR
-     * ============================================================
-     *
-     * Rules:
-     *
-     * PRESENT -> green
-     * ABSENT  -> red
-     * No record -> EMPTY / white
-     * Future   -> FUTURE / white
-     *
-     * IMPORTANT:
-     * A missing attendance record is NOT automatically ABSENT.
-     */
     public String getDisplayStatus(
             Integer employeeId,
             LocalDate date
@@ -342,60 +260,41 @@ public class AttendanceService {
                         date
                 );
 
-        /*
-         * Database record exists.
-         */
         if (attendance.isPresent()) {
 
-            String status =
-                    attendance.get()
-                            .getStatus();
+            String status = attendance.get().getStatus();
 
             if (status != null) {
-
                 return status.toUpperCase();
             }
 
             return "EMPTY";
         }
 
-        /*
-         * Future date.
-         */
         LocalDate today = LocalDate.now();
 
         if (date.isAfter(today)) {
             return "FUTURE";
         }
 
-        /*
-         * No database record.
-         *
-         * This is intentionally NOT ABSENT.
-         *
-         * The calendar will display this day as white.
-         */
         return "EMPTY";
     }
 
+    // ============================================================
+    // MARK END TIME FOR A SPECIFIC ATTENDANCE DATE
+    // ============================================================
 
-    /*
-     * ============================================================
-     * MARK END TIME
-     * ============================================================
-     */
     @Transactional
     public Attendance markEndTimeAt(
             Integer employeeId,
+            LocalDate attendanceDate,
             LocalTime endTime
     ) {
-
-        LocalDate today = LocalDate.now();
 
         Optional<Attendance> existing =
                 attendanceRepo.findByEmployeeIdAndAttendanceDate(
                         employeeId,
-                        today
+                        attendanceDate
                 );
 
         if (existing.isEmpty()) {
@@ -404,24 +303,43 @@ public class AttendanceService {
 
         Attendance attendance = existing.get();
 
+        if (!"PRESENT".equalsIgnoreCase(attendance.getStatus())) {
+            return null;
+        }
+
         attendance.setEndTime(endTime);
 
         return attendanceRepo.save(attendance);
     }
 
+    // ============================================================
+    // BACKWARD-COMPATIBLE METHOD
+    // Uses today's attendance date.
+    // ============================================================
 
-    /*
-     * ============================================================
-     * MARK END TIME USING CURRENT TIME
-     * ============================================================
-     */
     @Transactional
-    public Attendance markEndTime(
-            Integer employeeId
+    public Attendance markEndTimeAt(
+            Integer employeeId,
+            LocalTime endTime
     ) {
 
         return markEndTimeAt(
                 employeeId,
+                LocalDate.now(),
+                endTime
+        );
+    }
+
+    // ============================================================
+    // MARK END TIME USING CURRENT TIME
+    // ============================================================
+
+    @Transactional
+    public Attendance markEndTime(Integer employeeId) {
+
+        return markEndTimeAt(
+                employeeId,
+                LocalDate.now(),
                 LocalTime.now()
         );
     }

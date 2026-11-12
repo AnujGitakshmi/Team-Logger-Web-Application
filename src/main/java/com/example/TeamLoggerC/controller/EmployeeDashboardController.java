@@ -20,6 +20,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -219,12 +221,13 @@ public class EmployeeDashboardController {
         Session currentSession =
                 sessionService.getCurrentSession(userId);
 
-        // =================================================
-        // OFFICE HOURS
-        // =================================================
+        boolean workStarted =
+                currentSession != null &&
+                        currentSession.getEmployeeStartedAt() != null;
 
+        // OFFICE HOURS
         boolean officeHours =
-                sessionService.isOfficeHours();
+                sessionService.isOfficeHours(userId);
 
         // =================================================
         // ACTIVE / IDLE
@@ -260,14 +263,19 @@ public class EmployeeDashboardController {
 
         // =================================================
         // MODEL
-        // =================================================
-
+         // =================================================
         model.addAttribute("user", user);
 
-        // Company/Admin information
+        model.addAttribute(
+                "workstationActivated",
+                user.isWorkstationActivated()
+        );
+
+// Company/Admin information
         model.addAttribute("admin", admin);
 
         model.addAttribute("currentSession", currentSession);
+        model.addAttribute("workStarted", workStarted);
         model.addAttribute("officeHours", officeHours);
 
         model.addAttribute("activeMinutes", activeMinutes);
@@ -282,14 +290,62 @@ public class EmployeeDashboardController {
         model.addAttribute("loginTime", loginTime);
         model.addAttribute("logoutTime", logoutTime);
 
-        // =================================================
+         // =================================================
         // DASHBOARD PROJECT DATA
-        // =================================================
-
+       // =================================================
         model.addAttribute("projects", projects);
         model.addAttribute("currentProject", currentProject);
         model.addAttribute("todayWork", todayWork);
 
         return "dashboardEmployee";
     }
+
+//// =====================================================
+//// ACTIVATE EMPLOYEE WORKSTATION
+//// =====================================================
+//
+//    @PostMapping("/workstation/activate")
+//    @Transactional
+//    @PreAuthorize("hasAuthority('PERMISSION_DASHBOARD_VIEW')")
+//    public String activateWorkstation(Authentication authentication) {
+//
+//        if (authentication == null ||
+//                !authentication.isAuthenticated() ||
+//                !(authentication.getPrincipal() instanceof CustomUserDetails)) {
+//
+//            return "redirect:/login";
+//        }
+//
+//        CustomUserDetails userDetails =
+//                (CustomUserDetails) authentication.getPrincipal();
+//
+//        if (userDetails.getUser() == null ||
+//                userDetails.getUser().getId() == null) {
+//            return "redirect:/login";
+//        }
+//
+//        User user = userRepo.findById(
+//                userDetails.getUser().getId()
+//        ).orElse(null);
+//
+//        if (user == null ||
+//                !"ACTIVE".equalsIgnoreCase(String.valueOf(user.getStatus()))) {
+//
+//            return "redirect:/login";
+//        }
+//
+//        if (!"EMPLOYEE".equalsIgnoreCase(String.valueOf(user.getRole()))) {
+//            return "redirect:/login";
+//        }
+//
+//        // Activate workstation permanently.
+//        // This does NOT start a work session.
+//        if (!user.isWorkstationActivated()) {
+//            user.setWorkstationActivated(true);
+//            userRepo.save(user);
+//        }
+//
+//        return "redirect:/workstation";
+//    }
+
 }

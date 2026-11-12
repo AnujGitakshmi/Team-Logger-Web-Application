@@ -55,4 +55,9 @@ public interface SessionRepo extends JpaRepository<Session, Integer> {
             LocalDateTime start,
             LocalDateTime end
     );
+    List<Session> findByUserIdAndEmployeeStartedAtBetween(
+            Integer userId,
+            LocalDateTime start,
+            LocalDateTime end
+    );
 }
